@@ -28,6 +28,44 @@ Occ <-new_df[which(new_df$Model=="occurrence"),]
 O <-as.data.frame(c(Occ[5],Occ[60:70]))
 #write.csv(O, "ODF.csv", row.names = FALSE)
 
+## for (i in c("li_form_B.x", "reprod_B.x", "strategy", "poll_vect_B.x", "canopy_height", 
+#              "dispersal", "leaf_size", "dispersal_morphology", "growth_form", 
+#              "releasing_height", "sbank", "seed_mass", "seed_number_per_shoot", 
+#              "woodiness", "inflorescence_fr", "sex_reprod_fr", "poll_vect_fr", 
+#              "fruit_type_fr", "dissemination_fr", "li_form_fr", "li_form_B.y", 
+#              "reprod_B.y", "poll_vect_B.y", "bud_bank_seasonality_soil")){ print(length(O[i][!is.na(O[i])]))}
+
+## non-NA length of trait columns; 
+# [1] 130 
+# [1] 130
+# [1] 123
+# [1] 127
+# [1] 131
+# [1] 138
+# [1] 57
+# [1] 91
+# [1] 110
+# [1] 115
+# [1] 41
+# [1] 94
+# [1] 44
+# [1] 114
+# [1] 231
+# [1] 239
+# [1] 237
+# [1] 233
+# [1] 236
+# [1] 239
+# [1] 130
+# [1] 130
+# [1] 127
+# [1] 110
+
+## look at spread of total.area values 
+hist(log(1+O$total.area), breaks = 500)
+
+length(unique(O$total.area)) ## [1] 212
+
 #great function
 table(sbank)
 
