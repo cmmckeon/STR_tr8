@@ -1,0 +1,163 @@
+---
+title: "01_spatial_patterning_complier"
+author: "Caroline McKeon"
+date: "3/17/2020"
+output: word_document
+---
+Range occupancy as a proxy for dispersal establishment and colonisation.
+This mark down is being set up to reanalysis how species' traits might be related to their spetial patterning through out their European ranges. The rational for this investigation is that species' occupied European ranges may be a reflection of their ability to recolonise (spread, establisha and persist) climatically suitable habitat, following the last glaciation. Traits which relate strongly to the amount of climatically suitable habitat that a species occupies are therefore expected to relate to ability to spread, establisha and persist. Range occupancy as a proxy for dispersal establishment and colonisation. 
+It is important to note that is is not only recolonisation and climate that determins range filling in europe, but also likely to be human land use. This investigation is still relevant, as traits related to recolonisation are also likely to be related to a species' ability to cope with human disturbance. 
+
+# Notes: 
+- Anna Csergo is already looking at the relationship between spatial scales in these metrics across species. 
+- How rare and how recorded a species is will also matter.
+- which traits to use?
+- species mean or location specific traits?
+- Measures of intraspecific trait variability?
+- could re-extract and clean up massively (amalgamate trait data), might improve sample size
+
+# Set up
+```{r setup, include=FALSE}
+#install.packages(c("tidyverse", "glmmTMB"))
+library(tidyverse)
+library(glmmTMB)
+'%nin%' = Negate('%in%')
+knitr::opts_chunk$set(include=FALSE) 
+knitr::opts_chunk$set(fig.width=16, fig.height=10) 
+```
+
+read in species range metrics.
+```{r}
+metrics <- read.csv("tr8_range_metrics.csv") ## for now this is the updated metrics as calculated by Anna Csergo in spring 2019
+```
+
+read in trait data
+```{r}
+## for now these are trait values extracted by Caroline during her undergrad (winter 2016)
+DF100merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF110merged.csv")
+DF110merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF1merged.csv")
+DF200merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF2merged.csv")
+DF300merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF3merged.csv")
+DF395merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF395merged.csv")
+DF450merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF450merged.csv")
+DF500merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF500merged.csv")
+DF600merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF6merged.csv")
+DF700merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF7merged.csv")
+DF800merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF8merged.csv")
+DF852merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF852merged.csv")
+DF852merged <- DF852merged[, which(names(DF852merged) %nin% c("X.y", "X", "X.x"))]
+
+traits <-rbind(DF100merged, DF110merged, DF200merged, DF300merged, DF395merged, DF450merged, DF500merged, DF600merged, DF700merged, DF800merged, DF852merged, deparse.level = 0, make.row.names = TRUE)
+traits <- unique(traits)
+
+rm(DF100merged, DF110merged, DF200merged, DF300merged, DF395merged, DF450merged, DF500merged, DF600merged, DF700merged, DF800merged, DF852merged)
+```
+
+
+```{r}
+## subset to only trait data
+ traits <- traits[, which(names(traits) %in% c("Species.x", 
+"Ncells", "rwidth", "nwidth", "C_geo", "PC_geo", "synonyms", 
+"li_form_B.x", "reprod_B.x", "strategy", "poll_vect_B.x", "buoyancy", 
+"canopy_height", "dispersal", "leaf_size", "dispersal_morphology", 
+"growth_form", "releasing_height", "sbank", "seed_mass", "seed_number_per_shoot", 
+"woodiness", "inflorescence_fr", "sex_reprod_fr", "poll_vect_fr", 
+"fruit_type_fr", "dissemination_fr", "li_form_fr", "DispMode", 
+"FruitType", "LeafSize", "Propagule", "SeedBank", "SeedBankLong", 
+"Growth.Form", "Growth.Rate", "Height..Mature", "Lifespan", "Fruit.Seed.Abundance", 
+"Fruit.Seed.Persistence", "Propagated.by.Bare.Root", "Propagated.by.Bulb", 
+"Propagated.by.Container", "Propagated.by.Corm", "Propagated.by.Cuttings", 
+"Propagated.by.Seed", "Propagated.by.Sod", "Propagated.by.Sprigs", 
+"Propagated.by.Tubers", "Seed.Spread.Rate", "Seedling.Vigor", 
+"sla_cal", "wood_dens", "li_form_B.y", "reprod_B.y", "poll_vect_B.y", 
+"bud_bank_seasonality_soil"))]
+
+## handle species names
+traits$Species.x <-gsub("_", " ", traits$Species.x)
+```
+
+now merge with up to date (ish) range metric data
+```{r}
+mydata <- unique(merge(metrics, traits, by.x = "Species", by.y = "Species.x", all.x = TRUE)) ## gonna leave in all the vars for now...
+MDF <- mydata
+```
+
+
+
+thinking now about analysis
+If we take total.area as a starting point
+
+```{r print nas}
+## Looking at which varibles still contain NAs
+list <- c()
+for (i in names(mydata)){
+  list[i] <-length(which(is.na(mydata[,i])))
+}
+
+print(list)
+
+for (i in names(mydata)){
+  print(c(length(which(!is.na(mydata[i]))), i))
+}
+
+```
+
+subset the data for some quick analysis
+```{r}
+mydata <- unique(mydata[, which(names(mydata) %in% c("Species", "Model", "class", "n.patches", "total.area", "prop.landscape", 
+"patch.density", "total.edge", "edge.density", "landscape.shape.index", 
+"largest.patch.index", "mean.patch.area","li_form_B.x", "reprod_B.x", "strategy", "poll_vect_B.x", "buoyancy", 
+"canopy_height", "dispersal", "leaf_size", "dispersal_morphology", 
+"growth_form", "releasing_height", "sbank", "seed_mass", "seed_number_per_shoot", 
+"woodiness", "inflorescence_fr", "sex_reprod_fr", "poll_vect_fr", 
+"fruit_type_fr", "dissemination_fr", "li_form_fr"))])
+```
+
+
+visually investigate the data
+```{r}
+## Factors
+
+for (i in names(Filter(is.factor, mydata))) {
+  plot(mydata[,i], 
+       main = paste(i))
+}
+
+## Numeric variables
+for (i in names(Filter(is.numeric, mydata))) {
+  hist(mydata[,i], 
+       breaks = 3000, 
+       main = paste(i), 
+       xlab = paste(i))
+}
+```
+
+
+## Analysis
+
+```{r}
+m0 <- glmmTMB(log(total.area) ~ 1 + (1|Species), data = mydata)
+summary(m0)
+
+d <-scale(mydata$canopy_height)
+hist(mydata$canopy_height)
+hist(d)
+m1 <-glmmTMB(log(total.area) ~ log((canopy_height+0.001)) + (1|Species), data = mydata)
+summary(m1)
+plot(log(total.area) ~ log((canopy_height)+0.001), data = mydata)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
