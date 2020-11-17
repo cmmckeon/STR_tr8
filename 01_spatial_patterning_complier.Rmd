@@ -4,9 +4,9 @@ author: "Caroline McKeon"
 date: "3/17/2020"
 output: word_document
 ---
-Range occupancy as a proxy for dispersal establishment and colonisation.
-This mark down is being set up to reanalysis how species' traits might be related to their spetial patterning through out their European ranges. The rational for this investigation is that species' occupied European ranges may be a reflection of their ability to recolonise (spread, establisha and persist) climatically suitable habitat, following the last glaciation. Traits which relate strongly to the amount of climatically suitable habitat that a species occupies are therefore expected to relate to ability to spread, establisha and persist. Range occupancy as a proxy for dispersal establishment and colonisation. 
-It is important to note that is is not only recolonisation and climate that determins range filling in europe, but also likely to be human land use. This investigation is still relevant, as traits related to recolonisation are also likely to be related to a species' ability to cope with human disturbance. 
+Range occupancy as a proxy for dispersal, establishment and colonisation.
+This mark down is being set up to reanalysis how species' traits might be related to their spetial patterning through out their European ranges. The rational for this investigation is that species' occupied European ranges may be a reflection of their ability to recolonise (spread, establisha and persist) climatically suitable habitat, following the last glaciation. Traits which relate strongly to the amount of climatically suitable habitat that a species occupies are therefore expected to relate to ability to spread, establisha and persist. Range occupancy as a proxy for dispersal, establishment and colonisation. 
+It is important to note that is is not only recolonisation and climate that determins range filling in Europe, but also likely to be human land use. This investigation is still relevant, as traits related to recolonisation are also likely to be related to a species' ability to cope with human disturbance. 
 
 # Notes: 
 - Anna Csergo is already looking at the relationship between spatial scales in these metrics across species. 
@@ -21,6 +21,7 @@ It is important to note that is is not only recolonisation and climate that dete
 #install.packages(c("tidyverse", "glmmTMB"))
 library(tidyverse)
 library(glmmTMB)
+library(BIEN)
 '%nin%' = Negate('%in%')
 knitr::opts_chunk$set(include=FALSE) 
 knitr::opts_chunk$set(fig.width=16, fig.height=10) 
@@ -28,8 +29,17 @@ knitr::opts_chunk$set(fig.width=16, fig.height=10)
 
 read in species range metrics.
 ```{r}
-metrics <- read.csv("tr8_range_metrics.csv") ## for now this is the updated metrics as calculated by Anna Csergo in spring 2019
+mydata <- read.csv("tr8_data_range_metrics.csv") ## for now this is the updated metrics as calculated by Anna Csergo in spring 2019
 ```
+
+
+Get TRY and BIEN trait data
+
+```{r}
+source("01_get_trait_data.R")
+```
+
+
 
 read in trait data
 ```{r}
@@ -78,8 +88,7 @@ traits$Species.x <-gsub("_", " ", traits$Species.x)
 
 now merge with up to date (ish) range metric data
 ```{r}
-mydata <- unique(merge(metrics, traits, by.x = "Species", by.y = "Species.x", all.x = TRUE)) ## gonna leave in all the vars for now...
-MDF <- mydata
+mydata <- unique(merge(mydata, traits_bien, by.x = "Species", by.y = "scrubbed_species_binomial", all.x = TRUE)) ## gonna leave in all the vars for now...
 ```
 
 
