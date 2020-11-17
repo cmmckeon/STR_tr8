@@ -88,7 +88,8 @@ traits$Species.x <-gsub("_", " ", traits$Species.x)
 
 now merge with up to date (ish) range metric data
 ```{r}
-mydata <- unique(merge(mydata, traits_bien, traits, by.x = "Species", by.y = "scrubbed_species_binomial", by.z = "Speices.x", all.x = TRUE)) ## gonna leave in all the vars for now...
+mydata <- unique(merge(mydata, traits_bien, by.x = "Species", by.y = "scrubbed_species_binomial",  all.x = TRUE)) ## gonna leave in all the vars for now...
+mydata <- unique(merge(mydata, traits, by.x = "Species", by.y = "Speices.x",  all.x = TRUE)) 
 ```
 
 

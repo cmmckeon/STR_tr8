@@ -113,6 +113,16 @@ traits_bien <- droplevels(traits_bien)
 
 
 
+## TRY -------------
+
+## TRY data has to be mannually downloaded from the TRY plant trait data base, but there is some handling required first to get the right species list
+
+##(Mannually download and) read in TRY species info data (version 5)
+sp.info_try <- read.csv("Data_try_species_info.csv") ## 279875 obs of 7 vars
+
+## Get the list of TRY species for which there are PREDICTS data
+sp.list_TRY <- Reduce(intersect, list(unique(sp.info_try$AccSpeciesName),unique(PR$Best_guess_binomial))) ## 9709 species
+#saveRDS(sp.list_TRY, "Data_sp.list_TRY.rds")
 
 
 
