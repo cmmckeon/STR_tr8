@@ -99,17 +99,20 @@ for (i in names(Filter(is.numeric, traits_bien))) {
 
 
 
-dput(levels(traits_bien$trait_name))
-
-c("longest whole plant longevity", "maximum whole plant height", 
-  "maximum whole plant longevity", "seed mass", "whole plant growth form", 
-  "whole plant growth form diversity", "whole plant height", "whole plant vegetative phenology", 
-  "whole plant woodiness")
+# dput(levels(traits_bien$trait_name))
+# 
+# c("longest whole plant longevity", "maximum whole plant height", 
+#   "maximum whole plant longevity", "seed mass", "whole plant growth form", 
+#   "whole plant growth form diversity", "whole plant height", "whole plant vegetative phenology", 
+#   "whole plant woodiness")
 
 
 traits_bien$trait_name[traits_bien$trait_name == "longest whole plant longevity"] <- "maximum whole plant longevity"
 traits_bien$trait_name[traits_bien$trait_name == "whole plant height"] <- "maximum whole plant height"
 traits_bien <- droplevels(traits_bien)
+
+## for now, just take the columns with species name, trait names and trait value. You can come back to this point to look at more of the info if you need to
+traits_bien <- unique(traits_bien[which(names(traits_bien) %in% c("scrubbed_species_binomial", "trait_name", "trait_value"))])
 
 
 
@@ -118,11 +121,69 @@ traits_bien <- droplevels(traits_bien)
 ## TRY data has to be mannually downloaded from the TRY plant trait data base, but there is some handling required first to get the right species list
 
 ##(Mannually download and) read in TRY species info data (version 5)
-sp.info_try <- read.csv("Data_try_species_info.csv") ## 279875 obs of 7 vars
+#sp.info_try <- read.csv("Data_try_species_info.csv") ## 279875 obs of 7 vars
 
-## Get the list of TRY species for which there are PREDICTS data
-sp.list_TRY <- Reduce(intersect, list(unique(sp.info_try$AccSpeciesName),unique(PR$Best_guess_binomial))) ## 9709 species
-#saveRDS(sp.list_TRY, "Data_sp.list_TRY.rds")
+## Get the list of TRY species for which there are range metric data
+# sp.list_TRY <- Reduce(intersect, list(unique(sp.info_try$AccSpeciesName),unique(mydata$Species))) ## species
+# saveRDS(sp.list_TRY, "Data_sp.list_TRY.rds")
+sp.list_TRY <- readRDS('Data_sp.list_TRY.rds')
+
+# Get TRY species IDs to extract from database 
+#cat(paste(sp.info_try$AccSpeciesID[sp.info_try$AccSpeciesName %in% sp.list_TRY], collapse = ", ")) 
+# Now request data corresponding to these lists from the TRY Dataportal on the website.
+# Then download and read in this data.
+
+
+# trait_info_try <- read.csv("Data_try_trait_info.csv")
+# 
+# #Get list of TRY trait codes for traits related to disperal, establishment and persistance
+# trait_info_try <- trait_info_try[trait_info_try$Trait %in% c("Cone (strobilus) dry mass", "Dispersal distance", "Dispersal syndrome", "Dispersal unit appendages", "Dispersal unit dry mass",
+#   "Dispersal unit type", "Flower insemination autogamous or xenogamous", 'Flower pollinator and type of reward', 
+#   "Flower sexual syndrome (dichogamy, cleistogamy, dioecious, monoecious)", "Fruit mass", "Fruit type", "Fruit surface type", 
+#   "Mycorrhiza type", "Plant clonal growth form", "Plant height vegetative", "Plant height generative", "Plant mating system",
+#   "Plant ontogeny: age of maturity (first flowering)", "Plant recruitment efficiency", "Plant propagation type", "Plant reproductive phenology timing",
+#   "Plant resprouting capacity", "Plant vegetative reproduction: clonal growth organ", "Plant vegetative regeneration capacity", 
+#   "Plant vegetative reproduction: role of clonal growth organ in plant growth", 'Plant vital attributes of persistence and establishment', 
+#   'Plant woodiness', "Pollination syndrome", 'Seed (seedbank) longevity', 'Seed dry mass', 'Seed germination rate (germination efficiency)',
+#   "Seed germination type", 'Seed morphology type', 'Seedbank type', "Species generation overlap", "Species reproduction type", 
+#   'Species strategy type according to Grime', 'Species tolerance to human impact'),]
+# 
+# try_traitIDs <- paste(trait_info_try$TraitID, collapse = ", ") ## 38 traits 
+
+
+## having downloaded the traits you want for the species you want, read in your TRY trait data
+traits_try <- read.csv('Data_try_traits_tr8.csv')
+
+## for now, just take the columns with species name, trait names and trait value. You can come back to this point to look at more of the info if you need to
+traits_try <- unique(traits_try[which(names(traits_try) %in% c("AccSpeciesName", "TraitName", "OrigValueStr"))])
+traits_try <- unique(traits_try[traits_try$TraitName != "",])
+
+
+## find the overlap in species between try and bien
+sp.list_TRY_BIEN <- Reduce(intersect, list(unique(traits_bien$scrubbed_species_binomial),unique(traits_try$AccSpeciesName))) ## 457 species
+
+## now create one big traits df to tidy
+names(traits_try) <- names(traits_bien)
+traits <- rbind(traits_bien, traits_try)
+length(unique(traits$scrubbed_species_binomial))
+
+# Quick look at trait levels
+for (i in levels(traits$trait_name)) {
+  plot(traits$trait_value[traits$trait_name == i],
+       main = paste(i))
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
