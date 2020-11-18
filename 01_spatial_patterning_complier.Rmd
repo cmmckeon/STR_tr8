@@ -29,7 +29,7 @@ knitr::opts_chunk$set(fig.width=16, fig.height=10)
 
 read in species range metrics.
 ```{r}
-mydata <- read.csv("tr8_data_range_metrics.csv") ## for now this is the updated metrics as calculated by Anna Csergo in spring 2019
+metrics <- read.csv("tr8_data_range_metrics.csv") ## for now this is the updated metrics as calculated by Anna Csergo in spring 2019
 ```
 
 
