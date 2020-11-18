@@ -174,7 +174,7 @@ names(d) <- c("scrubbed_species_binomial", levels(traits$trait_name))
   
 d$scrubbed_species_binomial <- unique(traits$scrubbed_species_binomial)
 
-d <- merge(d, traits[traits$trait_name == "maximum whole plant height"], 
+d <- merge(d, traits[traits$trait_name == "maximum whole plant height",], 
            by = "scrubbed_species_binomial") 
 
 
