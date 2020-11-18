@@ -167,26 +167,33 @@ names(traits_try) <- names(traits_bien)
 traits <- droplevels(rbind(traits_bien, traits_try))
 length(unique(traits$scrubbed_species_binomial)) ## 287 species
 
-d <- data.frame(matrix(NA, nrow = length(unique(traits$scrubbed_species_binomial)),
-       ncol = length(levels(traits$trait_name))+1))
-
-names(d) <- c("scrubbed_species_binomial", levels(traits$trait_name))
-  
-d$scrubbed_species_binomial <- unique(traits$scrubbed_species_binomial)
-
-d <- merge(d, traits[traits$trait_name == "maximum whole plant height",], 
-           by = "scrubbed_species_binomial") 
+## restructure the dataframe for your own nefarious purposes
+for (i in levels(traits$trait_name)){
+  traits[,i] <- factor(NA) 
+  levels(traits[,i]) <- levels(traits$trait_value)
+  }
 
 
+for (i in levels(traits$trait_name)){
+  traits[,i][traits$trait_name == i] <- traits$trait_value[traits$trait_name == i]
+}
 
+#traits <- unique(traits[,which(names(traits) %nin% c("trait_value", "trait_name"))])
 
+x <- list()
+for (i in levels(traits$trait_name)){
+  x[[i]] <- droplevels(unique(traits[,which(names(traits) %in% c('scrubbed_species_binomial', i))][which(!is.na(traits[,i])),], 
+                              by = "scrubbed_species_binomial"))
+}
 
-traits$scrubbed_species_binomial
+## for maybe if you wanted this list all together in a data frame
+# x <- data.frame(traits$scrubbed_species_binomial)
+# names(x) <- "scrubbed_species_binomial"
+# for (i in levels(traits$trait_name)){
+#   x <- unique(merge(x, traits[,which(names(traits) %in% c('scrubbed_species_binomial', i))], by = "scrubbed_species_binomial")) 
+# }
 
-
-
-
-
-
-
+for (i in levels(traits$trait_name)){
+  i <- x[[i]]
+}
 
