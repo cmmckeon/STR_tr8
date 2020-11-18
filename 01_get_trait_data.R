@@ -164,23 +164,24 @@ sp.list_TRY_BIEN <- Reduce(intersect, list(unique(traits_bien$scrubbed_species_b
 
 ## now create one big traits df to tidy
 names(traits_try) <- names(traits_bien)
-traits <- rbind(traits_bien, traits_try)
-length(unique(traits$scrubbed_species_binomial))
+traits <- droplevels(rbind(traits_bien, traits_try))
+length(unique(traits$scrubbed_species_binomial)) ## 287 species
 
-# Quick look at trait levels
-for (i in levels(traits$trait_name)) {
-  plot(traits$trait_value[traits$trait_name == i],
-       main = paste(i))
-}
+d <- data.frame(matrix(NA, nrow = length(unique(traits$scrubbed_species_binomial)),
+       ncol = length(levels(traits$trait_name))+1))
 
+names(d) <- c("scrubbed_species_binomial", levels(traits$trait_name))
+  
+d$scrubbed_species_binomial <- unique(traits$scrubbed_species_binomial)
 
-
-
-
-
+d <- merge(d, traits[traits$trait_name == "maximum whole plant height"], 
+           by = "scrubbed_species_binomial") 
 
 
 
+
+
+traits$scrubbed_species_binomial
 
 
 
