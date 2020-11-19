@@ -85,17 +85,17 @@ for (i in names(Filter(is.character, traits_bien))) {
 
 ## Quick look at model dataframe
 # Factors
-for (i in names(Filter(is.factor, traits_bien))) {
-  plot(traits_bien[,i],
-       main = paste(i))
-}
-## Numeric variables
-for (i in names(Filter(is.numeric, traits_bien))) {
-  hist(traits_bien[,i],
-       breaks = 3000,
-       main = paste(i),
-       xlab = paste(i))
-}
+# for (i in names(Filter(is.factor, traits_bien))) {
+#   plot(traits_bien[,i],
+#        main = paste(i))
+# }
+# ## Numeric variables
+# for (i in names(Filter(is.numeric, traits_bien))) {
+#   hist(traits_bien[,i],
+#        breaks = 3000,
+#        main = paste(i),
+#        xlab = paste(i))
+# }
 
 
 
@@ -196,4 +196,29 @@ for (i in levels(traits$trait_name)){
 for (i in levels(traits$trait_name)){
   i <- x[[i]]
 }
+#dput(levels(traits$trait_name))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -40,6 +40,126 @@ source("01_get_trait_data.R")
 ```
 
 
+```{r}
+## quick height analysis
+## short sub
+height_1 <- x[["maximum whole plant height"]]
+height_2 <- x[["Plant height generative"]]
+height_3 <- x[["Plant height vegetative"]]
+names(height_1) <- c("species", "height")
+names(height_2) <- c("species", "height")
+names(height_3) <- c("species", "height")
+height <- unique(rbind(height_1, height_2, height_3))
+height$height <- as.character(height$height)
+rm(height_1, height_2, height_3)
+height$height <- as.numeric(height$height)
+height <- unique(drop_na(droplevels(height)))
+hist(log(height$height))
+length(unique(height$species)) ## 195 speceis
+## just get the quick height analysis species
+metrics <- metrics[metrics$Species %in% levels(height$species) & metrics$Model == "Occurrence",]
+hist(log(metrics$total.area))
+metrics <- unique(metrics[, which(names(metrics) %in% c("Species", "effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells"))])
+mydata <- unique(merge(metrics, height, by.x = "Species", by.y = "species", all.x = T))
+mydata$n.cells <- as.numeric(mydata$n.cells)
+```
+
+
+```{r}
+m_height <- list()
+#range_metrics <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells")
+for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells"))])){
+  par(mfrow = c(2,2))
+  m_height[[i]] <- lm(log(mydata[,i]) ~ log(height), data = mydata)
+  print(summary(m_height[[i]]))
+  plot(m_height[[i]])
+  plot(log(mydata[,i]) ~ log(height), data = mydata, main = paste(i)); abline(m_height[[i]])
+}
+par(mfrow = c(2,3))
+for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells"))])){
+  plot(log(mydata[,i]) ~ log(height), data = mydata, main = paste(i), xlab = paste("log", i, sep = " ")); abline(m_height[[i]])
+}
+```
+
+
+```{r}
+## get the median values for each species
+
+for(i in levels(mydata$Species)){
+  mydata$meid[mydata$Species == i] <- mean(mydata$height[mydata$Species == i])
+}
+
+mydata <- unique(mydata[, which(names(mydata) != "height")])
+```
+
+
+
+```{r}
+# Quick look at model dataframe
+## Numeric variables
+for (i in names(Filter(is.numeric, mydata))) {
+  hist((mydata[,i]),
+       breaks = 3000,
+       main = paste(i),
+       xlab = paste(i))
+}
+for (i in names(Filter(is.numeric, mydata))) {
+  hist(log(mydata[,i]),
+       breaks = 3000,
+       main = paste(i),
+       xlab = paste(i))
+}
+```
+
+
+```{r}
+m <- lm(log(total.area) ~ log(height+0.000001), data = mydata)
+summary(m)
+plot(m)
+plot(log(total.area) ~ log(height), data = mydata)
+abline(m)
+
+# m <- lm(log(total.area) ~ log(meid), data = mydata)
+# summary(m)
+# plot(m)
+# plot(log(total.area) ~ log(meid), data = mydata)
+# abline(m)
+```
+
+
+
+
+
+```{r}
+m <- list()
+#range_metrics <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells")
+for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells"))])){
+  par(mfrow = c(2,2))
+  m[[i]] <- lm(log(mydata[,i]) ~ log(meid), data = mydata)
+  print(summary(m[[i]]))
+  plot(m[[i]])
+  plot(log(mydata[,i]) ~ log(meid), data = mydata, main = paste(i)); abline(m[[i]])
+}
+```
+
+
+```{r}
+par(mfrow = c(2,3))
+for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells"))])){
+  plot(log(mydata[,i]) ~ log(meid), data = mydata, main = paste(i), xlab = paste("log", i, sep = " ")); abline(m[[i]])
+}
+
+
+```
+
+
+
+
+
+
+
+
+
 
 read in trait data
 ```{r}
