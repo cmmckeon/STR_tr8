@@ -59,16 +59,68 @@ length(unique(height$species)) ## 195 speceis
 ## just get the quick height analysis species
 metrics <- metrics[metrics$Species %in% levels(height$species) & metrics$Model == "Occurrence",]
 hist(log(metrics$total.area))
-metrics <- unique(metrics[, which(names(metrics) %in% c("Species", "effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells"))])
+metrics <- unique(metrics[, which(names(metrics) %in% c("Species", "effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])
 mydata <- unique(merge(metrics, height, by.x = "Species", by.y = "species", all.x = T))
-mydata$n.cells <- as.numeric(mydata$n.cells)
+mydata$range.size <- as.numeric(mydata$range.size)
+mydata <- mydata[mydata$height != 0,]
+```
+
+```{r}
+mydata <- drop_na(mydata)
+## get the single values for each species
+for(i in levels(mydata$Species)){
+ # print(i)
+  mydata$mean[mydata$Species == i] <- mean(mydata$height[mydata$Species == i])
+  mydata$median[mydata$Species == i] <- median(mydata$height[mydata$Species == i])
+  mydata$max[mydata$Species == i] <- max(mydata$height[mydata$Species == i])
+  mydata$coeff_var[mydata$Species == i] <- (sd(mydata$height[mydata$Species == i])/mean(mydata$height[mydata$Species == i]))*100
+}
+
+indiv_data <- unique(mydata[, which(names(mydata) != "height")])
 ```
 
 
 ```{r}
+y_list <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
+model_ranges <- function(mydata, y_list, x){
+  m_indiv <- list() 
+  #range_metrics <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
+  for(i in names(mydata[which(names(mydata) %in% y_list)])){
+  par(mfrow = c(2,2), mar=c(4,4,4,4))
+  m_indiv[[i]] <- lm(log(mydata[,i]) ~ log(x), data = mydata)
+  print(summary(m_indiv[[i]]))
+  plot(m_indiv[[i]], main = paste(i))
+  #plot(log(mydata[,i]) ~ log(x), data = mydata, main = paste(i)); abline(m_indiv[[i]])
+  }
+  par(mfrow = c(2,3))
+  plot <- for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
+  plot(log(mydata[,i]) ~ log(x), data = mydata, main = paste(i), ylab = paste("log", i, sep = " "), xlab = paste(x)); abline(m_indiv[[i]])
+  }
+  return(plot)
+  }
+
+```
+
+```{r}
+## Numeric variables
+# for (i in names(Filter(is.numeric, indiv_data))) {
+#   hist(log(indiv_data[,i]),
+#        breaks = 3000,
+#        main = paste(i),
+#        xlab = paste(i))
+# }
+```
+
+
+```{r}
+for(i in names(indiv_data[which(names(indiv_data) %in% c("mean", "median", "max", "coeff_var"))])){
+  print(model_ranges(mydata = indiv_data, y_list, x = indiv_data[,i]))}
+```
+
+```{r}
 m_height <- list()
-#range_metrics <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells")
-for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells"))])){
+#range_metrics <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
+for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
   par(mfrow = c(2,2))
   m_height[[i]] <- lm(log(mydata[,i]) ~ log(height), data = mydata)
   print(summary(m_height[[i]]))
@@ -76,22 +128,30 @@ for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.sh
   plot(log(mydata[,i]) ~ log(height), data = mydata, main = paste(i)); abline(m_height[[i]])
 }
 par(mfrow = c(2,3))
-for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells"))])){
+for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
   plot(log(mydata[,i]) ~ log(height), data = mydata, main = paste(i), xlab = paste("log", i, sep = " ")); abline(m_height[[i]])
 }
 ```
 
 
+
+
+
 ```{r}
-## get the median values for each species
-
-for(i in levels(mydata$Species)){
-  mydata$meid[mydata$Species == i] <- mean(mydata$height[mydata$Species == i])
+m_mean <- list()
+#range_metrics <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
+for(i in names(mean_data[which(names(mean_data) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
+  par(mfrow = c(2,2))
+  m_mean[[i]] <- lm(log(mean_data[,i]) ~ log(mean), data = mean_data)
+  print(summary(m_mean[[i]]))
+  plot(m_mean[[i]])
+  plot(log(mean_data[,i]) ~ log(mean), data = mean_data, main = paste(i)); abline(m_mean[[i]])
 }
-
-mydata <- unique(mydata[, which(names(mydata) != "height")])
+par(mfrow = c(2,3))
+for(i in names(mean_data[which(names(mean_data) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
+  plot(log(mean_data[,i]) ~ log(mean), data = mean_data, main = paste(i), xlab = paste("log", i, sep = " ")); abline(m_mean[[i]])
+}
 ```
-
 
 
 ```{r}
@@ -132,8 +192,8 @@ abline(m)
 
 ```{r}
 m <- list()
-#range_metrics <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells")
-for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells"))])){
+#range_metrics <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
+for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
   par(mfrow = c(2,2))
   m[[i]] <- lm(log(mydata[,i]) ~ log(meid), data = mydata)
   print(summary(m[[i]]))
@@ -145,7 +205,7 @@ for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.sh
 
 ```{r}
 par(mfrow = c(2,3))
-for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "n.cells"))])){
+for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
   plot(log(mydata[,i]) ~ log(meid), data = mydata, main = paste(i), xlab = paste("log", i, sep = " ")); abline(m[[i]])
 }
 
@@ -247,7 +307,7 @@ mydata <- unique(mydata[, which(names(mydata) %in% c("Species", "Model", "class"
 visually investigate the data
 ```{r}
 ## Factors
-
+G
 for (i in names(Filter(is.factor, mydata))) {
   plot(mydata[,i], 
        main = paste(i))
