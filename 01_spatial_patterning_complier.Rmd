@@ -91,7 +91,8 @@ model_ranges <- function(mydata, y_list, x){
   print(summary(m_indiv[[i]]))
   plot(m_indiv[[i]], main = paste(i))
   #plot(log(mydata[,i]) ~ log(x), data = mydata, main = paste(i)); abline(m_indiv[[i]])
-  }
+  }   
+  #return(m_indiv)
   par(mfrow = c(2,3))
   plot <- for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
   plot(log(mydata[,i]) ~ log(x), data = mydata, main = paste(i), ylab = paste("log", i, sep = " "), xlab = paste(x)); abline(m_indiv[[i]])
@@ -113,9 +114,27 @@ model_ranges <- function(mydata, y_list, x){
 
 
 ```{r}
+m_indiv <- list()
 for(i in names(indiv_data[which(names(indiv_data) %in% c("mean", "median", "max", "coeff_var"))])){
+ # m_indiv[[i]] <- model_ranges(mydata = indiv_data, y_list, x = indiv_data[,i])
   print(model_ranges(mydata = indiv_data, y_list, x = indiv_data[,i]))}
 ```
+
+
+```{r}
+par(mfrow = c(2,3))
+
+for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
+  plot(log(mydata[,i]) ~ log(height), data = mydata, main = paste(i), ylab = paste("log", i, sep = " "))
+  abline(m_indiv[["mean"]][[i]], col = "red", lwd = 2)
+  abline(m_indiv[["median"]][[i]], col = "blue", lwd = 2)
+  abline(m_indiv[["max"]][[i]], col = "green", lwd = 2)
+  abline(m_indiv[["coeff_var"]][[i]], col = "purple", lwd = 2)
+  }
+
+```
+
+
 
 ```{r}
 m_height <- list()
