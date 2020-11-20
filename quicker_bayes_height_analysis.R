@@ -1,7 +1,9 @@
 ## quicker bayes height analysis
 
-m_indiv_bayes[["mean"]][["total.area"]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(total.area) ~ log(mean),
+for(i in names(indiv_data[which(names(indiv_data) %in% c("mean", "median", "max", "coeff_var"))])){
+  m_indiv_bayes[[i]][["total.area"]] <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = log(total.area) ~ log(i),
+           random = ~ animal,
            rcov = ~units,
            family= "gaussian",
            pedigree = comp_data$tree,
@@ -9,11 +11,12 @@ m_indiv_bayes[["mean"]][["total.area"]] <-mod_list <- mclapply(1:2, function(i) 
            nitt = nitt,
            burnin = burnin,
            thin = thin,
-           prior = prior_indiv)
+           prior = prior)
 }, mc.cores=2)
 
-m_indiv_bayes[["mean"]][["prop.landscape"]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(prop.landscape) ~ log(mean),
+m_indiv_bayes[[i]][["prop.landscape"]] <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = log(prop.landscape) ~ log(i),
+           random = ~ animal,
            rcov = ~units,
            family= "gaussian",
            pedigree = comp_data$tree,
@@ -21,11 +24,12 @@ m_indiv_bayes[["mean"]][["prop.landscape"]] <-mod_list <- mclapply(1:2, function
            nitt = nitt,
            burnin = burnin,
            thin = thin,
-           prior = prior_indiv)
+           prior = prior)
 }, mc.cores=2)
 
-m_indiv_bayes[["mean"]][["perimeter.area.frac.dim"]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(perimeter.area.frac.dim) ~ log(mean),
+m_indiv_bayes[[i]][["perimeter.area.frac.dim"]] <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = log(perimeter.area.frac.dim) ~ log(i),
+           random = ~ animal,
            rcov = ~units,
            family= "gaussian",
            pedigree = comp_data$tree,
@@ -33,11 +37,12 @@ m_indiv_bayes[["mean"]][["perimeter.area.frac.dim"]] <-mod_list <- mclapply(1:2,
            nitt = nitt,
            burnin = burnin,
            thin = thin,
-           prior = prior_indiv)
+           prior = prior)
 }, mc.cores=2)
 
-m_indiv_bayes[["mean"]][["mean.shape.index"]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(mean.shape.index) ~ log(mean),
+m_indiv_bayes[[i]][["mean.shape.index"]] <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = log(mean.shape.index) ~ log(i),
+           random = ~ animal,
            rcov = ~units,
            family= "gaussian",
            pedigree = comp_data$tree,
@@ -45,11 +50,12 @@ m_indiv_bayes[["mean"]][["mean.shape.index"]] <-mod_list <- mclapply(1:2, functi
            nitt = nitt,
            burnin = burnin,
            thin = thin,
-           prior = prior_indiv)
+           prior = prior)
 }, mc.cores=2)
 
-m_indiv_bayes[["mean"]][["effective.mesh.size"]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(effective.mesh.size) ~ log(mean),
+m_indiv_bayes[[i]][["effective.mesh.size"]] <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = log(effective.mesh.size) ~ log(i),
+           random = ~ animal,
            rcov = ~units,
            family= "gaussian",
            pedigree = comp_data$tree,
@@ -57,11 +63,12 @@ m_indiv_bayes[["mean"]][["effective.mesh.size"]] <-mod_list <- mclapply(1:2, fun
            nitt = nitt,
            burnin = burnin,
            thin = thin,
-           prior = prior_indiv)
+           prior = prior)
 }, mc.cores=2)
 
-m_indiv_bayes[["mean"]][["range.size"]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(range.size) ~ log(mean),
+m_indiv_bayes[[i]][["range.size"]] <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = log(range.size) ~ log(i),
+           random = ~ animal,
            rcov = ~units,
            family= "gaussian",
            pedigree = comp_data$tree,
@@ -69,8 +76,10 @@ m_indiv_bayes[["mean"]][["range.size"]] <-mod_list <- mclapply(1:2, function(i) 
            nitt = nitt,
            burnin = burnin,
            thin = thin,
-           prior = prior_indiv)
-}, mc.cores=2)
+           prior = prior)
+}, mc.cores=2) }
+
+
 
 save <- m_indiv_bayes
 #m_indiv_bayes[["median"]] <- m_indiv_bayes[["median"]][-7]
@@ -113,6 +122,15 @@ for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.sh
 abline(12, 1)
 
 
-
+x <- MCMCglmm(fixed = log(total.area) ~ log(mean),
+              random = ~ animal,
+         rcov = ~units,
+         family= "gaussian",
+         pedigree = comp_data$tree,
+         data = comp_data$data,
+         nitt = nitt,
+         burnin = burnin,
+         thin = thin,
+         prior = prior)
 
 
