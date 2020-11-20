@@ -77,6 +77,7 @@ for(i in levels(mydata$Species)){
 }
 
 indiv_data <- unique(mydata[, which(names(mydata) != "height")])
+
 ```
 
 
@@ -92,7 +93,7 @@ model_ranges <- function(mydata, y_list, x){
   plot(m_indiv[[i]], main = paste(i))
   #plot(log(mydata[,i]) ~ log(x), data = mydata, main = paste(i)); abline(m_indiv[[i]])
   }   
-  #return(m_indiv)
+  return(m_indiv)
   par(mfrow = c(2,3))
   plot <- for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
   plot(log(mydata[,i]) ~ log(x), data = mydata, main = paste(i), ylab = paste("log", i, sep = " "), xlab = paste(x)); abline(m_indiv[[i]])
@@ -101,6 +102,57 @@ model_ranges <- function(mydata, y_list, x){
   }
 
 ```
+
+
+```{r}
+
+# mod_list <- mclapply(1:2, function(i) {
+#   MCMCglmm(fixed = formula_a,
+#            rcov = ~units,
+#            family= "gaussian",
+#            pedigree = comp_data$tree,
+#            data = comp_data$data,
+#            nitt = nitt,
+#            burnin = burnin,
+#            thin = thin,
+#            prior = prior_indiv)
+#   }, mc.cores=2)
+
+model_ranges_bayes <- function(mydata, y_list, x){
+  m_indiv_bayes <- list() 
+  for(i in names(mydata[which(names(mydata) %in% y_list)])){
+    m_indiv_bayes[[i]] <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = log(mydata[,i]) ~ log(x),
+           rcov = ~units,
+           family= "gaussian",
+           pedigree = comp_data$tree,
+           data = comp_data$data,
+           nitt = nitt,
+           burnin = burnin,
+           thin = thin,
+           prior = prior_indiv)
+  }, mc.cores=2)
+  }   
+  return(m_indiv_bayes)
+  }
+
+```
+
+```{r}
+c <- model_ranges_bayes(indiv_data, y_list, indiv_data$mean)
+```
+
+
+
+```{r}
+m_indiv_bayes <- list()
+for(i in names(indiv_data[which(names(indiv_data) %in% c("mean", "median", "max", "coeff_var"))])){
+  m_indiv_bayes[[i]] <- model_ranges_bayes(mydata = indiv_data, y_list, x = indiv_data[,i])
+ # print(model_ranges(mydata = indiv_data, y_list, x = indiv_data[,i]))
+  }
+```
+
+
 
 ```{r}
 ## Numeric variables
@@ -116,8 +168,9 @@ model_ranges <- function(mydata, y_list, x){
 ```{r}
 m_indiv <- list()
 for(i in names(indiv_data[which(names(indiv_data) %in% c("mean", "median", "max", "coeff_var"))])){
- # m_indiv[[i]] <- model_ranges(mydata = indiv_data, y_list, x = indiv_data[,i])
-  print(model_ranges(mydata = indiv_data, y_list, x = indiv_data[,i]))}
+  m_indiv[[i]] <- model_ranges(mydata = indiv_data, y_list, x = indiv_data[,i])
+ # print(model_ranges(mydata = indiv_data, y_list, x = indiv_data[,i]))
+  }
 ```
 
 
@@ -125,11 +178,11 @@ for(i in names(indiv_data[which(names(indiv_data) %in% c("mean", "median", "max"
 par(mfrow = c(2,3))
 
 for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
-  plot(log(mydata[,i]) ~ log(height), data = mydata, main = paste(i), ylab = paste("log", i, sep = " "))
-  abline(m_indiv[["mean"]][[i]], col = "red", lwd = 2)
-  abline(m_indiv[["median"]][[i]], col = "blue", lwd = 2)
-  abline(m_indiv[["max"]][[i]], col = "green", lwd = 2)
-  abline(m_indiv[["coeff_var"]][[i]], col = "purple", lwd = 2)
+  plot(log(mydata[,i]) ~ log(height), data = mydata, main = paste(i), ylab = paste("log", i, sep = " "), col = "grey", bty = "n")
+  abline(m_indiv[["mean"]][[i]], col = "red", lwd = 4)
+  abline(m_indiv[["median"]][[i]], col = "blue", lwd = 4)
+  abline(m_indiv[["max"]][[i]], col = "green", lwd = 4)
+  abline(m_indiv[["coeff_var"]][[i]], col = "purple", lwd = 4)
   }
 
 ```
