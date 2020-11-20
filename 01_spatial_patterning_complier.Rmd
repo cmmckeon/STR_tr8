@@ -189,6 +189,22 @@ for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.sh
 
 
 
+
+```{r}
+par(mfrow = c(2,3))
+
+for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
+  plot(log(mydata[,i]) ~ log(height), data = mydata, main = paste(i), ylab = paste("log", i, sep = " "), col = "grey", bty = "n")
+  print(abline(m_indiv[["mean"]][[i]], col = "red", lwd = 4))
+  abline(m_indiv[["median"]][[i]], col = "blue", lwd = 4)
+  abline(m_indiv[["max"]][[i]], col = "green", lwd = 4)
+  abline(m_indiv[["coeff_var"]][[i]], col = "purple", lwd = 4)
+  }
+
+```
+
+
+
 ```{r}
 m_height <- list()
 #range_metrics <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
