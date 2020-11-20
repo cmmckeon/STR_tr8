@@ -1,8 +1,11 @@
 ## quicker bayes height analysis
 
-for(i in names(indiv_data[which(names(indiv_data) %in% c("mean", "median", "max", "coeff_var"))])){
-  m_indiv_bayes[[i]][["total.area"]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(total.area) ~ log(i),
+
+m_indiv_bayes <- list()
+#for(i in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("mean", "median", "max", "coeff_var"))])){
+
+  m_indiv_bayes[["coeff_var"]][["total.area"]] <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = log(total.area) ~ log(coeff_var),
            random = ~ animal,
            rcov = ~units,
            family= "gaussian",
@@ -14,8 +17,8 @@ for(i in names(indiv_data[which(names(indiv_data) %in% c("mean", "median", "max"
            prior = prior)
 }, mc.cores=2)
 
-m_indiv_bayes[[i]][["prop.landscape"]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(prop.landscape) ~ log(i),
+m_indiv_bayes[["coeff_var"]][["prop.landscape"]] <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = log(prop.landscape) ~ log(coeff_var),
            random = ~ animal,
            rcov = ~units,
            family= "gaussian",
@@ -27,8 +30,8 @@ m_indiv_bayes[[i]][["prop.landscape"]] <-mod_list <- mclapply(1:2, function(i) {
            prior = prior)
 }, mc.cores=2)
 
-m_indiv_bayes[[i]][["perimeter.area.frac.dim"]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(perimeter.area.frac.dim) ~ log(i),
+m_indiv_bayes[["coeff_var"]][["perimeter.area.frac.dim"]] <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = log(perimeter.area.frac.dim) ~ log(coeff_var),
            random = ~ animal,
            rcov = ~units,
            family= "gaussian",
@@ -40,8 +43,8 @@ m_indiv_bayes[[i]][["perimeter.area.frac.dim"]] <-mod_list <- mclapply(1:2, func
            prior = prior)
 }, mc.cores=2)
 
-m_indiv_bayes[[i]][["mean.shape.index"]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(mean.shape.index) ~ log(i),
+m_indiv_bayes[["coeff_var"]][["mean.shape.index"]] <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = log(mean.shape.index) ~ log(coeff_var),
            random = ~ animal,
            rcov = ~units,
            family= "gaussian",
@@ -53,8 +56,8 @@ m_indiv_bayes[[i]][["mean.shape.index"]] <-mod_list <- mclapply(1:2, function(i)
            prior = prior)
 }, mc.cores=2)
 
-m_indiv_bayes[[i]][["effective.mesh.size"]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(effective.mesh.size) ~ log(i),
+m_indiv_bayes[["coeff_var"]][["effective.mesh.size"]] <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = log(effective.mesh.size) ~ log(coeff_var),
            random = ~ animal,
            rcov = ~units,
            family= "gaussian",
@@ -66,8 +69,8 @@ m_indiv_bayes[[i]][["effective.mesh.size"]] <-mod_list <- mclapply(1:2, function
            prior = prior)
 }, mc.cores=2)
 
-m_indiv_bayes[[i]][["range.size"]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(range.size) ~ log(i),
+m_indiv_bayes[["coeff_var"]][["range.size"]] <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = log(range.size) ~ log(coeff_var),
            random = ~ animal,
            rcov = ~units,
            family= "gaussian",
@@ -77,11 +80,12 @@ m_indiv_bayes[[i]][["range.size"]] <-mod_list <- mclapply(1:2, function(i) {
            burnin = burnin,
            thin = thin,
            prior = prior)
-}, mc.cores=2) }
+}, mc.cores=2) 
 
 
 
 save <- m_indiv_bayes
+#saveRDS(m_indiv_bayes, "quick_bayes_height_phylo.rds")
 #m_indiv_bayes[["median"]] <- m_indiv_bayes[["median"]][-7]
 
 par(mfrow = c(2,3))
