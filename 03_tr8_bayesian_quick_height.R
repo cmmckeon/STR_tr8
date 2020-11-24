@@ -116,17 +116,17 @@ comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
 # # ----priors----------------------------------------------------------------------------------------
 prior <- list(R = list(V=1, nu=0.002), 
               G = list(G1 = list(V=1, nu=0.002)))
-prior_indiv  <- list(R = list(V=1, nu=0.002))
+prior_indiv  <- list(R = list(V=1, nu=0.02))
 
 
 print("priors set")
 ## ----parameters-------------------------------------------------------------------------------------
 #no. of interations
-nitt <- c(30000)
+nitt <- c(240000)
 #length of burnin
 burnin <- nitt/6
 #amount of thinning
-thin <- c(12)
+thin <- c(20)
 
 eff_ss <- (nitt-burnin)/thin
 print(c("effect size will be:", eff_ss))
@@ -177,6 +177,9 @@ bay_dia <- function(mod_list){
   #### Diagnositcs ----------------------------
   ## How do the trace plots look?
   allChains <- as.mcmc(cbind(mod_mcmc$Sol,mod_mcmc$VCV))
+  vcChain <- log10(mod_mcmc$VCV)
+  plotTrace(vcChain)
+  plotTrace(allChains)
   
   ## estimates give the mean and the lower and higher 95% credible interval (CI) and effective sample size
   print(summary(mod_mcmc))
