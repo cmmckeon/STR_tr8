@@ -157,7 +157,7 @@ for(i in names(indiv_data[which(names(indiv_data) %in% c("mean", "median", "max"
 ```{r}
 # Numeric variables
 for (i in names(Filter(is.numeric, indiv_data))) {
-  hist(log(indiv_data[,i]),
+  hist((indiv_data[,i]),
        breaks = 3000,
        main = paste(i),
        xlab = paste(i))
