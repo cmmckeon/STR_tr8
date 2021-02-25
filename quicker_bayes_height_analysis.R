@@ -113,7 +113,7 @@ c<- cbind(c[-1,], one)
 par(mfrow = c(2,3), mar=c(4.5,4,2,2), col="black", col.main = "black", col.lab = "black", bg="transparent")
 #par(mfrow = c(2,3), mar=c(4.5,4,2,2), col="white", col.main = "white", col.lab = "white", bg="transparent")
 for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])) {
-   plot(log(mydata[,i]) ~ log(height), data = mydata, col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
+   plot(log(mydata[,i]) ~ log(height), data = mydata, col = "grey", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
         ylab = paste("log(", i, ")", sep = ""), main = paste(i))#, bty = "n")
   abline(c[,1][c$hh== "mean" & c$rr ==i], c[,2][c$hh== "mean" & c$rr ==i], col = "#F0F921FF", lwd = 6)
   abline(c[,1][c$hh== "median" & c$rr ==i], c[,2][c$hh== "median" & c$rr ==i], col = "#CC4678FF", lwd = 6)
