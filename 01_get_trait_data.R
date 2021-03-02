@@ -81,7 +81,7 @@ traits_bien <-readRDS("Data_traits_bien.rds") ## 1867 obs of 13 vars
 
 ## done --------------------
 
-## clean the trait data -------------------------------
+## initial clean the trait data -------------------------------
 
 ## make strings factors
 for (i in names(Filter(is.character, traits_bien))) {
@@ -102,28 +102,55 @@ for (i in names(Filter(is.character, traits_bien))) {
 #        xlab = paste(i))
 # }
 
-#dput(levels(traits_bien$method))
 
 ## just take the columns with species name, trait names and trait value and data collection method. 
 traits_bien <- unique(traits_bien[which(names(traits_bien) %in% c("scrubbed_species_binomial", "trait_name", "trait_value", "unit", "method"))])
 
-## fix ------------
-
-# dput(levels(traits_bien$trait_name))
-# 
-# c("longest whole plant longevity", "maximum whole plant height", 
-#   "maximum whole plant longevity", "seed mass", "whole plant growth form", 
-#   "whole plant growth form diversity", "whole plant height", "whole plant vegetative phenology", 
-#   "whole plant woodiness")
-
-
-# traits_bien$trait_name[traits_bien$trait_name == "longest whole plant longevity"] <- "maximum whole plant longevity"
-# traits_bien$trait_name[traits_bien$trait_name == "whole plant height"] <- "maximum whole plant height"
-# traits_bien <- droplevels(traits_bien)
-
 ## a) drop problem records -------------
 
-## b) consolitrait ---------------
+#dput(levels(traits_bien$method))
+## remove records from experiments
+traits_bien <- droplevels(traits_bien[traits_bien$method %nin% c(#"Heights, measured for 156 of these trees using a Vertex hypsometer, were used to select site indices for each plot, 
+ # and these were used to estimate height of all remaining trees using local allometric equations (Scrinzi, Galvagni & Marzullo 2010).", 
+  "laboratory/greenhouse/garden experiment", "laboratory/greenhouse/garden experiment; rehydration status unknown"),])
+
+## b) consolidate ---------------
+
+dput(levels(traits_bien$trait_name))
+
+traits_bien$trait_name[traits_bien$trait_name == "longest whole plant longevity"] <- "maximum whole plant longevity"
+traits_bien$trait_name[traits_bien$trait_name == "whole plant height"] <- "maximum whole plant height"
+traits_bien <- droplevels(traits_bien)
+
+## traits to use
+traits_bien <- droplevels(traits_bien[traits_bien$trait_name %in% c("leaf area", 
+                                                                     "leaf area per leaf dry mass", 
+                                                                     "leaf dry mass", 
+                                                                     "leaf nitrogen content per leaf area", 
+                                                                     "leaf nitrogen content per leaf dry mass", 
+                                                                     "maximum whole plant height", 
+                                                                     "maximum whole plant longevity", 
+                                                                     "plant flowering begin", 
+                                                                     "seed mass", 
+                                                                     "stem wood density", 
+                                                                     "whole plant growth form",
+                                                                     "whole plant growth form diversity", 
+                                                                     "whole plant vegetative phenology", 
+                                                                     "whole plant woodiness"),])
+
+## traits not used
+# c("leaf life span", 
+#   "leaf carbon content per leaf nitrogen content", 
+#   "leaf dry mass per leaf fresh mass", 
+#   "leaf phosphorus content per leaf area", 
+#   "leaf phosphorus content per leaf dry mass", 
+#   "leaf photosynthetic rate per leaf area", 
+#   "leaf photosynthetic rate per leaf dry mass", 
+#   "leaf stomatal conductance for H2O per leaf area", 
+#   "leaf thickness",   
+#   "vessel lumen area", 
+#   "vessel number")
+
 
 ## TRY -------------
 
@@ -132,7 +159,7 @@ traits_bien <- unique(traits_bien[which(names(traits_bien) %in% c("scrubbed_spec
 ## get species list ------------
 
 ##(Mannually download and) read in TRY species info data (version 5)
-#sp.info_try <- read.csv("Data_try_species_info.csv") ## 279875 obs of 7 vars
+# sp.info_try <- read.csv("Data_try_species_info.csv") ## 279875 obs of 7 vars
 
 ## Get the list of TRY species for which there are range metric data
 # sp.list_TRY <- Reduce(intersect, list(unique(sp.info_try$AccSpeciesName),unique(mydata$Species))) ## species
@@ -148,7 +175,7 @@ sp.list_TRY <- readRDS('Data_sp.list_TRY.rds')
 # Now request data corresponding to these lists from the TRY Dataportal on the website.
 # Then download and read in this data.
 
-trait_info_try <- read.csv("Data_try_trait_info.csv")
+## trait_info_try <- read.csv("Data_try_trait_info.csv")
 # 
 # #Get list of TRY trait codes for traits related to disperal, establishment and persistance
 # trait_info_try <- trait_info_try[trait_info_try$Trait %in% c("Cone (strobilus) dry mass", "Dispersal distance", "Dispersal syndrome", "Dispersal unit appendages", "Dispersal unit dry mass",
@@ -162,56 +189,62 @@ trait_info_try <- read.csv("Data_try_trait_info.csv")
 #   "Seed germination type", 'Seed morphology type', 'Seedbank type', "Species generation overlap", "Species reproduction type", 
 #   'Species strategy type according to Grime', 'Species tolerance to human impact'),]
 # 
+## add leaf traits
+# trait_info_try <- trait_info_try[trait_info_try$Trait %in% c("Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA) petiole, rhachis and midrib excluded", 
+#                                                              "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole excluded",
+#                                                              "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole included",
+#                                                              "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or exclu",
+#                                                              "Leaf nitrogen (N) content per leaf dry mass"),]
 # try_traitIDs <- paste(trait_info_try$TraitID, collapse = ", ") ## 38 traits 
-
-## fix 
-# Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA) petiole, rhachis and midrib excluded	645	645	403
-# 814	3115	Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole excluded	64838	53275	7558
-# 815	3116	Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole included	88490	79896	7068
-# 816	3117	Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or exclu	146315	127020	13101
-# 817	125	Leaf area per leaf fresh mass (specific leaf area (SLA or 1/LMA) based on leaf fresh mass)	13300	12770	743
-# 
-# 
-# 3117	Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or exclu	146315	127020	13101
-# 1033	22	Leaf photosynthesis pathway	143148	62684	37315
-# 985	14	Leaf nitrogen (N) content per leaf dry mass	129895	111855	12238
-# 871	17	Leaf compoundness	115459	30133	57922
-# 3441	Plant biomass and allometry: Leaf mass (dry or fresh) per plant	17069	16907	587
 
 
 ## having downloaded the traits you want for the species you want, read in your TRY trait data
-traits_try <- read.csv('Data_try_traits_tr8.csv')
+# leaf_ts <- read.delim("leaf_traits_13797.txt", quote = "")
+# leaf_ts <- leaf_ts[leaf_ts$TraitName != "",]
+# leaf_ts <- leaf_ts[leaf_ts$AccSpeciesName %in% sp.list_TRY,]
+# leaf_ts <- leaf_ts[, which(names(leaf_ts) != "X")]
+# 
+# traits_try <- read.delim("traits_12610.txt", quote = "")
+# traits_try <- traits_try[traits_try$TraitName != "",]
+# 
+# traits_try <- rbind(traits_try, leaf_ts)
+## save the data
+#saveRDS(traits_try, "Data_traits_try.rds")
+
+## OR
+
+## read in the try trait data csv
+traits_try <- readRDS("Data_traits_try.rds")
+
 
 ## done -----------------------
 
-## clean the trait data -----------------
+## initial clean the trait data -----------------
 
 ## find the overlap in species between try and bien
 #sp.list_TRY_BIEN <- Reduce(intersect, list(unique(traits_bien$scrubbed_species_binomial),unique(traits_try$AccSpeciesName))) ## 168 species 
 sp.list_full_TRY_BIEN <- unique(c(sp.list_TRY, sp.list_BIEN)) ## 473 species
 
-## fix
-## you've to come back and make decisions about which records to exclude based on how they were collected, expertimental data ect. 
+##  records to exclude based on how they were collected, expertimental data ect. 
 
-
-## for now, just take the columns with species name, trait names and trait value. You can come back to this point to look at more of the info if you need to
-traits_try <- unique(traits_try[which(names(traits_try) %in% c("AccSpeciesName", "TraitName", "OrigValueStr"))])
+## take the columns with species name, trait names and trait value and comment. 
+traits_try <- unique(traits_try[which(names(traits_try) %in% c("AccSpeciesName", "Dataset", "ValueKindName", 
+                                                               "TraitName","OriglName", "OrigValueStr", "OrigUnitStr", "Comment", "StdValue"))])
 traits_try <- unique(traits_try[traits_try$TraitName != "",])
 
-## short term subset of bien data
-traits_bien <- unique(traits_bien[which(names(traits_bien) %in% c("scrubbed_species_binomial", "trait_name", "trait_value"))])
-
-names(traits_try) <- c("species", "trait_name", "trait_value")
-names(traits_bien) <- c("species", "trait_name", "trait_value")
-
-
+plot(droplevels(traits_try$Comment[traits_try$Comment != ""]))
+dput(droplevels(traits_try$Comment))
+traits_try$Comment %>% factor(.) %>% table(.) %>% .[order(.)]
 
 ## create trait dataframes ------------------
+names(traits_bien) <- c("species", "trait_name", "trait_value", "unit", "comment")
+names(traits_try) <-c("Dataset", "species", "trait_name", "OriglName", "trait_value", 
+                      "unit", "ValueKindName", "StdValue", "comment")
+traits <- dplyr::bind_rows(traits_try, traits_bien)
 
 ## make one big traits df to tidy
-names(traits_try) <- names(traits_bien)
 traits <- droplevels(rbind(traits_bien, traits_try))
-length(unique(traits$species)) ## 288 species
+length(unique(traits$species)) ## 290 species
 
 ## restructure the dataframe for your own nefarious purposes
 ## create columns for each trait
@@ -238,16 +271,11 @@ for (i in levels(traits$trait_name)){
 #traits <- unique(traits[,which(names(traits) %nin% c("trait_value", "trait_name"))])
 
 ## for maybe if you wanted this list all together in a data frame
-b <- data.frame(unique(traits$species))
-names(b) <- "species"
-for (i in levels(traits$trait_name)){
-  b <- unique(merge(b, traits[,which(names(traits) %in% c('species', i))], by = "species"))
-}
-
-for (i in levels(traits$trait_name)){
-  i <- b[[i]]
-}
-#dput(levels(traits$trait_name))
+# b <- data.frame(unique(traits$species))
+# names(b) <- "species"
+# for (i in levels(traits$trait_name)){
+#   b <- unique(merge(b, traits[,which(names(traits) %in% c('species', i))], by = "species"))
+# }
 
 
 
