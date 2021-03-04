@@ -110,7 +110,7 @@ traits_bien <- unique(traits_bien[which(names(traits_bien) %in% c("scrubbed_spec
 
 #dput(levels(traits_bien$method))
 ## remove records from experiments
-traits_bien <- droplevels(traits_bien[traits_bien$method %nin% c(#"Heights, measured for 156 of these trees using a Vertex hypsometer, were used to select site indices for each plot, 
+traits_bien <- droplevels(traits_bien[traits_bien$method %nin% c("Heights, measured for 156 of these trees using a Vertex hypsometer, were used to select site indices for each plot, 
  # and these were used to estimate height of all remaining trees using local allometric equations (Scrinzi, Galvagni & Marzullo 2010).", 
   "laboratory/greenhouse/garden experiment", "laboratory/greenhouse/garden experiment; rehydration status unknown"),])
 

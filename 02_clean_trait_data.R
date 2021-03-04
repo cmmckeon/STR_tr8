@@ -12,7 +12,7 @@ mydata <- mydata[mydata$trait_value %nin% c("na", "NA", "Na"),]
 mydata <- mydata[mydata$trait_value != "",]
 
 ## group trait categories
-dput(levels(mydata$trait_name))
+#dput(levels(mydata$trait_name))
 
 mydata <- droplevels(mydata[mydata$trait_name %in% c("Seed dry mass","seed mass", "Dispersal unit dry mass", 
   "Plant woodiness", "whole plant woodiness", "Seed (seedbank) longevity", "Seedbank type", "Dispersal syndrome", "Dispersal unit appendages", 
@@ -31,13 +31,13 @@ mydata <- droplevels(mydata[mydata$trait_name %in% c("Seed dry mass","seed mass"
 
 ## drop these levels
 # c("whole plant growth form", "Species tolerance to human impact", 
-#   "Species strategy type according to Grime", 
+#   "Species strategy type according to Grime", "whole plant vegetative phenology",
 #   "Species generation overlap",   "Mycorrhiza type", "leaf dry mass",   
 #    "Plant ontogeny: age of maturity (first flowering)", "plant flowering begin", "Dispersal unit dry mass")
 
 
 ## look at levels
-dput(levels(factor(mydata$unit)))
+#dput(levels(factor(mydata$unit)))
 
 # c("g", "g.cm-3", "kg.m-2", "m", "m2.kg-1", "mg", "mg.g-1", 
 #   "mm2", "month", "", "%", "1/pound", "cm", 
@@ -57,12 +57,12 @@ mydata$unit <- gsub(paste(sub, collapse="|"), "year", mydata$unit)
 ## look at what these values for "plant vegatative height" came in as originally
 #mydata$OriglName %>% factor(.) %>% table(.) %>% .[order(.)]
 
-dput(levels(mydata$OriglName))
+#dput(levels(mydata$OriglName))
 
 ## dropping obviously silly data sources containing miniumum plant height
 mydata <- mydata[mydata$OriglName %nin% c("Height (seedling)", "HEIGHT min",  "Plant height [min]", "Stem length (Height)"),]  
 
-dput(levels(factor(mydata$Dataset)))
+#dput(levels(factor(mydata$Dataset)))
 
 ## drop databases which Ruth excluded on the basis of juvenile trees or experimental treament
 mydata <- mydata %>% subset(., .$Dataset %nin% c("Growth and Herbivory of Juvenil Trees", "The Functional Ecology of Trees (FET) Database  - Jena", 
@@ -97,8 +97,8 @@ mydata$species <- factor(mydata$species)
 ## seedbank ----------------
 bank <- droplevels(mydata[mydata$trait_name %in% c("Seed (seedbank) longevity", "Seedbank type"),])
 
-bank$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
-dput(levels(factor(bank$trait_value)))
+# bank$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
+# dput(levels(factor(bank$trait_value)))
 
 persistent <- c( ">1", "1-5 yrs", "100", "2", "44.44444444", 
   "5", "86.36363636", "long-term persistent", "mid-persistent/unk", 
@@ -114,13 +114,15 @@ bank$trait_value[grep("transient", bank$trait_value)] <- "transient"
 bank$StdValue <- bank$trait_value
 bank$trait_name <- "seed_bank"
 plot(factor(bank$StdValue))
-## clean
+## check for duplicate categories
+#x <- unique(bank[, which(names(bank) %in% c("species", "StdValue"))])
+## clean 
 
 ## dry_Nmass -------------
 dry_Nmass<- droplevels(mydata[mydata$trait_name %in% c("Leaf nitrogen (N) content per leaf dry mass",  "leaf nitrogen content per leaf dry mass"),])
 
-dry_Nmass$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
-dput(levels(factor(dry_Nmass$trait_value)))
+# dry_Nmass$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
+# dput(levels(factor(dry_Nmass$trait_value)))
 dry_Nmass$StdValue[which(is.na(dry_Nmass$StdValue))] <- dry_Nmass$trait_value[which(is.na(dry_Nmass$StdValue))] 
 dry_Nmass$trait_name <- "Nmass_drymass"
 hist(as.numeric(dry_Nmass$StdValue))
@@ -132,8 +134,8 @@ sla <- droplevels(mydata[mydata$trait_name %in% c("Leaf area per leaf dry mass (
                                                   "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded",  
                                                   "leaf area per leaf dry mass"),])
 
-sla$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
-dput(levels(factor(sla$trait_value)))
+# sla$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
+# dput(levels(factor(sla$trait_value)))
 sla$StdValue[which(is.na(sla$StdValue))] <- sla$trait_value[which(is.na(sla$StdValue))] 
 sla$StdValue <- as.numeric(sla$StdValue)
 
@@ -149,8 +151,8 @@ par(mfrow = c(2,2))
 ## woody ------
 woody <- droplevels(mydata[mydata$trait_name %in% c("Plant woodiness", "whole plant woodiness"),])
 
-woody$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
-dput(levels(factor(woody$trait_value)))
+# woody$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
+# dput(levels(factor(woody$trait_value)))
 woody$trait_value <- tolower(woody$trait_value)
 woody$trait_value[grep("h", woody$trait_value, ignore.case = TRUE)] <- "non-woody"
 woody$trait_value[woody$trait_value == "w"] <- "woody"
@@ -158,27 +160,37 @@ woody$trait_value[woody$trait_value == "2" | woody$trait_value == "3"] <- "woody
 woody <- woody[woody$trait_value %in% c("non-woody", "woody"),]
 woody$trait_name <- "woodiness"
 woody$StdValue <- woody$trait_value
-
 plot(factor(woody$StdValue))
-## clean 
+x <- unique(woody[, which(names(woody) %in% c("species", "StdValue"))])
+
+## find species with multiple categories
+f <- c()
+for(i in levels(x$species)){
+  f <- append(f, length(x$species[x$species == i]))
+}
+f <- as.data.frame(cbind(f, levels(x$species)))
+f <- f[f$f != 1,]
+
+y <- x[x$species %in% f$V2,]
+# clean
 
 ## seeds -----------
 seeds <- droplevels(mydata[mydata$trait_name %in% c("Seed dry mass","seed mass"),])
 
-seeds$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
-dput(levels(factor(seeds$trait_value)))
+# seeds$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
+# dput(levels(factor(seeds$trait_value)))
 seeds$StdValue[which(is.na(seeds$StdValue))] <- seeds$trait_value[which(is.na(seeds$StdValue))] 
 seeds <- seeds[seeds$StdValue != "heavy",]
 seeds$StdValue <- as.numeric(seeds$StdValue)
-hist(log(seeds$StdValue))
 seeds$trait_name <- "seed_mass"
+hist(log(seeds$StdValue))
 ## clean
 
 ## height ---------------
 height <- droplevels(mydata[mydata$trait_name %in% c("Plant height generative", "Plant height vegetative", "maximum whole plant height"),])
 
-height$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
-dput(levels(factor(height$StdValue)))
+# height$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
+# dput(levels(factor(height$StdValue)))
 height$StdValue[which(is.na(height$StdValue))] <- height$trait_value[which(is.na(height$StdValue))] 
 ## removed "lower value dash" where a range of values was entered, leaving just the upper value
 dash <- c("[[:digit:]]-","[[:digit:]][[:digit:]]-","[[:digit:]][[:digit:]][[:digit:]]-", "[[:digit:]] - ","[[:digit:]][[:digit:]] - ", "[[:digit:]] -")
@@ -195,16 +207,20 @@ height <- height[height$StdValue %nin% c("herb", 0),]
 height$StdValue <-gsub(",", ".", height$StdValue)
 height$StdValue <- as.numeric(height$StdValue)
 height <- height[which(!is.na(height$StdValue)),]
+height <- height[height$comment %nin% c("0, no seed produced; 1, seed too small to be measured; 2,<0.2 mg; 3, 0.2-0.5 mg; 4,  
+                                        0.5-1.0 mg; 5,  1.0-2.0 mg; 6,  2.0-10.0 mg; 7,  >10 mg"),]
+
 height$StdValue[height$comment %in% c("tofixcm")] <- height$StdValue[height$comment %in% c("tofixcm")]/100
-hist(height$StdValue)
 height$trait_name <- "height"
+hist(log(height$StdValue))
+
 ## clean
 
 ## la ----------
 la <- droplevels(mydata[mydata$trait_name %in% c("leaf area"),])
 
-la$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
-dput(levels(factor(la$trait_value)))
+# la$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
+# dput(levels(factor(la$trait_value)))
 la$trait_value <- as.numeric(la$trait_value)
 la <- la[la$comment != "leaf area x number of leaves",]
 la$StdValue <- la$trait_value
@@ -214,63 +230,133 @@ hist(log(la$StdValue))
 ## Nmass -------------------
 Nmass <- droplevels(mydata[mydata$trait_name %in% c("leaf nitrogen content per leaf area"),])
 
-Nmass$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
-dput(levels(factor(Nmass$trait_value)))
+# Nmass$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
+# dput(levels(factor(Nmass$trait_value)))
 Nmass$StdValue <- Nmass$trait_value
 Nmass$StdValue <- as.numeric(Nmass$StdValue)
 hist(Nmass$StdValue)
 ## clean
 
 
-
-
-
-
-
 ## clonal --------
-clonal <- droplevels(mydata[mydata$trait_name %in% c("Plant propagation type", "Plant reproductive phenology timing", "Plant resprouting capacity", 
-                                                     "Plant vegetative regeneration capacity", "Plant vegetative reproduction: role of clonal growth organ in plant growth", 
-                                                     "Species reproduction type", "whole plant vegetative phenology", "Plant clonal growth form"),])
+## shelving for now, as the information is vey mixed and it's not a key target trait in this proejct anyway
+# clonal <- droplevels(mydata[mydata$trait_name %in% c("Plant propagation type", "Plant reproductive phenology timing", "Plant resprouting capacity", 
+#                                                      "Plant vegetative regeneration capacity", "Plant vegetative reproduction: role of clonal growth organ in plant growth", 
+#                                                      "Species reproduction type",  "Plant clonal growth form"),])
+# 
+# clonal$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
+# dput(levels(factor(clonal$trait_value)))
+# dput(levels(factor(clonal$trait_name)))
 
-clonal$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
-dput(levels(factor(clonal$trait_value)))
 
-
+## dispersal ------------------
 dispersal <- droplevels(mydata[mydata$trait_name %in% c("Dispersal syndrome", "Dispersal unit appendages", 
-                                                        "Dispersal unit type", "Fruit type", "Seed morphology type"),])
+                                                       # "Dispersal unit type", "Fruit type", 
+                                                       "Seed morphology type"),])
+# dispersal$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
+# dput(levels(factor(dispersal$trait_value)))
+dispersal$trait_value <- tolower(dispersal$trait_value)
+dispersal <- dispersal[dispersal$trait_value %nin% c("generative dispersule", "germinule", "disp",
+                                                     "multi-seeded generative dispersule", "one-seeded generative dispersule"),]
+
+dispersal$trait_value[dispersal$trait_name == "Dispersal unit appendages" & dispersal$trait_value == "wings"] <- "wind"
+dispersal$trait_value[dispersal$trait_name == "Dispersal unit appendages" & dispersal$trait_value == "elaiosome"] <- "animal"
+dispersal$trait_value[dispersal$trait_name == "Seed morphology type" & dispersal$trait_value == "elaiosome"] <- "animal"
+
+#levels(factor(dispersal$trait_value[dispersal$trait_name == "Dispersal syndrome"]))
+dispersal$trait_value[grep("anemochory", dispersal$trait_value)] <- "wind"
+animals <- c("animal", "badger", "mammal", "cattle", "deer", "sheep", "roe", "squirrels", "hare","mouse", "Zoochor", "hoarding", "pine marten", "bird",
+             "ant",  "dysochor", "chamois")
+dispersal$trait_value[grep(paste(animals, collapse = "|"), dispersal$trait_value, ignore.case = T)] <- "animal"
+water <- c("water", "nautochor", "bythisochor")
+dispersal$trait_value[grep(paste(water, collapse = "|"), dispersal$trait_value, ignore.case = T)] <- "water"
+wind <- c("meteorochor", "wind")
+dispersal$trait_value[grep(paste(wind, collapse = "|"), dispersal$trait_value, ignore.case = T)] <- "wind"
+
+self <- c("autochor", "ombrochor", "ballochor", "baro", "blastochor", "boleochor", "chamaechor", "unspecialised" ,"unassisted")
+dispersal$trait_value[grep(paste(self, collapse = "|"), dispersal$trait_value, ignore.case = T)] <- "self"
+anthro <- c("hemerochor",  "car", "clothes","speirochor" , "agochor", "man", "commerce", "ethelochor") 
+dispersal$trait_value[grep(paste(anthro, collapse = "|"), dispersal$trait_value, ignore.case = T)] <- "anthro"
+other <- c( "other", "unknown" )
+dispersal$trait_value[grep(paste(other, collapse = "|"), dispersal$trait_value, ignore.case = T)] <- "unknown"
+dispersal$trait_value[dispersal$trait_value == "1"] <- "unknown"
+dispersal$trait_value[dispersal$trait_value == "2" | dispersal$trait_value == "3"] <- "animal"
+
+dispersal <- dispersal[dispersal$trait_value %in% c("animal", "anthro", "self", "water", "wind"),]
+#levels(factor(dispersal$trait_value))
+dispersal$StdValue <- dispersal$trait_value
+dispersal$trait_name <- "dispersal"
+plot(factor(dispersal$StdValue))
+## clean. there are multiple categories per species thought...
 
 
-dispersal$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
-dput(levels(factor(dispersal$trait_value)))
-
+## pollentation ---------------
 pollenation <- droplevels(mydata[mydata$trait_name %in% c("Flower insemination autogamous or xenogamous", 
-                                                          "Flower pollinator and type of reward", "Flower sexual syndrome (dichogamy, cleistogamy, dioecious, monoecious)", 
-                                                          "Pollination syndrome", "Plant mating system"),])
+                                                          "Plant mating system",
+                                                          "Flower pollinator and type of reward", 
+                                                          "Pollination syndrome",
+                                                          "Flower sexual syndrome (dichogamy, cleistogamy, dioecious, monoecious)"),])
+
+
+# selfing <- c("Flower insemination autogamous or xenogamous", 
+#              
+# "Plant mating system",
+# "Flower pollinator and type of reward", 
+# "Pollination syndrome",
+# "Flower sexual syndrome (dichogamy, cleistogamy, dioecious, monoecious)", 
 
 pollenation$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
+pollenation$trait_value %>% factor(.) %>% table(.) %>% .[order(.)]
 dput(levels(factor(pollenation$trait_value)))
 
 
 
 
+check<- droplevels(unique(rbind(bank, dry_Nmass, sla, woody, seeds, height, la, Nmass, dispersal)))
 
-bank$trait_value <-gsub(paste(transient, collapse = "|"), "transient", ignore.case = TRUE, bank$trait_value)
-bank$trait_value[grep(paste(persistent, collapse="|"), bank$trait_value)] <- "persistent"
-
-
-
-check<- rbind(bank, dry_Nmass, sla, woody, seeds, height, la, Nmass)
-check$species <- factor(check$species)
-
-
+check <-check[,which(names(check) %in% c("species", "trait_name", "StdValue", "comment"))]
+check$comment %>% factor(.) %>% table(.) %>% .[order(.)]
+## comments all fine, removal of final problem records inorporated into script above
 
 mydata <- droplevels(unique(mydata))
-
-
-hist((mydata$plant_height), main = "Histogram of plant heights", breaks = 1000)
-
-summary(as.numeric(mydata$plant_height))
-
-traits <- mydata
+# 
+# 
+# hist((mydata$plant_height), main = "Histogram of plant heights", breaks = 1000)
+# 
+# summary(as.numeric(mydata$plant_height))
+# 
+# traits <- mydata
 
 ## the end 
+
+
+## trash code that i haven't thrown out to prevent me needing it again..
+# x <- droplevels(unique(dispersal[, which(names(dispersal) %in% c("species", "trait_name", "StdValue"))]))
+
+# f <- c()
+# for(i in levels(x$species)){
+#   f <- append(f, length(x$species[x$species == i]))
+# }
+# f <- as.data.frame(cbind(f, levels(x$species)))
+# f <- f[f$f != 1,]
+# 
+# y <- x[x$species %in% f$V2,]
+# 
+# x$tag[x$species %in% f$V2 & x$StdValue == "anthro"] <- "double"
+# x$tag <- factor(x$tag)
+# x <- x[x$tag %nin% c("double"),]
+# 
+# f <- c()
+# for(i in levels(x$species)){
+#   f <- append(f, length(x$species[x$species == i]))
+# }
+# f <- as.data.frame(cbind(f, levels(x$species)))
+# f <- f[f$f != 1,]
+# 
+# y <- x[x$species %in% f$V2,]
+# 
+# dispersal <- dispersal[dispersal$species %nin% f$V2 & dispersal$StdValue != "anthro",]
+# 
+# dispersal <- dispersal %>%  .[]
+
+
