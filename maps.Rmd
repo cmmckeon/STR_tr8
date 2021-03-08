@@ -1,0 +1,123 @@
+---
+title: "maps"
+author: "Caroline McKeon"
+date: "3/7/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(sjPlot)
+library(rnaturalearth)
+library(sp)
+library(sf)
+library(raster)
+library(viridis)
+# blank theme
+set_theme(
+  base = theme_classic(),
+  axis.title.size = 2,
+  axis.textsize = 1.2,
+  legend.size = 2,
+  legend.title.size = 2,
+  geom.label.size = 3,
+  plot.margin = margin(3, 5, 1, 5, "pt")
+)
+```
+
+
+```{r}
+# PR <- readRDS("~/OneDrive/PhD/PREDICTS/PREDICTS_Data/Data_ModelDF.rds")
+# PR <- PR[PR$Region == "Europe",]
+# PR <- PR[, which(names(PR) %in% c("Longitude", "Latitude", "Region", "Diversity_metric"))]
+# #names(PR) <- c("x", "y","region", "occ")
+# 
+# # pr <- raster(PR)
+# # PR <- reproject_coordinates(PR, col_long = "Longitude", col_lat = "Latitude",
+# #  # crs_input = sp_crs1, 
+# #   crs_output = sp_crs)
+
+hf  <- raster("~/OneDrive/PhD/PREDICTS/PREDICTS_Data/Data_wildareas-v3-2009-human-footprint-geotiff/wildareas-v3-2009-human-footprint.tif")
+# proj4string(hf) <- "+init=epsg:3035"
+# j <- extract(hf)
+# sp_crs <- CRS("+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +no_defs ")
+# sp_crs <- crs("+init=epsg:3035")
+# hf  <- projectRaster(hf, crs = sp_crs)
+
+# crsInfo <- slot(hf, "crs")
+# slot(crsInfo, "projargs") <- paste0(slot(crsInfo, "projargs"), " +datum=GRS80")
+# slot(hf, "crs") <- crsInfo
+
+plot(hf)
+pal <- colorRampPalette(c('#0C276C', '#3B9088', '#EEFF00', '#ffffff'))
+hf_map <- calc(hf, fun=function(x){ x[x > 100] <- NA; return(x)} )
+par(bty = "n", mar=c(0.02,0.02,2,0.2))
+plot(hf_map, col = pal(50), main = "Human footprint 2009", yaxt="n", xaxt="n")
+
+
+```
+
+```{r}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+Europe <- world[which(world$continent == "Europe"),]
+#WorldData <- map_data('world')
+# ggplot(WorldData, aes(x=long, y=lat)) +
+#   geom_map(data=WorldData, map=WorldData,
+#            aes(x=long, y=lat, map_id=region),
+#            fill="lightgrey", colour="lightgrey")+
+#  # geom_polygon(fill="lightgray", colour = "white")#+ #, size=0.5)+
+#   geom_point(data=PR, aes(x=Longitude, y=Latitude), size=0.9, colour="red")
+# 
+
+
+```
+```{r}
+# WorldData <- map_data('world')
+# ggplot(WorldData, aes(x=long, y=lat)) +
+#   geom_map(data=WorldData, map=WorldData,
+#            aes(x=long, y=lat, map_id=region),
+#            fill="white", colour="#7f7f7f")+ #, size=0.5)+
+#   geom_point(data=PR, aes(x=Longitude, y=Latitude), size=0.9, colour="red")
+
+```
+
+
+```{r}
+ggplot(data = world) +
+    geom_sf(fill="lightgrey", colour="lightgrey") +
+    coord_sf(crs = "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80  +units=m +no_defs")
+
+ggplot(data = Europe, aes(fill="grey", colour="grey")) +
+    geom_sf(fill="lightgrey", colour="lightgrey") +
+    coord_sf(crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs ") +
+   theme_void()
+```
+
+
+
+```{r}
+# test_spdf <- as(hf, "SpatialPixelsDataFrame")
+# test_df <- as.data.frame(test_spdf)
+# colnames(test_df) <- c("value", "x", "y")
+# 
+# ggplot() +  
+#   geom_tile(data=test_df, aes(x=x, y=y, fill=value), alpha=0.8) + 
+#   geom_polygon(data=OR, aes(x=long, y=lat, group=group), 
+#                fill=NA, color="grey50", size=0.25) +
+#   scale_fill_viridis() +
+#   coord_equal() +
+#   theme_map() +
+#   theme(legend.position="bottom") +
+#   theme(legend.key.width=unit(2, "cm"))
+```
+
+
+
+
+
+
+
+
+
+
