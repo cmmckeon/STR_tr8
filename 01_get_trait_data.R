@@ -236,68 +236,19 @@ plot(droplevels(traits_try$Comment[traits_try$Comment != ""]))
 dput(droplevels(traits_try$Comment))
 traits_try$Comment %>% factor(.) %>% table(.) %>% .[order(.)]
 
+
+
+
 ## create trait dataframes ------------------
 names(traits_bien) <- c("species", "trait_name", "trait_value", "unit", "comment")
-names(traits_try) <-c("Dataset", "species", "trait_name", "OriglName", "trait_value", 
+names(traits_try) <-c("Dataset", "species", "trait_name", "OriglName", "trait_value",
                       "unit", "ValueKindName", "StdValue", "comment")
-traits <- dplyr::bind_rows(traits_try, traits_bien)
-
-## make one big traits df to tidy
-traits <- droplevels(rbind(traits_bien, traits_try))
-length(unique(traits$species)) ## 290 species
-
-## restructure the dataframe for your own nefarious purposes
-## create columns for each trait
-for (i in levels(traits$trait_name)){
-  traits[,i] <- factor(NA) 
-  levels(traits[,i]) <- levels(traits$trait_value)
-  }
-
-## populate the columns with values for that trait
-for (i in levels(traits$trait_name)){
-  traits[,i][traits$trait_name == i] <- traits$trait_value[traits$trait_name == i]
-}
-
-## create list of dataframes of species values for single traits
-x <- list()
-for (i in levels(traits$trait_name)){
-  x[[i]] <- droplevels(unique(traits[,which(names(traits) %in% c('species', i))][which(!is.na(traits[,i])),], 
-                              by = "species"))
-}
+traits <- dplyr::bind_rows(traits_try, traits_bien) ## 16325 obs of 9 vars
 
 ## done --------------------
 
 
-#traits <- unique(traits[,which(names(traits) %nin% c("trait_value", "trait_name"))])
-
-## for maybe if you wanted this list all together in a data frame
-# b <- data.frame(unique(traits$species))
-# names(b) <- "species"
-# for (i in levels(traits$trait_name)){
-#   b <- unique(merge(b, traits[,which(names(traits) %in% c('species', i))], by = "species"))
-# }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+## Finished
 
 
 

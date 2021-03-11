@@ -1,4 +1,7 @@
+## 02_clean_trait_data
 ## cleaning TRY and BIEN trait data
+## Feburary 2021
+## Caroline McKeon
 
 ## having looked at Dr Ruth Kelly's detailed cleaning notes, I will take a rule based exclusion approach to data from plants that are:
 ## juvenile, manipulated or unhealthy.
@@ -138,6 +141,7 @@ sla <- droplevels(mydata[mydata$trait_name %in% c("Leaf area per leaf dry mass (
 # dput(levels(factor(sla$trait_value)))
 sla$StdValue[which(is.na(sla$StdValue))] <- sla$trait_value[which(is.na(sla$StdValue))] 
 sla$StdValue <- as.numeric(sla$StdValue)
+sla$trait_name <- "sla"
 
 par(mfrow = c(2,2))
 # hist(sla$StdValue[sla$trait_name == "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole included"])
@@ -225,6 +229,7 @@ la$trait_value <- as.numeric(la$trait_value)
 la <- la[la$comment != "leaf area x number of leaves",]
 la$StdValue <- la$trait_value
 hist(log(la$StdValue))
+la$trait_name <- "leaf_area"
 ## clean
 
 ## Nmass -------------------
@@ -312,51 +317,57 @@ dput(levels(factor(pollenation$trait_value)))
 
 
 
-check<- droplevels(unique(rbind(bank, dry_Nmass, sla, woody, seeds, height, la, Nmass, dispersal)))
+check<- droplevels(unique(rbind(height, la, seeds, sla, woody)))
 
 check <-check[,which(names(check) %in% c("species", "trait_name", "StdValue", "comment"))]
 check$comment %>% factor(.) %>% table(.) %>% .[order(.)]
 ## comments all fine, removal of final problem records inorporated into script above
+check <-check[,which(names(check) %in% c("species", "trait_name", "StdValue"))]
 
-mydata <- droplevels(unique(mydata))
-# 
-# 
-# hist((mydata$plant_height), main = "Histogram of plant heights", breaks = 1000)
-# 
-# summary(as.numeric(mydata$plant_height))
-# 
-# traits <- mydata
+lifeform <- readRDS("~/OneDrive/PhD/PREDICTS/PREDICTS_Data/Data_lifeform.rds")
+lifeform$AccSpeciesName <- as.character(lifeform$AccSpeciesName)
+lifeform <- as.data.frame(cbind(lifeform$AccSpeciesName, c(1:length(lifeform$raunk_lf)), lifeform$raunk_lf))
+names(lifeform) <- c("species", "trait_name", "StdValue")
+lifeform$trait_name <- as.character(lifeform$trait_name)
+lifeform$trait_name <- "lifeform"
+
+lifeform <- lifeform[lifeform$species %in% sp.list_full_TRY_BIEN,]
+
+check <- rbind(check, lifeform)
+mydata <- droplevels(unique(check))
+length(unique(mydata$species))
+mydata$trait_name <- factor(mydata$trait_name)
+
+list <- c()
+for (i in names(mydata)){
+  list[i] <-length(which(is.na(mydata[,i])))
+}
+print(list)
+
+mydata <- drop_na(mydata)
+
+## make one big traits df to tidy
+
+## restructure the dataframe for your own nefarious purposes
+## create columns for each trait
+for (i in levels(mydata$trait_name)){
+  mydata[,i] <- as.character(NA)
+}
+
+## populate the columns with values for that trait
+for (i in levels(mydata$trait_name)){
+  print(i)
+  mydata[,i][mydata$trait_name == i] <- mydata$StdValue[mydata$trait_name == i]
+}
+
+## create list of dataframes of species values for single traits
+x <- list()
+for (i in levels(mydata$trait_name)){
+  x[[i]] <- droplevels(unique(mydata[,which(names(mydata) %in% c('species', i))][which(!is.na(mydata[,i])),],
+                              by = "species"))
+}
 
 ## the end 
 
-
-## trash code that i haven't thrown out to prevent me needing it again..
-# x <- droplevels(unique(dispersal[, which(names(dispersal) %in% c("species", "trait_name", "StdValue"))]))
-
-# f <- c()
-# for(i in levels(x$species)){
-#   f <- append(f, length(x$species[x$species == i]))
-# }
-# f <- as.data.frame(cbind(f, levels(x$species)))
-# f <- f[f$f != 1,]
-# 
-# y <- x[x$species %in% f$V2,]
-# 
-# x$tag[x$species %in% f$V2 & x$StdValue == "anthro"] <- "double"
-# x$tag <- factor(x$tag)
-# x <- x[x$tag %nin% c("double"),]
-# 
-# f <- c()
-# for(i in levels(x$species)){
-#   f <- append(f, length(x$species[x$species == i]))
-# }
-# f <- as.data.frame(cbind(f, levels(x$species)))
-# f <- f[f$f != 1,]
-# 
-# y <- x[x$species %in% f$V2,]
-# 
-# dispersal <- dispersal[dispersal$species %nin% f$V2 & dispersal$StdValue != "anthro",]
-# 
-# dispersal <- dispersal %>%  .[]
 
 

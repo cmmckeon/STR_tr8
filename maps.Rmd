@@ -2,7 +2,9 @@
 title: "maps"
 author: "Caroline McKeon"
 date: "3/7/2021"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -24,6 +26,7 @@ set_theme(
   geom.label.size = 3,
   plot.margin = margin(3, 5, 1, 5, "pt")
 )
+knitr::opts_chunk$set(fig.width=30, fig.height=20) 
 ```
 
 
@@ -33,7 +36,7 @@ world <- rnaturalearth::countries110
 europe <- world[world$region_un=="Europe"&world$name!='Russia',]
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 # PR <- readRDS("~/OneDrive/PhD/PREDICTS/PREDICTS_Data/Data_ModelDF.rds")
 # PR <- PR[PR$Region == "Europe",]
 # PR <- PR[, which(names(PR) %in% c("Longitude", "Latitude", "Region", "Diversity_metric"))]
@@ -63,7 +66,7 @@ plot(hf_map, col = pal(50), main = "Human footprint 2009", yaxt="n", xaxt="n")
 
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 mat <-raster('~/OneDrive/PhD/PREDICTS/PREDICTS_Data/bio1.bil')
 hf_mat <- projectRaster(hf, mat)
 e <- extent(-3000000,5000000,3000000,9000000)
@@ -80,7 +83,7 @@ plot(hf_map, col = pal(50), main = "Human footprint 2009", yaxt="n", xaxt="n")
 ```
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 
 #aggregate from resolution to 120x120 (factor = 3)
 h <- aggregate(hf_map, fact=10)
@@ -98,7 +101,8 @@ j$layer[j$layer == 301] <- 1
 ```{r}
 world <- ne_countries(scale = "medium", returnclass = "sf")
 Europe <- world[which(world$continent == "Europe"),]
-europe <- world[world$region_un=="Europe"&world$name!='Russia',]
+europe <- world[world$region_un=="Europe" & world$name!='Russia' & world$name!='French ',]
+
 #WorldData <- map_data('world')
 # ggplot(WorldData, aes(x=long, y=lat)) +
 #   geom_map(data=WorldData, map=WorldData,
@@ -121,17 +125,21 @@ europe <- world[world$region_un=="Europe"&world$name!='Russia',]
 ```
 
 
+
+
 ```{r}
 # ggplot(data = world) +
 #     geom_sf(fill="lightgrey", colour="lightgrey") +
 #     coord_sf(crs = "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80  +units=m +no_defs")
 
-ggplot(data = europe, aes(fill="grey", colour="grey")) +
-    geom_sf(fill="lightgrey", colour="lightgrey") +
+ggplot(data = Europe, aes(fill="grey", colour="grey")) +
+    geom_sf(fill="lightgrey", colour="grey") +
     coord_sf(crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs ")+
+  theme_void()
  # geom_point(data=j[j$layer == 1,], aes(x=x, y=y), size=0.1, colour="red")+
- geom_point(data=j[j$layer==2,], aes(x=x, y=y), size=0.1, colour="blue")+theme_void()
+# geom_point(data=j[j$layer==2,], aes(x=x, y=y), size=0.1, colour="blue")+
  #  geom_point(data=j[j$layer == 3,], aes(x=x, y=y), size=0.1, colour="yellow")
+
 ```
 
 

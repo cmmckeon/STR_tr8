@@ -31,7 +31,7 @@ knitr::opts_chunk$set(fig.width=16, fig.height=10)
 
 read in species range metrics.
 ```{r}
-mydata <- read.csv("Data_range_metrics.csv") ## for now this is the updated metrics as calculated by Anna Csergo in spring 2019
+metrics <- read.csv("Data_range_metrics.csv") ## for now this is the updated metrics as calculated by Anna Csergo in spring 2019
 ```
 
 Get TRY and BIEN trait data
@@ -39,6 +39,79 @@ Get TRY and BIEN trait data
 source("01_get_trait_data.R")
 ```
 
+Clean and collate trait data
+```{r}
+source("02_clean_trait_data.R")
+```
+
+
+Calculate summary stats for continuous traits
+```{r}
+cont <- c("height", "leaf_area", "seed_mass", "sla")
+## get the single values for each species
+for(j in cont){
+  a <- x[[j]]
+  a[,2] <- as.numeric(a[,2])
+  
+  for(i in levels(a$species)){
+  a$mean[a$species == i] <- mean(a[,2][a$species == i])
+  a$median[a$species == i] <- median(a[,2][a$species == i])
+  a$max[a$species == i] <- max(a[,2][a$species == i])
+  a$coeff_var[a$species == i] <- (sd(a[,2][a$species == i])/mean(a[,2][a$species == i]))*100
+  }
+  
+  x[[j]] <- unique(a[,-2])
+}
+
+```
+
+Extract each dataset
+```{r}
+height <- x[["height"]] ## 195 species
+leaf_area <- x[["leaf_area"]] ## 41 speceis
+lifeform <- x[["lifeform"]] ## 165 species
+seed_mass <- x[["seed_mass"]] ## 96 species
+sla <- x[["sla"]] ## 86 species
+woodiness <- x[["woodiness"]] ## 238 species
+```
+
+
+```{r}
+stat <- c("mean","median", "max", "coeff_var")
+par(mfrow = c(4,4))
+  for(j in stat){
+for(i in cont){
+
+    hist(log(x[[i]][,j]), main = paste(i,j), xlab = paste("log",j), cex = 0.2, breaks = 50)
+}}
+```
+
+
+```{r}
+par(mfrow = c(1,2))
+plot(factor(lifeform$lifeform))
+plot(factor(woodiness$woodiness))
+```
+
+Look at overlap in species between trait datasets
+```{r}
+## for maybe if you wanted this list all together in a data frame
+# b <- data.frame(unique(mydata$species))
+# names(b) <- "species"
+# # for (i in levels(mydata$trait_name)){
+# #   b <- unique(merge(b, mydata[,which(names(mydata) %in% c('species', i))], by = "species"))
+# # }
+# 
+# b <- unique(merge(woodiness, lifeform, by = "species"))
+# b <- unique(merge(b, height, by = "species"))
+# b <- unique(merge(b, seed_mass, by = "species"))
+# b <- unique(merge(b, sla, by = "species"))
+# b <- unique(merge(b, leaf_area, by = "species"))
+# b <- drop_na(b)
+```
+
+
+## clean but not tidy as far as here.
 
 ```{r}
 ## quick height analysis
@@ -57,27 +130,14 @@ height <- unique(drop_na(droplevels(height)))
 hist(log(height$height))
 length(unique(height$species)) ## 195 speceis
 ## just get the quick height analysis species
+
 metrics <- metrics[metrics$Species %in% levels(height$species) & metrics$Model == "Occurrence",]
-hist(log(metrics$total.area))
-metrics <- unique(metrics[, which(names(metrics) %in% c("Species", "effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])
+metrics <- unique(metrics[, which(names(metrics) %in% 
+                                    c("Species", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
+                                      "total.area", "perimeter.area.frac.dim", "range.size"))])
 mydata <- unique(merge(metrics, height, by.x = "Species", by.y = "species", all.x = T))
 mydata$range.size <- as.numeric(mydata$range.size)
 mydata <- mydata[mydata$height != 0,]
-```
-
-```{r}
-mydata <- drop_na(mydata)
-## get the single values for each species
-for(i in levels(mydata$Species)){
- # print(i)
-  mydata$mean[mydata$Species == i] <- mean(mydata$height[mydata$Species == i])
-  mydata$median[mydata$Species == i] <- median(mydata$height[mydata$Species == i])
-  mydata$max[mydata$Species == i] <- max(mydata$height[mydata$Species == i])
-  mydata$coeff_var[mydata$Species == i] <- (sd(mydata$height[mydata$Species == i])/mean(mydata$height[mydata$Species == i]))*100
-}
-
-indiv_data <- unique(mydata[, which(names(mydata) != "height")])
-
 ```
 
 
@@ -392,39 +452,9 @@ mydata <- unique(mydata[, which(names(mydata) %in% c("Species", "Model", "class"
 ```
 
 
-visually investigate the data
-```{r}
-## Factors
-G
-for (i in names(Filter(is.factor, mydata))) {
-  plot(mydata[,i], 
-       main = paste(i))
-}
-
-## Numeric variables
-for (i in names(Filter(is.numeric, mydata))) {
-  hist(mydata[,i], 
-       breaks = 3000, 
-       main = paste(i), 
-       xlab = paste(i))
-}
-```
 
 
 ## Analysis
-
-```{r}
-m0 <- glmmTMB(log(total.area) ~ 1 + (1|Species), data = mydata)
-summary(m0)
-
-d <-scale(mydata$canopy_height)
-hist(mydata$canopy_height)
-hist(d)
-m1 <-glmmTMB(log(total.area) ~ log((canopy_height+0.001)) + (1|Species), data = mydata)
-summary(m1)
-plot(log(total.area) ~ log((canopy_height)+0.001), data = mydata)
-```
-
 
 
 
