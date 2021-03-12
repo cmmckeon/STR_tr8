@@ -18,7 +18,7 @@ print("This is the bayesian bivariate script")
 
 ## read in and handle data-------------------------------------------------------------------------------------------------------------------------------
 
-mcmc_data <- mydata
+mcmc_data <- height
 mcmc_data$animal <- mcmc_data$species
 
 ## create comparative dataset
@@ -28,7 +28,8 @@ comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
 #' R (residual terms) and G (random terms which we will come to later).
 #' 
 # # ----priors----------------------------------------------------------------------------------------
-prior <- list(R = list(V=1, nu=0.002))
+prior <- list(R = list(V=1, nu=0.002), 
+              G = list(G1 = list(V=1, nu=0.002)))
 
 print("priors set")
 ## ----parameters-------------------------------------------------------------------------------------
@@ -44,26 +45,15 @@ print(c("effect size will be:", eff_ss))
 print("parameters set")
 ## ----forumla---------------------------------------------------------------------------------
 ##
-formula_a <- log(total.area) ~ log(height.max)
+formula_a <- log(total.area) ~ log(height_max)
 print("Formula set")
 
 ## ----MCMCglmm_run---------------------------------------------------------------------------------
 print("beginning running mod_mcmc")
 
-m <-  MCMCglmm(fixed = formula_a,
-               #  random= ~ animal,
-               rcov = ~units,
-               family= "gaussian",
-               pedigree = comp_data$tree,
-               data = comp_data$data,
-               nitt = nitt,
-               burnin = burnin,
-               thin = thin,
-               prior = prior)
-
 mod_list <- mclapply(1:2, function(i) {
   MCMCglmm(fixed = formula_a,
-         #  random= ~ animal,
+           random= ~ animal,
            rcov = ~units,
            family= "gaussian",
            pedigree = comp_data$tree,
@@ -96,7 +86,7 @@ bay_dia <- function(mod_list){
   # Variance cannot be zero, and therefore if the mean value is pushed up against zero your effect is not significant
   # The larger the spread of the histogram, the less well estimated the distribution is.
   par(mfrow=c(2,2))
-  hist(mcmc(mod_mcmc$VCV)[,"species"]) ## very 
+  hist(mcmc(mod_mcmc$VCV)) ## very 
   hist(mcmc(mod_mcmc$VCV)[,"units"]) ## not as significant
   
   ## plot the fist fixed term, the intercpet.
@@ -123,7 +113,7 @@ bay_dia <- function(mod_list){
   ## look at the autocorrelation values for all of the fixed effects terms
   x <- autocorr.diag(mod_mcmc$Sol, lag = 1)
   x <-as.data.frame(t(x))
-  hist(x$'Lag 12')
+  hist(x$'Lag 20')
   
   ## random effects autocorrelation
   autocorr.diag(mod_mcmc$VCV, lag = 1)
@@ -154,7 +144,7 @@ sum <- as.data.frame(summary(mod_mcmc)[["solutions"]])
 sum <- setDT(sum, keep.rownames = TRUE)[]
 
 par(mfrow = c(1,1))
-plot(log(total.area) ~ log(height), data = mydata)
+plot((total.area) ~ log(height_max), data = height)
 abline(sum$post.mean[1], sum$post.mean[2])
 
 ###---Finished-----------------------------

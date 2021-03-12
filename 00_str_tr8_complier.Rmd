@@ -102,11 +102,6 @@ names(metrics) <- c("species", "effective.mesh.size", "mean.shape.index", "prop.
                                       "total.area", "perimeter.area.frac.dim", "range.size")
 ```
 
-Look at metrics
-```{r}
-
-```
-
 
 Calculate summary stats for continuous traits
 ```{r}
@@ -159,7 +154,7 @@ b <- data.frame(unique(mydata$species))
 names(b) <- "species"
 for (i in cont){
   b <- merge(b, x[[i]][,which(names(x[[i]]) %in% c('species', "max"))], by = "species", all.x = T); 
-  names(b)[names(b) == 'max'] <- paste(i, "max", collapse = "_") 
+  names(b)[names(b) == 'max'] <- paste(i, "max", sep = "_") 
 }
 for (i in c("lifeform", "woodiness")){
   b <- merge(b, x[[i]], by = "species", all.x = T)
@@ -172,11 +167,51 @@ mydata$lifeform <- factor(mydata$lifeform)
 levels(mydata$species) <- gsub(" ", "_", levels(mydata$species))
 ```
 
+```{r}
+## Quick look at model dataframe
+## Factors
+for (i in names(Filter(is.factor, mydata))) {
+  plot(mydata[,i],
+       main = paste(i))
+}
+
+## Numeric variables
+for (i in names(Filter(is.numeric, mydata))) {
+  hist(log(mydata[,i]),
+       breaks = 3000,
+       main = paste(i),
+       xlab = paste(i))
+}
+```
+
 Set up phlyogeny
 ```{r}
 if(!exists("clean_tree")) {
   try(clean_tree <- read.tree("Data_str_clean_tree.tre"))
   } else source("03_clean_phylogeny.R")
+```
+
+Set up individual datasets for analysis
+```{r}
+## Extract each dataset
+height <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "total.area", "perimeter.area.frac.dim", 
+                                                      "range.size", "height_max"))]))
+leaf_area <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "total.area", "perimeter.area.frac.dim", 
+                                                      "range.size", "leaf_area_max"))]))
+lifeform <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "total.area", "perimeter.area.frac.dim", 
+                                                      "range.size", "lifeform"))]))
+seed_mass <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "total.area", "perimeter.area.frac.dim", 
+                                                      "range.size", "seed_mass_max"))]))
+sla <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "total.area", "perimeter.area.frac.dim", 
+                                                      "range.size", "sla_max"))]))
+woodiness <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "total.area", "perimeter.area.frac.dim", 
+                                                      "range.size", "woodiness_max"))]))
 ```
 
 
