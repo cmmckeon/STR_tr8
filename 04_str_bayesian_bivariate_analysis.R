@@ -1,5 +1,5 @@
 #' ---
-#' title: "03_bayesian_quick_height"
+#' title: "04_str_bayesian_bivariate_analysis"
 #' author: "adapted by Caroline McKeon from script by Kevin Healy"
 #' date: ' ANovember 2020'
 #' ---
@@ -11,113 +11,24 @@
 #' https://groups.nceas.ucsb.edu/non-linear-modeling/projects/owls/WRITEUP/owls.pdf/@@download
 #'  
 
-print("This is the bayesian quick height script")
-
-## install packages needed
-# install.packages(c("tidyverse", "raster", "rgdal", "RColorBrewer",
-#                    "MCMCglmm", "lme4", 'invgamma', "mulTree", "ape", 
-#                    "phytools", "caper","maps", "dismo", "coda", "hdrcde",
-#                    "snow", "ape", "corpcor", "curl"),
-#                  repos="https://cloud.r-project.org/")
-
+print("This is the bayesian bivariate script")
 
 ## set up ###################
-library(tidyverse)
-library(MCMCglmm)
-library(lme4)
-library(invgamma)
-library(glmmTMB)
-library(mulTree)
-library(phytools)
-library(doParallel)
-library(optimx) 
-library(tidyverse)
-library(MCMCglmm)
-library(lme4)
-library(glmmTMB)
-library(invgamma)
-library(mulTree)
-library(phytools)
-library(doParallel)
-library(runjags)
-library(plotMCMC)
-library(coda)
-library(tidybayes)
-library(emmeans)
-library(boot)
-library(sjPlot)
-library(effects)
-library(ggridges)
-library(ggeffects)
-library(cowplot)
-library(gridExtra)
-library(MuMIn)
-library(LaplacesDemon)
-library("kableExtra")
-library(ggpubr)
-library(data.table)
-library(gridBase)
-library(viridis)
-library(ggplot2)
 
-## create "not in" operator
-'%nin%' = Negate('%in%')
-## create logit transformation function
-logitTransform <- function(x) { log(x/(1-x)) }
 
 ## read in and handle data-------------------------------------------------------------------------------------------------------------------------------
 
-## handle model dataframe to get just percent cover data, with species levels in the right format
-tip_labels <- as.character(treefile$tip.label) ## 356305 species (well, tipes..)
-
-# ## get species names in the right format to match with those in phylogenetic trees
-levels(mydata$Species) <- gsub(" ", "_", levels(mydata$Species))
-levels(indiv_data$Species) <- gsub(" ", "_", levels(indiv_data$Species))
-
-#### drop unused species from phylogeny 
-omit_spe <- as.character(setdiff(treefile$tip.label, unique(mydata$Species)))
-clean_tree <- drop.tip(treefile, omit_spe)
-
-## label nodes
-clean_tree$node.label <- c(1:length(clean_tree$node.label))  
-
-## make tree ultrametric
-clean_tree <- nnls.tree(cophenetic(clean_tree),clean_tree,rooted=TRUE)
-## "RSS: 0.574181455739743"
-
-#### check trees similarity this should equal 1
-tips<-clean_tree$tip.label
-cor(as.vector(cophenetic(clean_tree)[tips,tips]),
-    as.vector(cophenetic(clean_tree)[tips,tips]))
-### 1
-
-clean_tips <- as.character(clean_tree$tip.label)
-
-
-mcmc_data <- indiv_data
-mcmc_data$animal <- mcmc_data$Species
-
-mcmc_data$animal <- mcmc_data$Species
+mcmc_data <- mydata
+mcmc_data$animal <- mcmc_data$species
 
 ## create comparative dataset
 comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
 
-
-#' Since we are using a Bayesian approach we will need to set up the priors. 
-#' In most cases we want to use a non-informative prior that doesn’t influence the estimated posterior distribution. 
-#' We are basically saying that we don't know anything about the expected values for our parameters. 
-#' That is, we have no prior information.
-#' 
 #' To give priors for MCMCglmm we need to make an object that is in a list format that includes terms of B (fixed effect), 
 #' R (residual terms) and G (random terms which we will come to later).
-
-### PRECENT COVER MODEL--------------------
-
+#' 
 # # ----priors----------------------------------------------------------------------------------------
-prior <- list(R = list(V=1, nu=0.002), 
-              G = list(G1 = list(V=1, nu=0.002)))
-prior_indiv  <- list(R = list(V=1, nu=0.02))
-
+prior <- list(R = list(V=1, nu=0.002))
 
 print("priors set")
 ## ----parameters-------------------------------------------------------------------------------------
@@ -133,26 +44,23 @@ print(c("effect size will be:", eff_ss))
 print("parameters set")
 ## ----forumla---------------------------------------------------------------------------------
 ##
-formula_a <- log(total.area) ~ log(mean)
+formula_a <- log(total.area) ~ log(height.max)
 print("Formula set")
 
 ## ----MCMCglmm_run---------------------------------------------------------------------------------
 print("beginning running mod_mcmc")
 
-#  print("bayesian quick height model with no phylogeny")
-# mod_mcmc_pc <- mclapply(1:2, function(i) {
-#   mod_mcmc_glm <- MCMCglmm(fixed =  log(total.area) ~ log(mean),
-#                            family="gaussian",
-#                            data = indiv_data,
-#                            nitt = nitt,
-#                            burnin = burnin,
-#                            thin = thin,
-#                            prior = prior_indiv)
-#   }, mc.cores=2)
+m <-  MCMCglmm(fixed = formula_a,
+               #  random= ~ animal,
+               rcov = ~units,
+               family= "gaussian",
+               pedigree = comp_data$tree,
+               data = comp_data$data,
+               nitt = nitt,
+               burnin = burnin,
+               thin = thin,
+               prior = prior)
 
-
-
-## print("bayesian percent cover model with phylogeny)
 mod_list <- mclapply(1:2, function(i) {
   MCMCglmm(fixed = formula_a,
          #  random= ~ animal,
@@ -163,7 +71,7 @@ mod_list <- mclapply(1:2, function(i) {
            nitt = nitt,
            burnin = burnin,
            thin = thin,
-           prior = prior_indiv)
+           prior = prior)
 }, mc.cores=2)
 
 print("end")
@@ -188,7 +96,7 @@ bay_dia <- function(mod_list){
   # Variance cannot be zero, and therefore if the mean value is pushed up against zero your effect is not significant
   # The larger the spread of the histogram, the less well estimated the distribution is.
   par(mfrow=c(2,2))
-  hist(mcmc(mod_mcmc$VCV)[,"Species"]) ## very 
+  hist(mcmc(mod_mcmc$VCV)[,"species"]) ## very 
   hist(mcmc(mod_mcmc$VCV)[,"units"]) ## not as significant
   
   ## plot the fist fixed term, the intercpet.

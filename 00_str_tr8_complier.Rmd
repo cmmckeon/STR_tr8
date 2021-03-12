@@ -23,15 +23,62 @@ This markdown is for the extraction, wrangling and analysis of data relating to 
 library(BIEN)
 library(tidyverse)
 library(glmmTMB)
+library(tidyverse)
+library(MCMCglmm)
+library(lme4)
+library(invgamma)
+library(glmmTMB)
+library(mulTree)
+library(phytools)
+library(doParallel)
+library(optimx) 
+library(tidyverse)
+library(MCMCglmm)
+library(lme4)
+library(glmmTMB)
+library(invgamma)
+library(mulTree)
+library(phytools)
+library(doParallel)
+library(runjags)
+library(plotMCMC)
+library(coda)
+library(tidybayes)
+library(emmeans)
+library(boot)
+library(sjPlot)
+library(effects)
+library(ggridges)
+library(ggeffects)
+library(cowplot)
+library(gridExtra)
+library(MuMIn)
+library(LaplacesDemon)
+library("kableExtra")
+library(ggpubr)
+library(data.table)
+library(gridBase)
+library(viridis)
+library(ggplot2)
 
 '%nin%' = Negate('%in%')
+
+gm_mean = function(x, na.rm=TRUE, zero.propagate = FALSE){
+  if(any(x < 0, na.rm = TRUE)){
+    return(NaN)
+  }
+  if(zero.propagate){
+    if(any(x == 0, na.rm = TRUE)){
+      return(0)
+    }
+    exp(mean(log(x), na.rm = na.rm))
+  } else {
+    exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))
+  }
+}
 knitr::opts_chunk$set(include=FALSE) 
 knitr::opts_chunk$set(fig.width=16, fig.height=10) 
-```
 
-read in species range metrics.
-```{r}
-metrics <- read.csv("Data_range_metrics.csv") ## for now this is the updated metrics as calculated by Anna Csergo in spring 2019
 ```
 
 Get TRY and BIEN trait data
@@ -44,6 +91,22 @@ Clean and collate trait data
 source("02_clean_trait_data.R")
 ```
 
+Read in species range metrics.
+```{r}
+metrics <- read.csv("Data_range_metrics.csv") ## for now this is the updated metrics as calculated by Anna Csergo in spring 2019
+metrics <- metrics[metrics$Species %in% sp.list_full_TRY_BIEN & metrics$Model == "Occurrence",]
+metrics <- unique(metrics[, which(names(metrics) %in% 
+                                    c("Species", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
+                                      "total.area", "perimeter.area.frac.dim", "range.size"))])
+names(metrics) <- c("species", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
+                                      "total.area", "perimeter.area.frac.dim", "range.size")
+```
+
+Look at metrics
+```{r}
+
+```
+
 
 Calculate summary stats for continuous traits
 ```{r}
@@ -54,7 +117,7 @@ for(j in cont){
   a[,2] <- as.numeric(a[,2])
   
   for(i in levels(a$species)){
-  a$mean[a$species == i] <- mean(a[,2][a$species == i])
+  a$mean[a$species == i] <- gm_mean(a[,2][a$species == i])
   a$median[a$species == i] <- median(a[,2][a$species == i])
   a$max[a$species == i] <- max(a[,2][a$species == i])
   a$coeff_var[a$species == i] <- (sd(a[,2][a$species == i])/mean(a[,2][a$species == i]))*100
@@ -63,10 +126,7 @@ for(j in cont){
   x[[j]] <- unique(a[,-2])
 }
 
-```
-
-Extract each dataset
-```{r}
+## Extract each dataset
 height <- x[["height"]] ## 195 species
 leaf_area <- x[["leaf_area"]] ## 41 speceis
 lifeform <- x[["lifeform"]] ## 165 species
@@ -75,14 +135,14 @@ sla <- x[["sla"]] ## 86 species
 woodiness <- x[["woodiness"]] ## 238 species
 ```
 
-
+Plot summary stats
 ```{r}
 stat <- c("mean","median", "max", "coeff_var")
 par(mfrow = c(4,4))
   for(j in stat){
 for(i in cont){
 
-    hist(log(x[[i]][,j]), main = paste(i,j), xlab = paste("log",j), cex = 0.2, breaks = 50)
+    hist(log(x[[i]][,j]), main = paste(i,j), xlab = paste("log",j), cex = 1, breaks = 50)
 }}
 ```
 
@@ -93,377 +153,42 @@ plot(factor(lifeform$lifeform))
 plot(factor(woodiness$woodiness))
 ```
 
-Look at overlap in species between trait datasets
+Merge trait and metric dataframes
 ```{r}
-## for maybe if you wanted this list all together in a data frame
-# b <- data.frame(unique(mydata$species))
-# names(b) <- "species"
-# # for (i in levels(mydata$trait_name)){
-# #   b <- unique(merge(b, mydata[,which(names(mydata) %in% c('species', i))], by = "species"))
-# # }
-# 
-# b <- unique(merge(woodiness, lifeform, by = "species"))
-# b <- unique(merge(b, height, by = "species"))
-# b <- unique(merge(b, seed_mass, by = "species"))
-# b <- unique(merge(b, sla, by = "species"))
-# b <- unique(merge(b, leaf_area, by = "species"))
-# b <- drop_na(b)
+b <- data.frame(unique(mydata$species))
+names(b) <- "species"
+for (i in cont){
+  b <- merge(b, x[[i]][,which(names(x[[i]]) %in% c('species', "max"))], by = "species", all.x = T); 
+  names(b)[names(b) == 'max'] <- paste(i, "max", collapse = "_") 
+}
+for (i in c("lifeform", "woodiness")){
+  b <- merge(b, x[[i]], by = "species", all.x = T)
+}
+
+mydata <- unique(merge(metrics, b, by = "species"))
+mydata$woodiness <- factor(mydata$woodiness)
+mydata$lifeform <- factor(mydata$lifeform)
+# ## get ModelDF species names in the right format to match with those in phylogenetic trees
+levels(mydata$species) <- gsub(" ", "_", levels(mydata$species))
+```
+
+Set up phlyogeny
+```{r}
+if(!exists("clean_tree")) {
+  try(clean_tree <- read.tree("Data_str_clean_tree.tre"))
+  } else source("03_clean_phylogeny.R")
 ```
 
 
 ## clean but not tidy as far as here.
 
-```{r}
-## quick height analysis
-## short sub
-height_1 <- x[["maximum whole plant height"]]
-height_2 <- x[["Plant height generative"]]
-height_3 <- x[["Plant height vegetative"]]
-names(height_1) <- c("species", "height")
-names(height_2) <- c("species", "height")
-names(height_3) <- c("species", "height")
-height <- unique(rbind(height_1, height_2, height_3))
-height$height <- as.character(height$height)
-rm(height_1, height_2, height_3)
-height$height <- as.numeric(height$height)
-height <- unique(drop_na(droplevels(height)))
-hist(log(height$height))
-length(unique(height$species)) ## 195 speceis
-## just get the quick height analysis species
-
-metrics <- metrics[metrics$Species %in% levels(height$species) & metrics$Model == "Occurrence",]
-metrics <- unique(metrics[, which(names(metrics) %in% 
-                                    c("Species", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
-                                      "total.area", "perimeter.area.frac.dim", "range.size"))])
-mydata <- unique(merge(metrics, height, by.x = "Species", by.y = "species", all.x = T))
-mydata$range.size <- as.numeric(mydata$range.size)
-mydata <- mydata[mydata$height != 0,]
-```
-
-
-```{r}
-y_list <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
-model_ranges <- function(mydata, y_list, x){
-  m_indiv <- list() 
-  #range_metrics <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
-  for(i in names(mydata[which(names(mydata) %in% y_list)])){
-  par(mfrow = c(2,2), mar=c(4,4,4,4))
-  m_indiv[[i]] <- lm(log(mydata[,i]) ~ log(x), data = mydata)
-  print(summary(m_indiv[[i]]))
-  plot(m_indiv[[i]], main = paste(i))
-  #plot(log(mydata[,i]) ~ log(x), data = mydata, main = paste(i)); abline(m_indiv[[i]])
-  }   
-  return(m_indiv)
-  par(mfrow = c(2,3))
-  plot <- for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
-  plot(log(mydata[,i]) ~ log(x), data = mydata, main = paste(i), ylab = paste("log", i, sep = " "), xlab = paste(x)); abline(m_indiv[[i]])
-  }
-  return(plot)
-  }
-
-```
-
-
-```{r}
-
-# mod_list <- mclapply(1:2, function(i) {
-#   MCMCglmm(fixed = formula_a,
-#            rcov = ~units,
-#            family= "gaussian",
-#            pedigree = comp_data$tree,
-#            data = comp_data$data,
-#            nitt = nitt,
-#            burnin = burnin,
-#            thin = thin,
-#            prior = prior_indiv)
-#   }, mc.cores=2)
-
-model_ranges_bayes <- function(mydata, y_list, x){
-  m_indiv_bayes <- list() 
-  for(i in names(mydata[which(names(mydata) %in% y_list)])){
-    m_indiv_bayes[[i]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(mydata[,i]) ~ log(x),
-           rcov = ~units,
-           family= "gaussian",
-           pedigree = comp_data$tree,
-           data = comp_data$data,
-           nitt = nitt,
-           burnin = burnin,
-           thin = thin,
-           prior = prior_indiv)
-  }, mc.cores=2)
-  }   
-  return(m_indiv_bayes)
-  }
-
-```
-
-```{r}
-c <- model_ranges_bayes(indiv_data, y_list, indiv_data$mean)
-```
-
-
-
-```{r}
-m_indiv_bayes <- list()
-for(i in names(indiv_data[which(names(indiv_data) %in% c("mean", "median", "max", "coeff_var"))])){
-  m_indiv_bayes[[i]] <- model_ranges_bayes(mydata = indiv_data, y_list, x = indiv_data[,i])
- # print(model_ranges(mydata = indiv_data, y_list, x = indiv_data[,i]))
-  }
-```
-
-
-
-```{r}
-# Numeric variables
-for (i in names(Filter(is.numeric, indiv_data))) {
-  hist((indiv_data[,i]),
-       breaks = 3000,
-       main = paste(i),
-       xlab = paste(i))
-}
-```
-
-
-```{r}
-m_indiv <- list()
-for(i in names(indiv_data[which(names(indiv_data) %in% c("mean", "median", "max", "coeff_var"))])){
-  m_indiv[[i]] <- model_ranges(mydata = indiv_data, y_list, x = indiv_data[,i])
- # print(model_ranges(mydata = indiv_data, y_list, x = indiv_data[,i]))
-  }
-```
-
-
-```{r}
-par(mfrow = c(2,3))
-
-for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
-  plot(log(mydata[,i]) ~ log(height), data = mydata, main = paste(i), ylab = paste("log", i, sep = " "), col = "grey", bty = "n")
-  abline(m_indiv[["mean"]][[i]], col = "red", lwd = 4)
-  abline(m_indiv[["median"]][[i]], col = "blue", lwd = 4)
-  abline(m_indiv[["max"]][[i]], col = "green", lwd = 4)
-  abline(m_indiv[["coeff_var"]][[i]], col = "purple", lwd = 4)
-  }
-
-```
-
-
-
-
-```{r}
-par(mfrow = c(2,3))
-
-for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
-  plot(log(mydata[,i]) ~ log(height), data = mydata, main = paste(i), ylab = paste("log", i, sep = " "), col = "grey", bty = "n")
-  print(abline(m_indiv[["mean"]][[i]], col = "red", lwd = 4))
-  abline(m_indiv[["median"]][[i]], col = "blue", lwd = 4)
-  abline(m_indiv[["max"]][[i]], col = "green", lwd = 4)
-  abline(m_indiv[["coeff_var"]][[i]], col = "purple", lwd = 4)
-  }
-
-```
-
-
-
-```{r}
-m_height <- list()
-#range_metrics <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
-for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
-  par(mfrow = c(2,2))
-  m_height[[i]] <- lm(log(mydata[,i]) ~ log(height), data = mydata)
-  print(summary(m_height[[i]]))
-  plot(m_height[[i]])
-  plot(log(mydata[,i]) ~ log(height), data = mydata, main = paste(i)); abline(m_height[[i]])
-}
-par(mfrow = c(2,3))
-for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
-  plot(log(mydata[,i]) ~ log(height), data = mydata, main = paste(i), xlab = paste("log", i, sep = " ")); abline(m_height[[i]])
-}
-```
-
-
-
-
-
-```{r}
-m_mean <- list()
-#range_metrics <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
-for(i in names(mean_data[which(names(mean_data) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
-  par(mfrow = c(2,2))
-  m_mean[[i]] <- lm(log(mean_data[,i]) ~ log(mean), data = mean_data)
-  print(summary(m_mean[[i]]))
-  plot(m_mean[[i]])
-  plot(log(mean_data[,i]) ~ log(mean), data = mean_data, main = paste(i)); abline(m_mean[[i]])
-}
-par(mfrow = c(2,3))
-for(i in names(mean_data[which(names(mean_data) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
-  plot(log(mean_data[,i]) ~ log(mean), data = mean_data, main = paste(i), xlab = paste("log", i, sep = " ")); abline(m_mean[[i]])
-}
-```
-
-
-```{r}
-# Quick look at model dataframe
-## Numeric variables
-for (i in names(Filter(is.numeric, mydata))) {
-  hist((mydata[,i]),
-       breaks = 3000,
-       main = paste(i),
-       xlab = paste(i))
-}
-for (i in names(Filter(is.numeric, mydata))) {
-  hist(log(mydata[,i]),
-       breaks = 3000,
-       main = paste(i),
-       xlab = paste(i))
-}
-```
-
-
-```{r}
-m <- lm(log(total.area) ~ log(height+0.000001), data = mydata)
-summary(m)
-plot(m)
-plot(log(total.area) ~ log(height), data = mydata)
-abline(m)
-
-# m <- lm(log(total.area) ~ log(meid), data = mydata)
-# summary(m)
-# plot(m)
-# plot(log(total.area) ~ log(meid), data = mydata)
-# abline(m)
-```
-
-
-
-
-
-```{r}
-m <- list()
-#range_metrics <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
-for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
-  par(mfrow = c(2,2))
-  m[[i]] <- lm(log(mydata[,i]) ~ log(meid), data = mydata)
-  print(summary(m[[i]]))
-  plot(m[[i]])
-  plot(log(mydata[,i]) ~ log(meid), data = mydata, main = paste(i)); abline(m[[i]])
-}
-```
-
-
-```{r}
-par(mfrow = c(2,3))
-for(i in names(mydata[which(names(mydata) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])){
-  plot(log(mydata[,i]) ~ log(meid), data = mydata, main = paste(i), xlab = paste("log", i, sep = " ")); abline(m[[i]])
-}
-
-
-```
-
-
-
-
-
-
-
-
-
-
-read in trait data
-```{r}
-## for now these are trait values extracted by Caroline during her undergrad (winter 2016)
-DF100merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF110merged.csv")
-DF110merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF1merged.csv")
-DF200merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF2merged.csv")
-DF300merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF3merged.csv")
-DF395merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF395merged.csv")
-DF450merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF450merged.csv")
-DF500merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF500merged.csv")
-DF600merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF6merged.csv")
-DF700merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF7merged.csv")
-DF800merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF8merged.csv")
-DF852merged <-read.csv("~/OneDrive/Documents/Work/TCD Undergrad/Thesis/DataSets/TraitDFs/DF852merged.csv")
-DF852merged <- DF852merged[, which(names(DF852merged) %nin% c("X.y", "X", "X.x"))]
-
-traits <-rbind(DF100merged, DF110merged, DF200merged, DF300merged, DF395merged, DF450merged, DF500merged, DF600merged, DF700merged, DF800merged, DF852merged, deparse.level = 0, make.row.names = TRUE)
-traits <- unique(traits)
-
-rm(DF100merged, DF110merged, DF200merged, DF300merged, DF395merged, DF450merged, DF500merged, DF600merged, DF700merged, DF800merged, DF852merged)
-```
-
-
-```{r}
-## subset to only trait data
- traits <- traits[, which(names(traits) %in% c("Species.x", 
-"Ncells", "rwidth", "nwidth", "C_geo", "PC_geo", "synonyms", 
-"li_form_B.x", "reprod_B.x", "strategy", "poll_vect_B.x", "buoyancy", 
-"canopy_height", "dispersal", "leaf_size", "dispersal_morphology", 
-"growth_form", "releasing_height", "sbank", "seed_mass", "seed_number_per_shoot", 
-"woodiness", "inflorescence_fr", "sex_reprod_fr", "poll_vect_fr", 
-"fruit_type_fr", "dissemination_fr", "li_form_fr", "DispMode", 
-"FruitType", "LeafSize", "Propagule", "SeedBank", "SeedBankLong", 
-"Growth.Form", "Growth.Rate", "Height..Mature", "Lifespan", "Fruit.Seed.Abundance", 
-"Fruit.Seed.Persistence", "Propagated.by.Bare.Root", "Propagated.by.Bulb", 
-"Propagated.by.Container", "Propagated.by.Corm", "Propagated.by.Cuttings", 
-"Propagated.by.Seed", "Propagated.by.Sod", "Propagated.by.Sprigs", 
-"Propagated.by.Tubers", "Seed.Spread.Rate", "Seedling.Vigor", 
-"sla_cal", "wood_dens", "li_form_B.y", "reprod_B.y", "poll_vect_B.y", 
-"bud_bank_seasonality_soil"))]
-
-## handle species names
-traits$Species.x <-gsub("_", " ", traits$Species.x)
-```
-
-now merge with up to date (ish) range metric data
-```{r}
-mydata <- unique(merge(mydata, traits_bien, by.x = "Species", by.y = "scrubbed_species_binomial",  all.x = TRUE)) ## gonna leave in all the vars for now...
-mydata <- unique(merge(mydata, traits, by.x = "Species", by.y = "Speices.x",  all.x = TRUE)) 
-```
-
-
-
-thinking now about analysis
-If we take total.area as a starting point
-
-```{r print nas}
-## Looking at which varibles still contain NAs
-list <- c()
-for (i in names(mydata)){
-  list[i] <-length(which(is.na(mydata[,i])))
-}
-
-print(list)
-
-for (i in names(mydata)){
-  print(c(length(which(!is.na(mydata[i]))), i))
-}
-
-```
-
-subset the data for some quick analysis
-```{r}
-mydata <- unique(mydata[, which(names(mydata) %in% c("Species", "Model", "class", "n.patches", "total.area", "prop.landscape", 
-"patch.density", "total.edge", "edge.density", "landscape.shape.index", 
-"largest.patch.index", "mean.patch.area","li_form_B.x", "reprod_B.x", "strategy", "poll_vect_B.x", "buoyancy", 
-"canopy_height", "dispersal", "leaf_size", "dispersal_morphology", 
-"growth_form", "releasing_height", "sbank", "seed_mass", "seed_number_per_shoot", 
-"woodiness", "inflorescence_fr", "sex_reprod_fr", "poll_vect_fr", 
-"fruit_type_fr", "dissemination_fr", "li_form_fr"))])
-```
-
-
-
 
 ## Analysis
+## 1. Metric ~ trait
 
+```{r}
 
-
-
-
-
-
-
-
+```
 
 
 
