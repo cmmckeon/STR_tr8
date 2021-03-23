@@ -5,7 +5,7 @@
 
 ## having looked at Dr Ruth Kelly's detailed cleaning notes, I will take a rule based exclusion approach to data from plants that are:
 ## juvenile, manipulated or unhealthy.
-## also seeking to address the units discrepencies
+## I then consolidate suitable data into the traits of interest
 
 ## name the trait dataset "mydata"
 mydata <- droplevels(traits)
@@ -82,7 +82,7 @@ mydata$ValueKindName %>% factor(.) %>% levels(.) %>% dput(.)
 mydata <- mydata %>% subset(., .$ValueKindName %in% c("", "Best estimate", "Maximum", "Mean", "Median",
                                                       "Single", "Species mean", NA))
 
-mydata$species %>% unique(.) %>% length(.) ## 284 species
+#mydata$species %>% unique(.) %>% length(.) ## 284 species
 
 
 ## make datasets for cleaning by trait type
@@ -116,7 +116,7 @@ bank$trait_value[grep("transient", bank$trait_value)] <- "transient"
 
 bank$StdValue <- bank$trait_value
 bank$trait_name <- "seed_bank"
-plot(factor(bank$StdValue))
+#plot(factor(bank$StdValue))
 ## check for duplicate categories
 #x <- unique(bank[, which(names(bank) %in% c("species", "StdValue"))])
 ## clean 
@@ -128,14 +128,16 @@ dry_Nmass<- droplevels(mydata[mydata$trait_name %in% c("Leaf nitrogen (N) conten
 # dput(levels(factor(dry_Nmass$trait_value)))
 dry_Nmass$StdValue[which(is.na(dry_Nmass$StdValue))] <- dry_Nmass$trait_value[which(is.na(dry_Nmass$StdValue))] 
 dry_Nmass$trait_name <- "Nmass_drymass"
-hist(as.numeric(dry_Nmass$StdValue))
+#hist(as.numeric(dry_Nmass$StdValue))
 ## clean
 
 ## SLA ------------
-sla <- droplevels(mydata[mydata$trait_name %in% c("Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole excluded", 
-                                                  "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole included", 
-                                                  "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded",  
-                                                  "leaf area per leaf dry mass"),])
+sla <- droplevels(mydata[mydata$trait_name %in% c("Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole excluded"
+                                                  # "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole included",
+                                                  # "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded",
+                                                  # "leaf area per leaf dry mass"
+                                                  ),])
+## 
 
 # sla$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
 # dput(levels(factor(sla$trait_value)))
@@ -143,12 +145,12 @@ sla$StdValue[which(is.na(sla$StdValue))] <- sla$trait_value[which(is.na(sla$StdV
 sla$StdValue <- as.numeric(sla$StdValue)
 sla$trait_name <- "sla"
 
-par(mfrow = c(2,2))
-# hist(sla$StdValue[sla$trait_name == "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole included"])
+#par(mfrow = c(2,2))
+# hist(sla$StdValue[sla$trait_name == "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole included"], breaks = 60)
 # hist(sla$StdValue[sla$trait_name == "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole excluded"&
-#                     sla$StdValue <600])
-# hist((sla$StdValue[sla$trait_name == "leaf area per leaf dry mass"]))
-# hist(sla$StdValue[sla$trait_name == "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded"])
+#                     sla$StdValue <600], breaks = 60)
+# hist((sla$StdValue[sla$trait_name == "leaf area per leaf dry mass"]), breaks = 60)
+# hist(sla$StdValue[sla$trait_name == "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded"], breaks = 60)
 
 ## not clean; has outliers...
 
@@ -164,7 +166,7 @@ woody$trait_value[woody$trait_value == "2" | woody$trait_value == "3"] <- "woody
 woody <- woody[woody$trait_value %in% c("non-woody", "woody"),]
 woody$trait_name <- "woodiness"
 woody$StdValue <- woody$trait_value
-plot(factor(woody$StdValue))
+#plot(factor(woody$StdValue))
 x <- unique(woody[, which(names(woody) %in% c("species", "StdValue"))])
 
 ## find species with multiple categories
@@ -176,6 +178,11 @@ f <- as.data.frame(cbind(f, levels(x$species)))
 f <- f[f$f != 1,]
 
 y <- x[x$species %in% f$V2,]
+
+## mannually correct mistaken duplicate catergories
+woody$StdValue[woody$species == 'Salix repens'] <- "woody"
+woody$StdValue[woody$species == 'Helleborus foetidus'] <- "non-woody"
+woody$StdValue[woody$species == 'Silene mollissima'] <- "non-woody"
 # clean
 
 ## seeds -----------
@@ -187,7 +194,7 @@ seeds$StdValue[which(is.na(seeds$StdValue))] <- seeds$trait_value[which(is.na(se
 seeds <- seeds[seeds$StdValue != "heavy",]
 seeds$StdValue <- as.numeric(seeds$StdValue)
 seeds$trait_name <- "seed_mass"
-hist(log(seeds$StdValue))
+#hist(log(seeds$StdValue))
 ## clean
 
 ## height ---------------
@@ -216,7 +223,7 @@ height <- height[height$comment %nin% c("0, no seed produced; 1, seed too small 
 
 height$StdValue[height$comment %in% c("tofixcm")] <- height$StdValue[height$comment %in% c("tofixcm")]/100
 height$trait_name <- "height"
-hist(log(height$StdValue))
+#hist(log(height$StdValue))
 
 ## clean
 
@@ -228,8 +235,9 @@ la <- droplevels(mydata[mydata$trait_name %in% c("leaf area"),])
 la$trait_value <- as.numeric(la$trait_value)
 la <- la[la$comment != "leaf area x number of leaves",]
 la$StdValue <- la$trait_value
-hist(log(la$StdValue))
 la$trait_name <- "leaf_area"
+#hist(log(la$StdValue))
+
 ## clean
 
 ## Nmass -------------------
@@ -239,7 +247,7 @@ Nmass <- droplevels(mydata[mydata$trait_name %in% c("leaf nitrogen content per l
 # dput(levels(factor(Nmass$trait_value)))
 Nmass$StdValue <- Nmass$trait_value
 Nmass$StdValue <- as.numeric(Nmass$StdValue)
-hist(Nmass$StdValue)
+#hist(Nmass$StdValue)
 ## clean
 
 
@@ -291,14 +299,14 @@ dispersal <- dispersal[dispersal$trait_value %in% c("animal", "anthro", "self", 
 #levels(factor(dispersal$trait_value))
 dispersal$StdValue <- dispersal$trait_value
 dispersal$trait_name <- "dispersal"
-plot(factor(dispersal$StdValue))
-## clean. there are multiple categories per species thought...
+#plot(factor(dispersal$StdValue))
+## clean. there are multiple categories per species though...
 
 
 ## pollentation ---------------
 pollenation <- droplevels(mydata[mydata$trait_name %in% c("Flower insemination autogamous or xenogamous", 
                                                           "Plant mating system",
-                                                          "Flower pollinator and type of reward", 
+                                                         # "Flower pollinator and type of reward", 
                                                           "Pollination syndrome",
                                                           "Flower sexual syndrome (dichogamy, cleistogamy, dioecious, monoecious)"),])
 
@@ -310,20 +318,23 @@ pollenation <- droplevels(mydata[mydata$trait_name %in% c("Flower insemination a
 # "Pollination syndrome",
 # "Flower sexual syndrome (dichogamy, cleistogamy, dioecious, monoecious)", 
 
-pollenation$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
-pollenation$trait_value %>% factor(.) %>% table(.) %>% .[order(.)]
-dput(levels(factor(pollenation$trait_value)))
+# pollenation$trait_name %>% factor(.) %>% table(.) %>% .[order(.)]
+# pollenation$trait_value %>% factor(.) %>% table(.) %>% .[order(.)]
+#dput(levels(factor(pollenation$trait_value)))
 
+## don't think I'm going to use pollination to creating a selfing dataset, as I'd just be selecting for rows
+## that mention selfing, failing to capture many outcrossing species with any certainty.
 
 
 
 check<- droplevels(unique(rbind(height, la, seeds, sla, woody)))
 
 check <-check[,which(names(check) %in% c("species", "trait_name", "StdValue", "comment"))]
-check$comment %>% factor(.) %>% table(.) %>% .[order(.)]
+#check$comment %>% factor(.) %>% table(.) %>% .[order(.)]
 ## comments all fine, removal of final problem records inorporated into script above
 check <-check[,which(names(check) %in% c("species", "trait_name", "StdValue"))]
 
+## life form ---------------
 lifeform <- readRDS("~/OneDrive/PhD/PREDICTS/PREDICTS_Data/Data_lifeform.rds")
 lifeform$AccSpeciesName <- as.character(lifeform$AccSpeciesName)
 lifeform <- as.data.frame(cbind(lifeform$AccSpeciesName, c(1:length(lifeform$raunk_lf)), lifeform$raunk_lf))
@@ -335,7 +346,7 @@ lifeform <- lifeform[lifeform$species %in% sp.list_full_TRY_BIEN,]
 
 check <- rbind(check, lifeform)
 mydata <- droplevels(unique(check))
-length(unique(mydata$species))
+#length(unique(mydata$species)) ## 278 species
 mydata$trait_name <- factor(mydata$trait_name)
 
 list <- c()
@@ -366,6 +377,9 @@ for (i in levels(mydata$trait_name)){
   x[[i]] <- droplevels(unique(mydata[,which(names(mydata) %in% c('species', i))][which(!is.na(mydata[,i])),],
                               by = "species"))
 }
+
+rm(animals, anthro, brackets, dash, other, persistent, self, sub, transient, water, wind, words, y)
+rm(bank, dispersal, dry_Nmass, f, height, la, lifeform, Nmass, pollenation, seeds, sla, woody)
 
 ## the end 
 

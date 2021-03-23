@@ -121,6 +121,8 @@ for(j in cont){
   x[[j]] <- unique(a[,-2])
 }
 
+rm(a)
+
 ## Extract each dataset
 height <- x[["height"]] ## 195 species
 leaf_area <- x[["leaf_area"]] ## 41 speceis
@@ -129,6 +131,26 @@ seed_mass <- x[["seed_mass"]] ## 96 species
 sla <- x[["sla"]] ## 86 species
 woodiness <- x[["woodiness"]] ## 238 species
 ```
+
+
+Look at overlap in species between trait datasets
+```{r}
+# for maybe if you wanted this list all together in a data frame
+b <- data.frame(unique(mydata$species))
+names(b) <- "species"
+# for (i in levels(mydata$trait_name)){
+#   b <- unique(merge(b, mydata[,which(names(mydata) %in% c('species', i))], by = "species"))
+# }
+
+b <- droplevels(unique(merge(woodiness, lifeform, by = "species"))) ## 140
+b <- droplevels(unique(merge(b, height, by = "species"))) ## 137
+b <- droplevels(unique(merge(b, seed_mass, by = "species"))) ## 80
+b <- droplevels(unique(merge(b, sla, by = "species"))) ## 30
+b <- droplevels(unique(merge(b, leaf_area, by = "species"))) ## 30
+b <- drop_na(b)
+rm(b)
+```
+
 
 Plot summary stats
 ```{r}
@@ -165,6 +187,7 @@ mydata$woodiness <- factor(mydata$woodiness)
 mydata$lifeform <- factor(mydata$lifeform)
 # ## get ModelDF species names in the right format to match with those in phylogenetic trees
 levels(mydata$species) <- gsub(" ", "_", levels(mydata$species))
+rm(b)
 ```
 
 ```{r}
@@ -211,12 +234,84 @@ sla <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.
                                                       "range.size", "sla_max"))]))
 woodiness <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.mesh.size", "mean.shape.index", 
                                                       "prop.landscape", "total.area", "perimeter.area.frac.dim", 
-                                                      "range.size", "woodiness_max"))]))
+                                                      "range.size", "woodiness"))]))
 ```
 
 
-## clean but not tidy as far as here.
+```{r}
+par(mfrow = c(6,6))
 
+for (i in names(height[,2:7])) {
+  hist(log(height[,i]),
+       breaks = 30,
+       main = "height",
+       xlab = paste(i))
+}
+
+for (i in names(height[,2:7])) {
+  hist((leaf_area[,i]),
+       main = "LA",
+       xlab = paste(i))
+}
+
+for (i in names(sla[,2:7])) {
+  hist(log(sla[,i]),
+       breaks = 30,
+       main = "sla",
+       xlab = paste(i))
+}
+
+for (i in names(seed_mass[,2:7])) {
+  hist(log(seed_mass[,i]),
+       breaks = 30,
+       main = "seed mass",
+       xlab = paste(i))
+}
+
+for (i in names(lifeform[,2:7])) {
+  plot(log(lifeform[,i]) ~ lifeform$lifeform,
+       main = "lifeform",
+       xlab = paste(i))
+}
+
+for (i in names(woodiness[,2:7])) {
+  plot(log(woodiness[,i]) ~ woodiness$woodiness,
+       main = "wood",
+       xlab = paste(i))
+}
+```
+
+
+```{r}
+
+par(mfrow = c(4,6))
+
+for(i in names(height[which(names(height) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])) {
+  plot(height[,i] ~ log(height_max), data = height, col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
+       ylab = paste("(", i, ")", sep = ""), main = paste(i))}
+
+for(i in names(height[which(names(height) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])) {
+  plot(leaf_area[,i] ~ log(leaf_area_max), data = leaf_area, col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
+       ylab = paste("(", i, ")", sep = ""), main = paste(i))}
+
+for(i in names(height[which(names(height) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])) {
+  plot(log(sla[,i]) ~ log(sla_max), data = sla, col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
+       ylab = paste("(", i, ")", sep = ""), main = paste(i))}
+
+for(i in names(height[which(names(height) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])) {
+  plot(log(seed_mass[,i]) ~ log(seed_mass_max), data = seed_mass, col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
+       ylab = paste("(", i, ")", sep = ""), main = paste(i))}
+
+for(i in names(height[which(names(height) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])) {
+  plot(lifeform[,i] ~ lifeform, data = lifeform, col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
+       ylab = paste("(", i, ")", sep = ""), main = paste(i))}
+# 
+# for(i in names(height[which(names(height) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])) {
+#   plot(woodiness[,i] ~ woodiness, data = woodiness, col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
+#        ylab = paste("(", i, ")", sep = ""), main = paste(i))}
+```
+
+Now look at colinearity.
 
 ## Analysis
 ## 1. Metric ~ trait

@@ -116,7 +116,7 @@ traits_bien <- droplevels(traits_bien[traits_bien$method %nin% c("Heights, measu
 
 ## b) consolidate ---------------
 
-dput(levels(traits_bien$trait_name))
+#dput(levels(traits_bien$trait_name))
 
 traits_bien$trait_name[traits_bien$trait_name == "longest whole plant longevity"] <- "maximum whole plant longevity"
 traits_bien$trait_name[traits_bien$trait_name == "whole plant height"] <- "maximum whole plant height"
@@ -232,9 +232,9 @@ traits_try <- unique(traits_try[which(names(traits_try) %in% c("AccSpeciesName",
                                                                "TraitName","OriglName", "OrigValueStr", "OrigUnitStr", "Comment", "StdValue"))])
 traits_try <- unique(traits_try[traits_try$TraitName != "",])
 
-plot(droplevels(traits_try$Comment[traits_try$Comment != ""]))
-dput(droplevels(traits_try$Comment))
-traits_try$Comment %>% factor(.) %>% table(.) %>% .[order(.)]
+#plot(droplevels(traits_try$Comment[traits_try$Comment != ""]))
+#dput(droplevels(traits_try$Comment))
+#traits_try$Comment %>% factor(.) %>% table(.) %>% .[order(.)]
 
 
 
@@ -244,6 +244,10 @@ names(traits_bien) <- c("species", "trait_name", "trait_value", "unit", "comment
 names(traits_try) <-c("Dataset", "species", "trait_name", "OriglName", "trait_value",
                       "unit", "ValueKindName", "StdValue", "comment")
 traits <- dplyr::bind_rows(traits_try, traits_bien) ## 16325 obs of 9 vars
+
+if(exists("traits")) {
+  print("traits dataframe created")
+} else warning("failed to create traits dataframe. Did any packages fail to load? Are you missing files in the directory?")
 
 ## done --------------------
 
