@@ -143,9 +143,9 @@ print("MODEL SUMMARY")
 print(summary(mod_mcmc))
 
 ## testing whether the random effects are significant
-# Plot the posterior distribution as a histogram to check for significance and whether it's been well estimated or not
-# Variance cannot be zero, and therefore if the mean value is pushed up against zero your effect is not significant
-# The larger the spread of the histogram, the less well estimated the distribution is.
+print("Plot the posterior distribution as a histogram to check for significance and whether it's been well estimated or not
+Variance cannot be zero, and therefore if the mean value is pushed up against zero your effect is not significant
+The larger the spread of the histogram, the less well estimated the distribution is.")
 par(mfrow=c(2,2))
 hist(mcmc(mod_mcmc$VCV)) ## very 
 hist(mcmc(mod_mcmc$VCV)[,"units"]) ## not as significant
@@ -155,14 +155,6 @@ plot(mod_mcmc$Sol)
 
 #plot the fist variance term, the residual error term.
 plot(mod_mcmc$VCV)
-
-#' On the right hand side of the plots is the posterior distributions for each of the terms. 
-#' On the left side of these plots are the traces of the mcmc chain for each estimate 
-median(mod_mcmc$Sol[,1])
-#' #calulate the mode of the slope as:
-hdr(mod_mcmc$Sol[,2])$mode
-#' and the 50%, 95% and 99% credibility intervals
-hdr(mod_mcmc$Sol[,2])$hdr
 
 
 
