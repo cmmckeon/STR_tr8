@@ -1,6 +1,8 @@
 ## 04_exploratory_plots_and_colinearity 
 ## CM 24/03/2021
 
+
+
 ## range metric histograms in each trait dataset --------------
 par(mfrow = c(6,6), mar =c(4,4,1,1))
 
@@ -102,7 +104,7 @@ ma <- lm(log(height_max) ~ lifeform, data = a)
 mb <- lm(log(height_max) ~ woodiness, data = b)
 mc <- lm(log(height_max) ~ log(sla_max), data = c)
 md <- lm(log(height_max) ~ log(seed_mass_max), data = d)
-me <- lm(log(height_max) ~ log(leaf_area_max), e)
+me <- lm(log(height_max) ~ log(leaf_area_max), data = e)
 
 plot(log(height_max) ~ lifeform, data = a)
 mtext(paste("r2", round(summary(ma)$adj.r.squared, 4), col = ""), side =3)
@@ -187,7 +189,11 @@ plot.new()
 plot.new()
 plot.new()
 
+rm(a,b,c,d,e, j,k,ma,mb,mc,md,me)
 
+
+
+## the end ------------
 
 
 

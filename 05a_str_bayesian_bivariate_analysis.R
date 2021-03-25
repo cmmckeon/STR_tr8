@@ -1,5 +1,5 @@
 #' ---
-#' title: "04_str_bayesian_bivariate_analysis"
+#' title: "05a_str_bayesian_bivariate_analysis"
 #' author: "adapted by Caroline McKeon from script by Kevin Healy"
 #' date: ' ANovember 2020'
 #' ---
@@ -27,8 +27,20 @@ comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
 #' R (residual terms) and G (random terms which we will come to later).
 #' 
 # # priors----------------------------------------------------------------------------------------
+## normal prior (for models including phylogeny)
 prior <- list(R = list(V=1, nu=0.002), 
               G = list(G1 = list(V=1, nu=0.002)))
+
+## no phylogeny prior
+#prior <- list(R = list(V=1, nu=0.002))
+
+## this is a parameter expanded prior
+# a <- 1000
+# b <- 1
+# prior<- list(R = list(V=1, nu=0.002),
+#              G = list(G1 = list(V = diag(b), nu =0.002, alpha.mu = 0, alpha.V = diag(b)*a)))
+
+
 ## parameters-------------------------------------------------------------------------------------
 nitt <- c(240000) #no. of interations
 burnin <- nitt/6 #length of burnin
@@ -44,12 +56,12 @@ par(mfrow = c(2,3))
 ## Quick look at model dataframe
 
 ## Numeric variables
-for (i in names(Filter(is.numeric, height))) {
-  hist(log(height[,i]),
-       breaks = 30,
-       main = paste(i),
-       xlab = paste(i))
-}
+# for (i in names(Filter(is.numeric, height))) {
+#   hist(log(height[,i]),
+#        breaks = 30,
+#        main = paste(i),
+#        xlab = paste(i))
+# }
 
 
 plot(log(effective.mesh.size) ~ log(height_max), data = height)
@@ -123,7 +135,7 @@ mod_mcmc_2 <- m_indiv_height[["total.area"]][["height"]][[2]]
 
 ## How do the trace plots look?
 allChains <- as.mcmc(cbind(mod_mcmc$Sol,mod_mcmc$VCV))
-plotTrace(allChains)
+plotTrace(allChains,axes=TRUE,las=1)
 vcChain <- log10(mod_mcmc$VCV)
 plotTrace(vcChain)
 
@@ -152,6 +164,8 @@ hdr(mod_mcmc$Sol[,2])$mode
 #' and the 50%, 95% and 99% credibility intervals
 hdr(mod_mcmc$Sol[,2])$hdr
 
+
+
 #' The `pMCMC` value can be treated like a p-value, although its technically not. 
 #' If data is z-scored my data; can just check if both 95% credibility 
 #' intervals are above or below zero.
@@ -160,6 +174,7 @@ hdr(mod_mcmc$Sol[,2])$hdr
 traceplot(mod_mcmc$Sol[,1])
 
 ## look at the autocorrelation values for all of the fixed effects terms
+autocorr.diag(mod_mcmc$Sol, lag = 1)
 x <- autocorr.diag(mod_mcmc$Sol, lag = 1)
 x <-as.data.frame(t(x))
 hist(x$'Lag 20')
@@ -179,6 +194,12 @@ gelman.diag(mcmc.list(mod_mcmc$VCV, mod_mcmc_2$VCV)) ## 1
 ## look at the pairwise distributions
 plotSplom(mod_mcmc$VCV,pch=".")
 
+H <- mod_mcmc$VCV[,"animal"]/
+  (mod_mcmc$VCV[,"animal"] + mod_mcmc$VCV[,"units"])
+summary(H)
+
+
+
 ## rough plots ----------
 
 
@@ -196,20 +217,20 @@ c <- data_frame("a", "b")
 
 c <- cbind(c[-1,], rr)
 
+k <- list("log effective mesh size", "mean shape index", "proportion of landscape", "log total area", 
+          "log perimeter area fractality", "log range size")
+names(k) <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", 
+              "perimeter.area.frac.dim", "range.size")
 
-par(mfrow = c(2,3), mar=c(4.5,4,2,2), col="black", col.main = "black", col.lab = "black")
+par(mfrow = c(2,3), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
 #par(mfrow = c(2,3), mar=c(4.5,4,2,2), col="white", col.main = "white", col.lab = "white", bg="transparent")
-for(i in names(height[which(names(height) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size"))])) {
+for(i in names(height[which(names(height) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", 
+                                                 "perimeter.area.frac.dim", "range.size"))])) {
   plot(f[[i]], data = height, col = "grey", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
-       ylab = paste("(", i, ")", sep = ""), main = paste(i))#, bty = "n")
-  abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = "#F0F921FF", lwd = 6)
-  abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = "#CC4678FF", lwd = 6)
-  abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = "#FBA139FF", lwd = 6)
+       ylab = paste(k[[i]]), main = paste(k[[i]]), xlab = paste("log max height"), bty = "n")
   abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = "#7000A8FF", lwd = 6)
 }
 
-
-plot(log(height$effective.mesh.size) ~ log(height$height_max))
 
 
 #### Plotting results -----------------------------------

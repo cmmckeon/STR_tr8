@@ -100,6 +100,7 @@ metrics <- unique(metrics[, which(names(metrics) %in%
                                       "total.area", "perimeter.area.frac.dim", "range.size"))])
 names(metrics) <- c("species", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
                                       "total.area", "perimeter.area.frac.dim", "range.size")
+
 ```
 
 
@@ -190,6 +191,7 @@ levels(mydata$species) <- gsub(" ", "_", levels(mydata$species))
 rm(b)
 ```
 
+
 ```{r}
 ## Quick look at model dataframe
 ## Factors
@@ -237,7 +239,31 @@ woodiness <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effe
                                                       "range.size", "woodiness"))]))
 ```
 
+scale data
+```{r}
+# for (i in names(Filter(is.numeric, height))) {
+#   height[, i] <- c(scale(height[,i]))
+# }
+# for (i in names(Filter(is.numeric, leaf_area))) {
+#   leaf_area[, i] <- c(scale(leaf_area[,i]))
+# }
+# for (i in names(Filter(is.numeric, seed_mass))) {
+#   seed_mass[, i] <- c(scale(seed_mass[,i]))
+# }
+# for (i in names(Filter(is.numeric, sla))) {
+#   sla[, i] <- c(scale(sla[,i]))
+# }
+# for (i in names(Filter(is.numeric, lifeform))) {
+#   lifeform[, i] <- c(scale(lifeform[,i]))
+# }
+# for (i in names(Filter(is.numeric, woodiness))) {
+#   woodiness[, i] <- c(scale(woodiness[,i]))
+# }
+```
 
+```{r}
+source("04_exploration_and_colinearity.R")
+```
 
 
 

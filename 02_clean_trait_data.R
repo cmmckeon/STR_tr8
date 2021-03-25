@@ -76,7 +76,7 @@ mydata <- mydata %>% subset(., .$Dataset %nin% c("Growth and Herbivory of Juveni
                                                  "ECOCRAFT","Leaf Physiology Database","The DIRECT Plant Trait Database", 
                                                  "French Weeds Trait Database"))
 
-mydata$ValueKindName %>% factor(.) %>% levels(.) %>% dput(.)
+#mydata$ValueKindName %>% factor(.) %>% levels(.) %>% dput(.)
 
 ## select the higher measurements of height, dropping "Minimum", 
 mydata <- mydata %>% subset(., .$ValueKindName %in% c("", "Best estimate", "Maximum", "Mean", "Median",
@@ -367,7 +367,7 @@ for (i in levels(mydata$trait_name)){
 
 ## populate the columns with values for that trait
 for (i in levels(mydata$trait_name)){
-  print(i)
+ # print(i)
   mydata[,i][mydata$trait_name == i] <- mydata$StdValue[mydata$trait_name == i]
 }
 
