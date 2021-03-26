@@ -81,16 +81,17 @@ knitr::opts_chunk$set(fig.width=16, fig.height=10)
 
 ```
 
+## get traits
 Get TRY and BIEN trait data
 ```{r}
 source("01_get_trait_data.R")
 ```
-
+## clean traits
 Clean and collate trait data
 ```{r}
 source("02_clean_trait_data.R")
 ```
-
+## get range metrics
 Read in species range metrics.
 ```{r}
 metrics <- read.csv("Data_range_metrics.csv") ## for now this is the updated metrics as calculated by Anna Csergo in spring 2019
@@ -103,7 +104,7 @@ names(metrics) <- c("species", "effective.mesh.size", "mean.shape.index", "prop.
 
 ```
 
-
+## get trait sumamry statistics
 Calculate summary stats for continuous traits
 ```{r}
 cont <- c("height", "leaf_area", "seed_mass", "sla")
@@ -208,7 +209,7 @@ for (i in names(Filter(is.numeric, mydata))) {
        xlab = paste(i))
 }
 ```
-
+## get phylogeny
 Set up phlyogeny
 ```{r}
 if(!exists("clean_tree")) {
@@ -261,6 +262,7 @@ scale data
 # }
 ```
 
+## look at colinearity
 ```{r}
 source("04_exploration_and_colinearity.R")
 ```
@@ -271,7 +273,7 @@ source("04_exploration_and_colinearity.R")
 ## 1. Metric ~ trait
 
 ```{r}
-
+source("05a_str_bayesian_bivariate_analysis.R")
 ```
 
 

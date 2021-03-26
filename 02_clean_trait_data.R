@@ -235,6 +235,7 @@ la <- droplevels(mydata[mydata$trait_name %in% c("leaf area"),])
 la$trait_value <- as.numeric(la$trait_value)
 la <- la[la$comment != "leaf area x number of leaves",]
 la$StdValue <- la$trait_value
+la <- la[la$StdValue != 0,]
 la$trait_name <- "leaf_area"
 #hist(log(la$StdValue))
 
