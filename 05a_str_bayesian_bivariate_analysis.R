@@ -10,10 +10,10 @@
 #' 
 #' https://groups.nceas.ucsb.edu/non-linear-modeling/projects/owls/WRITEUP/owls.pdf/@@download
 #'  
+#'  http://www.wildanimalmodels.org/tiki-download_wiki_attachment.php?attId=24
 
 
 ## set up ###################
-
 
 ## read in and handle data------------------------------------------------------------------------------------------------
 mcmc_data <- height
@@ -27,9 +27,9 @@ prior <- list(R = list(V=1, nu=0.002),
               G = list(G1 = list(V=1, nu=0.002)))
 
 ## no phylogeny prior
-#prior <- list(R = list(V=1, nu=0.002))
-
-## this is a parameter expanded prior
+# prior <- list(R = list(V=1, nu=0.002))
+# 
+# ## this is a parameter expanded prior
 # a <- 1000
 # b <- 1
 # prior<- list(R = list(V=1, nu=0.002),
@@ -78,21 +78,21 @@ f[["range.size"]] <- log(range.size) ~ log(height_max)
 
 
 ## for quick checks
-m_list <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(total.area) ~ log(height_max),
-           random = ~ animal,
-           rcov = ~units,
-           family= "gaussian",
-           pedigree = comp_data$tree,
-           data = comp_data$data,
-           nitt = nitt,
-           burnin = burnin,
-           thin = thin,
-           prior = prior)
-}, mc.cores=2)
-
-mod_mcmc <-  m_list[[1]]
-mod_mcmc_2 <- m_list[[2]]
+# m_list <-mod_list <- mclapply(1:2, function(i) {
+#   MCMCglmm(fixed = log(perimeter.area.frac.dim) ~ log(height_max),
+#           #random = ~ animal,
+#            rcov = ~units,
+#            family= "gaussian",
+#            #pedigree = comp_data$tree,
+#            data = comp_data$data,
+#            nitt = nitt,
+#            burnin = burnin,
+#            thin = thin,
+#            prior = prior)
+# }, mc.cores=2)
+# 
+# mod_mcmc <-  m_list[[1]]
+# mod_mcmc_2 <- m_list[[2]]
 
 
 
@@ -119,13 +119,17 @@ m_indiv_height[[j]][["height"]] <-mod_list <- mclapply(1:2, function(i) {
 mod_mcmc <-  m_indiv_height[["height"]][[j]][[1]]
 mod_mcmc_2 <-  m_indiv_height[["height"]][[j]][[2]]}
 
+#saveRDS(m_indiv_height, "m_height_phlyo.rds")
 
 ## Diagnositcs ----------------------------
+z <- "perimeter.area.frac.dim"
 
-mod_mcmc <- m_indiv_height[["total.area"]][["height"]][[1]]
-mod_mcmc_2 <- m_indiv_height[["total.area"]][["height"]][[2]]
+mod_mcmc <- m_indiv_height[[z]][["height"]][[1]]
+mod_mcmc_2 <- m_indiv_height[[z]][["height"]][[2]]
 
+bay_phylo_dia(mod_mcmc)
 bay_dia(mod_mcmc)
+
 
 ## rough plots ----------
 
@@ -134,7 +138,7 @@ par(mfrow = c(2,3))
 ## extract the posterior estiamtes
 rr <- c()
 r <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
-c <- data_frame("a", "b")
+c <- tibble("a", "b")
   for(i in r) {
     sum <- as.data.frame(summary(m_indiv_height[[i]][["height"]][[1]][["Sol"]])[["statistics"]]); 
     c <- rbind(c, c(sum$Mean[1], sum$Mean[2])); 
