@@ -51,11 +51,23 @@ for (i in names(woodiness[,2:7])) {
 ## range metric ~ trait relationshiops -----------------
 
 par(mfrow = c(6,6), mar =c(4,4,1,1)) ## b,l,t,r
-## effective.mesh.size
 j <- list(height, leaf_area, sla, seed_mass)
+k <- list(lifeform, woodiness)
+## total.area
+for(i in 1:length(j)){
+  plot(log(total.area) ~ log(j[[i]][,8]), data = j[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
+for(i in 1:length(k)){
+  plot(log(total.area) ~ k[[i]][,8], data = k[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
+
+## range.size
+for(i in 1:length(j)){
+  plot(log(range.size) ~ log(j[[i]][,8]), data = j[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
+for(i in 1:length(k)){
+  plot(log(range.size) ~ k[[i]][,8], data = k[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
+
+## effective.mesh.size
 for(i in 1:length(j)){
   plot(log(effective.mesh.size) ~ log(j[[i]][,8]), data = j[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
-k <- list(lifeform, woodiness)
 for(i in 1:length(k)){
 plot(log(effective.mesh.size) ~ k[[i]][,8], data = k[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 
@@ -71,23 +83,11 @@ for(i in 1:length(j)){
 for(i in 1:length(k)){
   plot((prop.landscape) ~ k[[i]][,8], data = k[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 
-## total.area
-for(i in 1:length(j)){
-  plot(log(total.area) ~ log(j[[i]][,8]), data = j[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
-for(i in 1:length(k)){
-  plot(log(total.area) ~ k[[i]][,8], data = k[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
-
 ## perimeter.area.frac.dim
 for(i in 1:length(j)){
   plot(log(perimeter.area.frac.dim) ~ log(j[[i]][,8]), data = j[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 for(i in 1:length(k)){
   plot(log(perimeter.area.frac.dim) ~ k[[i]][,8], data = k[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
-
-## range.size
-for(i in 1:length(j)){
-  plot(log(range.size) ~ log(j[[i]][,8]), data = j[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
-for(i in 1:length(k)){
-  plot(log(range.size) ~ k[[i]][,8], data = k[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 
 
 
@@ -137,7 +137,7 @@ plot(log(leaf_area_max) ~ woodiness, data = b)
 mtext(paste("r2", round(summary(mb)$adj.r.squared, 4), "ns", col = ""), side =3, col = "red")
 plot(log(c$leaf_area_max) ~ log(c$sla_max))
 abline(mc)
-mtext(paste("r2", round(summary(mc)$adj.r.squared, 4), col = ""), side =3)
+mtext(paste("r2", round(summary(mc)$adj.r.squared, 4), col = ""), side =3, col = "red")
 plot(log(d$leaf_area_max) ~ log(d$seed_mass_max))
 abline(md)
 mtext(paste("r2", round(summary(md)$adj.r.squared, 4), col = ""), side =3)
@@ -172,7 +172,7 @@ mb <- lm(log(sla_max) ~ woodiness, data = b)
 plot(log(sla_max) ~ lifeform, data = a)
 mtext(paste("r2", round(summary(ma)$adj.r.squared, 4), col = ""), side =3)
 plot(log(sla_max) ~ woodiness, data = b)
-mtext(paste("r2", round(summary(mb)$adj.r.squared, 4), col = ""), side =3)
+mtext(paste("r2", round(summary(mb)$adj.r.squared, 4), col = ""), side =3, col = "red")
 plot.new()
 plot.new()
 plot.new()

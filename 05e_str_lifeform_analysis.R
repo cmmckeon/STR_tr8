@@ -1,5 +1,5 @@
 #' ---
-#' title: "05c_str_bayesian_bivariate_analysis"
+#' title: "05e_str_lifeform_analysis"
 #' author: "adapted by Caroline McKeon from script by Kevin Healy"
 #' date: ' November 2020'
 #' ---
@@ -14,13 +14,14 @@
 
 
 ## set up ###################
-# if(!exists("m_indiv_seed_mass")){
-#   if(exists("m_seed_mass_phlyo.rds")){
-#   try(m_indiv_seed_mass <- readRDS("m_seed_mass_phlyo.rds"))
-#   } else try(
 
 ## read in and handle data------------------------------------------------------------------------------------------------
-mcmc_data <- seed_mass
+## set up for weighted effects coding
+# ## main effects
+# lifeform$lifeform.wec <- factor(lifeform$lifeform)
+# contrasts(lifeform$lifeform.wec) <- contr.wec(lifeform$lifeform, "therophyte")
+
+mcmc_data <- lifeform
 mcmc_data$animal <- mcmc_data$species
 ## create comparative dataset
 comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
@@ -53,36 +54,34 @@ print(c("effect size will be:", eff_ss))
 par(mfrow = c(2,3))
 
 ## Quick look at model dataframe
-
-## Numeric variables
-# for (i in names(Filter(is.numeric, seed_mass))) {
-#   hist(log(seed_mass[,i]),
-#        breaks = 30,
+# for (i in names(Filter(is.factor, lifeform))) {
+#   plot(lifeform[,i],
 #        main = paste(i),
 #        xlab = paste(i))
 # }
 
-plot(log(total.area) ~ log(seed_mass_max), data = comp_data$data)
-plot(log(range.size) ~ log(seed_mass_max), data = comp_data$data)
-plot(log(effective.mesh.size) ~ log(seed_mass_max), data = comp_data$data)
-plot(mean.shape.index~ log(seed_mass_max), data = comp_data$data)
-plot(prop.landscape~ log(seed_mass_max), data = comp_data$data)
-plot(log(perimeter.area.frac.dim) ~ log(seed_mass_max), data = comp_data$data)
+plot(log(total.area) ~ lifeform, data = comp_data$data)
+plot(log(range.size) ~ lifeform, data = comp_data$data)
+plot(log(effective.mesh.size) ~ lifeform, data = comp_data$data)
+plot(mean.shape.index~ lifeform, data = comp_data$data)
+plot(prop.landscape~ lifeform, data = comp_data$data)
+plot((perimeter.area.frac.dim) ~ lifeform, data = comp_data$data)
+
 
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- log(total.area) ~ log(seed_mass_max)   
-f[["range.size"]] <- log(range.size) ~ log(seed_mass_max)  
-f[["effective.mesh.size"]] <-  log(effective.mesh.size) ~ log(seed_mass_max)     
-f[["mean.shape.index"]] <- mean.shape.index ~ log(seed_mass_max)        
-f[["prop.landscape"]] <- prop.landscape ~ log(seed_mass_max)
-f[["perimeter.area.frac.dim"]] <- log(perimeter.area.frac.dim) ~ log(seed_mass_max)
+f[["total.area"]]  <- log(total.area) ~ lifeform 
+f[["range.size"]] <- log(range.size) ~ lifeform
+f[["effective.mesh.size"]] <-  log(effective.mesh.size) ~ lifeform    
+f[["mean.shape.index"]] <- mean.shape.index ~ lifeform       
+f[["prop.landscape"]] <- prop.landscape ~ lifeform
+f[["perimeter.area.frac.dim"]] <- (perimeter.area.frac.dim) ~ lifeform
 
 
 ## for quick checks
 # m_list <-mod_list <- mclapply(1:2, function(i) {
-#   MCMCglmm(fixed = log(perimeter.area.frac.dim) ~ log(seed_mass_max),
+#   MCMCglmm(fixed = log(perimeter.area.frac.dim) ~ lifeform,
 #           #random = ~ animal,
 #            rcov = ~units,
 #            family= "gaussian",
@@ -98,15 +97,14 @@ f[["perimeter.area.frac.dim"]] <- log(perimeter.area.frac.dim) ~ log(seed_mass_m
 # mod_mcmc_2 <- m_list[[2]]
 
 
-
 ## run a model for each spatial pattern metric
-m_indiv_seed_mass <- list()
+m_indiv_lifeform <- list()
 
-for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index",
                                                                            "prop.landscape", "perimeter.area.frac.dim"))])){
   formula <- f[[j]]
   
-  m_indiv_seed_mass[[j]][["seed_mass"]] <-mod_list <- mclapply(1:2, function(i) {
+  m_indiv_lifeform[[j]][["lifeform"]] <-mod_list <- mclapply(1:2, function(i) {
     MCMCglmm(fixed = formula,
              random = ~ animal,
              rcov = ~units,
@@ -119,19 +117,25 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
              prior = prior)
   }, mc.cores=2)
   
-  mod_mcmc <-  m_indiv_seed_mass[["seed_mass"]][[j]][[1]]
-  mod_mcmc_2 <-  m_indiv_seed_mass[["seed_mass"]][[j]][[2]]}
+  mod_mcmc <-  m_indiv_lifeform[["lifeform"]][[j]][[1]]
+  mod_mcmc_2 <-  m_indiv_lifeform[["lifeform"]][[j]][[2]]}
 
-saveRDS(m_indiv_seed_mass, "m_seed_mass_phylo_parexp.rds")
+#saveRDS(m_indiv_lifeform, "m_lifeform_phlyo_parexp.rds")
 
 ## Diagnositcs ----------------------------
+z <- "total.area"
+z <- "range.size"
+z <- 'effective.mesh.size'
+z <- "mean.shape.index"
+z <- "prop.landscape"
 z <- "perimeter.area.frac.dim"
 
-mod_mcmc <- m_indiv_seed_mass[[z]][["seed_mass"]][[1]]
-mod_mcmc_2 <- m_indiv_seed_mass[[z]][["seed_mass"]][[2]]
+
+mod_mcmc <- m_indiv_lifeform[[z]][["lifeform"]][[1]]
+mod_mcmc_2 <- m_indiv_lifeform[[z]][["lifeform"]][[2]]
 
 bay_phylo_dia(mod_mcmc)
-bay_dia(mod_mcmc)
+#bay_dia(mod_mcmc)
 
 
 ## rough plots ----------
@@ -143,7 +147,7 @@ rr <- c()
 r <- c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
 c <- tibble("a", "b")
 for(i in r) {
-  sum <- as.data.frame(summary(m_indiv_seed_mass[[i]][["seed_mass"]][[1]][["Sol"]])[["statistics"]]); 
+  sum <- as.data.frame(summary(m_indiv_lifeform[[i]][["lifeform"]][[1]][["Sol"]])[["statistics"]]); 
   c <- rbind(c, c(sum$Mean[1], sum$Mean[2])); 
   rr <- append(rr, paste(i))
 }
@@ -151,19 +155,20 @@ for(i in r) {
 c <- cbind(c[-1,], rr)
 
 k <- list("log total area", "log range size", "log effective mesh size", "mean shape index",
-          "proportion of landscape", "log perimeter area fractality")
+          "proportion of landscape", "perimeter area fractality")
 names(k) <- r
 
 par(mfrow = c(2,3), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
 #par(mfrow = c(2,3), mar=c(4.5,4,2,2), col="white", col.main = "white", col.lab = "white", bg="transparent")
-for(i in names(seed_mass[which(names(seed_mass) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
-                                                 "perimeter.area.frac.dim"))])) {
+for(i in names(lifeform[which(names(lifeform) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                     "prop.landscape", "perimeter.area.frac.dim"))])) {
   plot(f[[i]], data = comp_data$data, col = "grey", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
-       ylab = paste(k[[i]]), main = paste(k[[i]]), xlab = paste("log max seed_mass"), bty = "n")
-  abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = "#7000A8FF", lwd = 6)
+       ylab = paste(k[[i]]), main = paste(k[[i]]), xlab = paste("lifeform"), bty = "n")
+ # abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = "#7000A8FF", lwd = 6)
 }
 
 
 for(i in r){
-  print(summary(m_indiv_seed_mass[[i]][["seed_mass"]][[1]]))
+  print(summary(m_indiv_lifeform[[i]][["lifeform"]][[1]]))
 }
+

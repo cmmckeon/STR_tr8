@@ -41,11 +41,10 @@ Read in species range metrics.
 metrics <- read.csv("Data_range_metrics.csv") ## for now this is the updated metrics as calculated by Anna Csergo in spring 2019
 metrics <- metrics[metrics$Species %in% sp.list_full_TRY_BIEN & metrics$Model == "Occurrence",]
 metrics <- unique(metrics[, which(names(metrics) %in% 
-                                    c("Species", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
-                                      "total.area", "perimeter.area.frac.dim", "range.size"))])
-names(metrics) <- c("species", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
-                                      "total.area", "perimeter.area.frac.dim", "range.size")
-
+                                    c("Species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape",
+                                      "perimeter.area.frac.dim"))])
+metrics <- metrics[c("Species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")]
+names(metrics) <- c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
 ```
 
 ## get trait sumamry statistics
@@ -76,6 +75,8 @@ lifeform <- x[["lifeform"]] ## 165 species
 seed_mass <- x[["seed_mass"]] ## 96 species
 sla <- x[["sla"]] ## 86 species
 woodiness <- x[["woodiness"]] ## 238 species
+
+lifeform$lifeform <- factor(lifeform$lifeform, levels = c("phanerophyte", "chamaephyte", "hemicryptophyte", "cryptophyte", "therophyte"))
 ```
 
 
@@ -133,6 +134,7 @@ mydata$woodiness <- factor(mydata$woodiness)
 mydata$lifeform <- factor(mydata$lifeform)
 # ## get ModelDF species names in the right format to match with those in phylogenetic trees
 levels(mydata$species) <- gsub(" ", "_", levels(mydata$species))
+mydata$lifeform <- factor(mydata$lifeform, levels = c("phanerophyte", "chamaephyte", "hemicryptophyte", "cryptophyte", "therophyte"))
 rm(b)
 ```
 
@@ -164,47 +166,55 @@ if(!exists("clean_tree")) {
 Set up individual datasets for analysis
 ```{r}
 ## Extract each dataset
-height <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.mesh.size", "mean.shape.index", 
-                                                      "prop.landscape", "total.area", "perimeter.area.frac.dim", 
-                                                      "range.size", "height_max"))]))
-leaf_area <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.mesh.size", "mean.shape.index", 
-                                                      "prop.landscape", "total.area", "perimeter.area.frac.dim", 
-                                                      "range.size", "leaf_area_max"))]))
-lifeform <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.mesh.size", "mean.shape.index", 
-                                                      "prop.landscape", "total.area", "perimeter.area.frac.dim", 
-                                                      "range.size", "lifeform"))]))
-seed_mass <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.mesh.size", "mean.shape.index", 
-                                                      "prop.landscape", "total.area", "perimeter.area.frac.dim", 
-                                                      "range.size", "seed_mass_max"))]))
-sla <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.mesh.size", "mean.shape.index", 
-                                                      "prop.landscape", "total.area", "perimeter.area.frac.dim", 
-                                                      "range.size", "sla_max"))]))
-woodiness <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "effective.mesh.size", "mean.shape.index", 
-                                                      "prop.landscape", "total.area", "perimeter.area.frac.dim", 
-                                                      "range.size", "woodiness"))]))
+height <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "perimeter.area.frac.dim", "height_max"))]))
+leaf_area <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "perimeter.area.frac.dim","leaf_area_max"))]))
+lifeform <- unique(drop_na(mydata[, which(names(mydata) %in% c("species","total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "perimeter.area.frac.dim","lifeform"))]))
+seed_mass <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "perimeter.area.frac.dim","seed_mass_max"))]))
+sla <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "perimeter.area.frac.dim","sla_max"))]))
+woodiness <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "perimeter.area.frac.dim","woodiness"))]))
 ```
 
 scale data
 ```{r}
 # for (i in names(Filter(is.numeric, height))) {
-#   height[, i] <- c(scale(height[,i]))
+#   height[, i] <- c(scale(height[,i])) +10
 # }
 # for (i in names(Filter(is.numeric, leaf_area))) {
-#   leaf_area[, i] <- c(scale(leaf_area[,i]))
+#   leaf_area[, i] <- c(scale(leaf_area[,i])) +10
 # }
 # for (i in names(Filter(is.numeric, seed_mass))) {
-#   seed_mass[, i] <- c(scale(seed_mass[,i]))
+#   seed_mass[, i] <- c(scale(seed_mass[,i])) +10
 # }
 # for (i in names(Filter(is.numeric, sla))) {
-#   sla[, i] <- c(scale(sla[,i]))
+#   sla[, i] <- c(scale(sla[,i])) +10
 # }
 # for (i in names(Filter(is.numeric, lifeform))) {
-#   lifeform[, i] <- c(scale(lifeform[,i]))
+#   lifeform[, i] <- c(scale(lifeform[,i])) +10
 # }
 # for (i in names(Filter(is.numeric, woodiness))) {
-#   woodiness[, i] <- c(scale(woodiness[,i]))
+#   woodiness[, i] <- c(scale(woodiness[,i])) +10
 # }
 ```
+
+```{r}
+
+# g <- seed_mass
+# 
+# ## Numeric variables
+# for (i in names(Filter(is.numeric, g))) {
+#   hist(log(g[,i]),
+#        breaks = 3000,
+#        main = paste(i),
+#        xlab = paste(i))
+# }
+```
+
 
 ## look at colinearity
 ```{r}

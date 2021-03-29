@@ -10,7 +10,7 @@
 #' 
 #' https://groups.nceas.ucsb.edu/non-linear-modeling/projects/owls/WRITEUP/owls.pdf/@@download
 #'  
-#'  http://www.wildanimalmodels.org/tiki-download_wiki_attachment.php?attId=24
+#'http://www.wildanimalmodels.org/tiki-download_wiki_attachment.php?attId=24
 
 
 ## set up ###################
@@ -30,10 +30,10 @@ prior <- list(R = list(V=1, nu=0.002),
 # prior <- list(R = list(V=1, nu=0.002))
 # 
 # ## this is a parameter expanded prior
-# a <- 1000
-# b <- 1
-# prior<- list(R = list(V=1, nu=0.002),
-#              G = list(G1 = list(V = diag(b), nu =0.002, alpha.mu = 0, alpha.V = diag(b)*a)))
+a <- 1000
+b <- 1
+prior<- list(R = list(V=1, nu=0.002),
+             G = list(G1 = list(V = diag(b), nu =0.002, alpha.mu = 0, alpha.V = diag(b)*a)))
 
 
 ## parameters-------------------------------------------------------------------------------------
@@ -58,23 +58,22 @@ par(mfrow = c(2,3))
 #        xlab = paste(i))
 # }
 
-
-plot(log(effective.mesh.size) ~ log(height_max), data = height)
-plot(mean.shape.index~ log(height_max), data = height)
-plot(prop.landscape~ log(height_max), data = height)
-plot(log(total.area) ~ log(height_max), data = height)
-plot(log(perimeter.area.frac.dim) ~ log(height_max), data = height)
-plot(log(range.size) ~ log(height_max), data = height)
+plot(log(total.area) ~ log(height_max), data = comp_data$data)
+plot(log(range.size) ~ log(height_max), data = comp_data$data)
+plot(log(effective.mesh.size) ~ log(height_max), data = comp_data$data)
+plot(mean.shape.index~ log(height_max), data = comp_data$data)
+plot(prop.landscape~ log(height_max), data = comp_data$data)
+plot(log(perimeter.area.frac.dim) ~ log(height_max), data = comp_data$data)
 
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
+f[["total.area"]]  <- log(total.area) ~ log(height_max)   
+f[["range.size"]] <- log(range.size) ~ log(height_max)  
 f[["effective.mesh.size"]] <-  log(effective.mesh.size) ~ log(height_max)     
 f[["mean.shape.index"]] <- mean.shape.index ~ log(height_max)        
 f[["prop.landscape"]] <- prop.landscape ~ log(height_max)
-f[["total.area"]]  <- log(total.area) ~ log(height_max)   
 f[["perimeter.area.frac.dim"]] <- log(perimeter.area.frac.dim) ~ log(height_max)
-f[["range.size"]] <- log(range.size) ~ log(height_max)  
 
 
 ## for quick checks
@@ -99,8 +98,8 @@ f[["range.size"]] <- log(range.size) ~ log(height_max)
 ## run a model for each spatial pattern metric
 m_indiv_height <- list()
 
-for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", 
-                                                                           "total.area", "perimeter.area.frac.dim", "range.size"))])){
+for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                                           "prop.landscape", "perimeter.area.frac.dim"))])){
    formula <- f[[j]]
    
 m_indiv_height[[j]][["height"]] <-mod_list <- mclapply(1:2, function(i) {
@@ -119,7 +118,7 @@ m_indiv_height[[j]][["height"]] <-mod_list <- mclapply(1:2, function(i) {
 mod_mcmc <-  m_indiv_height[["height"]][[j]][[1]]
 mod_mcmc_2 <-  m_indiv_height[["height"]][[j]][[2]]}
 
-#saveRDS(m_indiv_height, "m_height_phlyo.rds")
+saveRDS(m_indiv_height, "m_height_phylog_parexp.rds")
 
 ## Diagnositcs ----------------------------
 z <- "perimeter.area.frac.dim"
@@ -137,7 +136,7 @@ par(mfrow = c(2,3))
 
 ## extract the posterior estiamtes
 rr <- c()
-r <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
+r <- c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
 c <- tibble("a", "b")
   for(i in r) {
     sum <- as.data.frame(summary(m_indiv_height[[i]][["height"]][[1]][["Sol"]])[["statistics"]]); 
@@ -147,17 +146,20 @@ c <- tibble("a", "b")
 
 c <- cbind(c[-1,], rr)
 
-k <- list("log effective mesh size", "mean shape index", "proportion of landscape", "log total area", 
-          "log perimeter area fractality", "log range size")
+k <- list("log total area", "log range size", "log effective mesh size", "mean shape index",
+          "proportion of landscape", "log perimeter area fractality")
 names(k) <- r
 
 par(mfrow = c(2,3), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
 #par(mfrow = c(2,3), mar=c(4.5,4,2,2), col="white", col.main = "white", col.lab = "white", bg="transparent")
-for(i in names(height[which(names(height) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", 
-                                                 "perimeter.area.frac.dim", "range.size"))])) {
-  plot(f[[i]], data = height, col = "grey", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
+for(i in names(height[which(names(height) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
+                                                 "perimeter.area.frac.dim"))])) {
+  plot(f[[i]], data = comp_data$data, col = "grey", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
        ylab = paste(k[[i]]), main = paste(k[[i]]), xlab = paste("log max height"), bty = "n")
   abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = "#7000A8FF", lwd = 6)
 }
 
 
+for(i in r){
+  print(summary(m_indiv_height[[i]][["height"]][[1]]))
+}

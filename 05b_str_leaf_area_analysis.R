@@ -22,8 +22,8 @@ comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
 
 # # priors----------------------------------------------------------------------------------------
 ## normal prior (for models including phylogeny)
-prior <- list(R = list(V=1, nu=0.002), 
-              G = list(G1 = list(V=1, nu=0.002)))
+# prior <- list(R = list(V=1, nu=0.002), 
+#               G = list(G1 = list(V=1, nu=0.002)))
 
 ## no phylogeny prior
 prior <- list(R = list(V=1, nu=0.002))
@@ -57,23 +57,22 @@ par(mfrow = c(2,3))
 #        xlab = paste(i))
 # }
 
-
-plot(log(effective.mesh.size) ~ log(leaf_area_max), data = leaf_area)
-plot(mean.shape.index~ log(leaf_area_max), data = leaf_area)
-plot(prop.landscape~ log(leaf_area_max), data = leaf_area)
-plot(log(total.area) ~ log(leaf_area_max), data = leaf_area)
-plot(log(perimeter.area.frac.dim) ~ log(leaf_area_max), data = leaf_area)
-plot(log(range.size) ~ log(leaf_area_max), data = leaf_area)
+plot(log(total.area) ~ log(leaf_area_max), data = comp_data$data)
+plot(log(range.size) ~ log(leaf_area_max), data = comp_data$data)
+plot(log(effective.mesh.size) ~ log(leaf_area_max), data = comp_data$data)
+plot(mean.shape.index~ log(leaf_area_max), data = comp_data$data)
+plot(prop.landscape~ log(leaf_area_max), data = comp_data$data)
+plot(log(perimeter.area.frac.dim) ~ log(leaf_area_max), data = comp_data$data)
 
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
+f[["total.area"]]  <- log(total.area) ~ log(leaf_area_max)   
+f[["range.size"]] <- log(range.size) ~ log(leaf_area_max)  
 f[["effective.mesh.size"]] <-  log(effective.mesh.size) ~ log(leaf_area_max)     
 f[["mean.shape.index"]] <- mean.shape.index ~ log(leaf_area_max)        
 f[["prop.landscape"]] <- prop.landscape ~ log(leaf_area_max)
-f[["total.area"]]  <- log(total.area) ~ log(leaf_area_max)   
 f[["perimeter.area.frac.dim"]] <- log(perimeter.area.frac.dim) ~ log(leaf_area_max)
-f[["range.size"]] <- log(range.size) ~ log(leaf_area_max)  
 
 
 ## for quick checks
@@ -98,8 +97,8 @@ f[["range.size"]] <- log(range.size) ~ log(leaf_area_max)
 ## run a model for each spatial pattern metric
 m_indiv_leaf_area <- list()
 
-for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", 
-                                                                           "total.area", "perimeter.area.frac.dim", "range.size"))])){
+for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                                           "prop.landscape", "perimeter.area.frac.dim"))])){
   formula <- f[[j]]
   
   m_indiv_leaf_area[[j]][["leaf_area"]] <-mod_list <- mclapply(1:2, function(i) {
@@ -107,7 +106,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("effe
             # random = ~ animal,
              rcov = ~units,
              family= "gaussian",
-             #pedigree = comp_data$tree,
+            # pedigree = comp_data$tree,
              data = comp_data$data,
              nitt = nitt,
              burnin = burnin,
@@ -118,19 +117,17 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("effe
   mod_mcmc <-  m_indiv_leaf_area[["leaf_area"]][[j]][[1]]
   mod_mcmc_2 <-  m_indiv_leaf_area[["leaf_area"]][[j]][[2]]}
 
-#saveRDS(m_indiv_leaf_area, "m_leaf_area_phlyo.rds")
-#saveRDS(m_indiv_leaf_area, "m_leaf_area.rds")
+saveRDS(m_indiv_leaf_area, "m_leaf_area.rds")
 
 ## Diagnositcs ----------------------------
-z <- "range.size"
+z <- "perimeter.area.frac.dim"
 
 mod_mcmc <- m_indiv_leaf_area[[z]][["leaf_area"]][[1]]
 mod_mcmc_2 <- m_indiv_leaf_area[[z]][["leaf_area"]][[2]]
 
-#bay_phylo_dia(mod_mcmc)
+bay_phylo_dia(mod_mcmc)
 bay_dia(mod_mcmc)
 
-## no signifcant effects in the phylogeny models
 
 ## rough plots ----------
 
@@ -138,7 +135,7 @@ par(mfrow = c(2,3))
 
 ## extract the posterior estiamtes
 rr <- c()
-r <- c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", "perimeter.area.frac.dim", "range.size")
+r <- c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
 c <- tibble("a", "b")
 for(i in r) {
   sum <- as.data.frame(summary(m_indiv_leaf_area[[i]][["leaf_area"]][[1]][["Sol"]])[["statistics"]]); 
@@ -148,17 +145,20 @@ for(i in r) {
 
 c <- cbind(c[-1,], rr)
 
-k <- list("log effective mesh size", "mean shape index", "proportion of landscape", "log total area", 
-          "log perimeter area fractality", "log range size")
+k <- list("log total area", "log range size", "log effective mesh size", "mean shape index",
+          "proportion of landscape", "log perimeter area fractality")
 names(k) <- r
 
 par(mfrow = c(2,3), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
 #par(mfrow = c(2,3), mar=c(4.5,4,2,2), col="white", col.main = "white", col.lab = "white", bg="transparent")
-for(i in names(leaf_area[which(names(leaf_area) %in% c("effective.mesh.size", "mean.shape.index", "prop.landscape", "total.area", 
-                                                 "perimeter.area.frac.dim", "range.size"))])) {
-  plot(f[[i]], data = leaf_area, col = "grey", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
+for(i in names(leaf_area[which(names(leaf_area) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
+                                                 "perimeter.area.frac.dim"))])) {
+  plot(f[[i]], data = comp_data$data, col = "grey", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
        ylab = paste(k[[i]]), main = paste(k[[i]]), xlab = paste("log max leaf_area"), bty = "n")
   abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = "#7000A8FF", lwd = 6)
 }
 
 
+for(i in r){
+  print(summary(m_indiv_leaf_area[[i]][["leaf_area"]][[1]]))
+}

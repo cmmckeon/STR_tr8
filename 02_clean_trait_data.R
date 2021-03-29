@@ -343,6 +343,8 @@ names(lifeform) <- c("species", "trait_name", "StdValue")
 lifeform$trait_name <- as.character(lifeform$trait_name)
 lifeform$trait_name <- "lifeform"
 
+lifeform$StdValue <- factor(lifeform$StdValue, levels = c("phanerophyte", "chamaephyte", "hemicryptophyte", "cryptophyte", "therophyte"))
+
 lifeform <- lifeform[lifeform$species %in% sp.list_full_TRY_BIEN,]
 
 check <- rbind(check, lifeform)
