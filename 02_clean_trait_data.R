@@ -345,7 +345,7 @@ lifeform$trait_name <- "lifeform"
 
 lifeform$StdValue <- factor(lifeform$StdValue, levels = c("phanerophyte", "chamaephyte", "hemicryptophyte", "cryptophyte", "therophyte"))
 
-lifeform <- lifeform[lifeform$species %in% sp.list_full_TRY_BIEN,]
+#lifeform <- lifeform[lifeform$species %in% sp.list_full_TRY_BIEN,]
 
 check <- rbind(check, lifeform)
 mydata <- droplevels(unique(check))

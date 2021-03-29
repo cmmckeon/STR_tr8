@@ -117,7 +117,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
   mod_mcmc <-  m_indiv_leaf_area[["leaf_area"]][[j]][[1]]
   mod_mcmc_2 <-  m_indiv_leaf_area[["leaf_area"]][[j]][[2]]}
 
-saveRDS(m_indiv_leaf_area, "m_leaf_area.rds")
+#saveRDS(m_indiv_leaf_area, "m_leaf_area.rds")
 
 ## Diagnositcs ----------------------------
 z <- "perimeter.area.frac.dim"
@@ -125,7 +125,7 @@ z <- "perimeter.area.frac.dim"
 mod_mcmc <- m_indiv_leaf_area[[z]][["leaf_area"]][[1]]
 mod_mcmc_2 <- m_indiv_leaf_area[[z]][["leaf_area"]][[2]]
 
-bay_phylo_dia(mod_mcmc)
+#bay_phylo_dia(mod_mcmc)
 bay_dia(mod_mcmc)
 
 

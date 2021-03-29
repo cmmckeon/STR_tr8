@@ -118,16 +118,16 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
   mod_mcmc <-  m_indiv_sla[["sla"]][[j]][[1]]
   mod_mcmc_2 <-  m_indiv_sla[["sla"]][[j]][[2]]}
 
-saveRDS(m_indiv_sla, "m_sla_phylo_parexp.rds")
+#saveRDS(m_indiv_sla, "m_sla_phylo_parexp.rds")
 
 ## Diagnositcs ----------------------------
-z <- "perimeter.area.frac.dim"
+z <- "range.size"
 
 mod_mcmc <- m_indiv_sla[[z]][["sla"]][[1]]
 mod_mcmc_2 <- m_indiv_sla[[z]][["sla"]][[2]]
 
 bay_phylo_dia(mod_mcmc)
-bay_dia(mod_mcmc)
+#bay_dia(mod_mcmc)
 
 
 ## rough plots ----------

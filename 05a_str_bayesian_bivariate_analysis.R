@@ -77,21 +77,21 @@ f[["perimeter.area.frac.dim"]] <- log(perimeter.area.frac.dim) ~ log(height_max)
 
 
 ## for quick checks
-# m_list <-mod_list <- mclapply(1:2, function(i) {
-#   MCMCglmm(fixed = log(perimeter.area.frac.dim) ~ log(height_max),
-#           #random = ~ animal,
-#            rcov = ~units,
-#            family= "gaussian",
-#            #pedigree = comp_data$tree,
-#            data = comp_data$data,
-#            nitt = nitt,
-#            burnin = burnin,
-#            thin = thin,
-#            prior = prior)
-# }, mc.cores=2)
-# 
-# mod_mcmc <-  m_list[[1]]
-# mod_mcmc_2 <- m_list[[2]]
+m_list <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = (perimeter.area.frac.dim) ~ log(height_max),
+          random = ~ animal,
+           rcov = ~units,
+           family= "gaussian",
+           pedigree = comp_data$tree,
+           data = comp_data$data,
+           nitt = nitt,
+           burnin = burnin,
+           thin = thin,
+           prior = prior)
+}, mc.cores=2)
+
+mod_mcmc <-  m_list[[1]]
+mod_mcmc_2 <- m_list[[2]]
 
 
 
@@ -118,7 +118,7 @@ m_indiv_height[[j]][["height"]] <-mod_list <- mclapply(1:2, function(i) {
 mod_mcmc <-  m_indiv_height[["height"]][[j]][[1]]
 mod_mcmc_2 <-  m_indiv_height[["height"]][[j]][[2]]}
 
-saveRDS(m_indiv_height, "m_height_phylog_parexp.rds")
+#saveRDS(m_indiv_height, "m_height_phylog_parexp.rds")
 
 ## Diagnositcs ----------------------------
 z <- "perimeter.area.frac.dim"
@@ -158,6 +158,7 @@ for(i in names(height[which(names(height) %in% c("total.area", "range.size", "ef
        ylab = paste(k[[i]]), main = paste(k[[i]]), xlab = paste("log max height"), bty = "n")
   abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = "#7000A8FF", lwd = 6)
 }
+
 
 
 for(i in r){
