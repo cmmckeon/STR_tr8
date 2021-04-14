@@ -19,7 +19,7 @@ if(exists("treefile")) {
 } else warning("phylogeny does not exist in this directory")
 
 
-tip_labels <- as.character(treefile$tip.label) ## 356305 species (well, tipes..)
+tip_labels <- as.character(treefile$tip.label) ## 356305 species (well, tips..)
 
 #### drop unused species from phylogeny 
 omit_spe <- as.character(setdiff(treefile$tip.label, unique(mydata$species)))

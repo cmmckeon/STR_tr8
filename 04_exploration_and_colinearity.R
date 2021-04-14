@@ -181,6 +181,12 @@ plot.new()
 a <- droplevels(unique(merge(woodiness, lifeform, by = "species"))) 
 
 ma <- glm(woodiness ~ lifeform, family = binomial, data = a)
+# mb <- glm(woodiness ~ 1, family = binomial, data = a)
+# summary(mb)
+
+# simulationOutput <- simulateResiduals(fittedModel = ma, plot = F)
+# plot(simulateResiduals(ma))
+
 
 plot((woodiness) ~ lifeform, data = a)
 mtext(paste("re-do this model"))
@@ -189,6 +195,8 @@ plot.new()
 plot.new()
 plot.new()
 plot.new()
+
+
 
 rm(a,b,c,d,e, j,k,ma,mb,mc,md,me)
 

@@ -167,6 +167,7 @@ for(i in names(woodiness[which(names(woodiness) %in% c("total.area", "range.size
   # abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = "#7000A8FF", lwd = 6)
 }
 
+m_indiv_woodiness <- readRDS("m_indiv/m_woodiness_phlyo_parexp.rds")
 
 for(i in r){
   print(summary(m_indiv_woodiness[[i]][["woodiness"]][[1]]))

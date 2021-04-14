@@ -1,22 +1,23 @@
-#' ---
-#' title: "05a_str_bayesian_bivariate_analysis"
-#' author: "adapted by Caroline McKeon from script by Kevin Healy"
-#' date: ' November 2020'
-#' ---
-#' 
-#' 
-#' more good resources
-#' https://ourcodingclub.github.io/tutorials/mcmcglmm/
-#' 
-#' https://groups.nceas.ucsb.edu/non-linear-modeling/projects/owls/WRITEUP/owls.pdf/@@download
-#'  
-#'http://www.wildanimalmodels.org/tiki-download_wiki_attachment.php?attId=24
+## 06_str_multitrait_analysis
+## cm
+## 12/04/21
+
+# make multi-trait model data frame
+multi <- data.frame(unique(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", 
+                                                           "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim"))]))
+# for (i in levels(mydata$trait_name)){
+#   b <- unique(merge(b, mydata[,which(names(mydata) %in% c('species', i))], by = "species"))
+# }
+
+multi <- droplevels(unique(merge(woodiness[, which(names(woodiness) %in% c("species", "woodiness"))], lifeform, by = "species"))) ## 143
+multi <- droplevels(unique(merge(multi, height[, which(names(height) %in% c("species", "height_max"))], by = "species"))) ## 141
+multi <- droplevels(unique(merge(multi, seed_mass[, which(names(seed_mass) %in% c("species", "seed_mass_max"))], by = "species"))) ## 90
 
 
 ## set up ###################
 
 ## read in and handle data------------------------------------------------------------------------------------------------
-mcmc_data <- height
+mcmc_data <- multi
 mcmc_data$animal <- mcmc_data$species
 ## create comparative dataset
 comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
@@ -27,7 +28,7 @@ prior <- list(R = list(V=1, nu=0.002),
               G = list(G1 = list(V=1, nu=0.002)))
 
 ## no phylogeny prior
-# prior <- list(R = list(V=1, nu=0.002))
+ prior <- list(R = list(V=1, nu=0.002))
 # 
 # ## this is a parameter expanded prior
 a <- 1000
@@ -50,36 +51,36 @@ par(mfrow = c(2,3))
 
 ## Quick look at model dataframe
 
-## Numeric variables
-# for (i in names(Filter(is.numeric, height))) {
-#   hist(log(height[,i]),
+# Numeric variables
+# for (i in names(Filter(is.numeric, multi))) {
+#   hist((multi[,i]),
 #        breaks = 30,
 #        main = paste(i),
 #        xlab = paste(i))
 # }
 
-plot(log(total.area) ~ log(height_max), data = comp_data$data)
-plot(log(range.size) ~ log(height_max), data = comp_data$data)
-plot(log(effective.mesh.size) ~ log(height_max), data = comp_data$data)
-plot(mean.shape.index~ log(height_max), data = comp_data$data)
-plot(prop.landscape~ log(height_max), data = comp_data$data)
-plot(log(perimeter.area.frac.dim) ~ log(height_max), data = comp_data$data)
+# plot(log(total.area) ~ log(height_max), data = comp_data$data)
+# plot(log(range.size) ~ log(height_max), data = comp_data$data)
+# plot(log(effective.mesh.size) ~ log(height_max), data = comp_data$data)
+# plot(mean.shape.index~ log(height_max), data = comp_data$data)
+# plot(prop.landscape~ log(height_max), data = comp_data$data)
+# plot(log(perimeter.area.frac.dim) ~ log(height_max), data = comp_data$data)
 
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- log(total.area) ~ log(height_max)   
-f[["range.size"]] <- log(range.size) ~ log(height_max)  
-f[["effective.mesh.size"]] <-  log(effective.mesh.size) ~ log(height_max)     
-f[["mean.shape.index"]] <- mean.shape.index ~ log(height_max)        
-f[["prop.landscape"]] <- prop.landscape ~ log(height_max)
-f[["perimeter.area.frac.dim"]] <- log(perimeter.area.frac.dim) ~ log(height_max)
+f[["total.area"]]  <- log(total.area) ~ log(height_max)*woodiness*log(seed_mass_max)   
+f[["range.size"]] <- log(range.size) ~ log(height_max)*woodiness*log(seed_mass_max)      
+f[["effective.mesh.size"]] <-  log(effective.mesh.size) ~ log(height_max)*woodiness*log(seed_mass_max)        
+f[["mean.shape.index"]] <- mean.shape.index ~ log(height_max)*woodiness*log(seed_mass_max)           
+f[["prop.landscape"]] <- prop.landscape ~ log(height_max)*woodiness*log(seed_mass_max)    
+f[["perimeter.area.frac.dim"]] <- log(perimeter.area.frac.dim) ~ log(height_max)*woodiness*log(seed_mass_max)     
 
 
 ## for quick checks
 m_list <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = (perimeter.area.frac.dim) ~ log(height_max),
-          random = ~ animal,
+  MCMCglmm(fixed = log(total.area) ~ woodiness*log(height_max) + woodiness*log(seed_mass_max),
+           random = ~ animal,
            rcov = ~units,
            family= "gaussian",
            pedigree = comp_data$tree,
@@ -96,35 +97,37 @@ mod_mcmc_2 <- m_list[[2]]
 
 
 ## run a model for each spatial pattern metric
-m_indiv_height <- list()
+m_multi <- list()
 
 for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
                                                                            "prop.landscape", "perimeter.area.frac.dim"))])){
-   formula <- f[[j]]
-   
-m_indiv_height[[j]][["height"]] <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = formula,
-           random = ~ animal,
-           rcov = ~units,
-           family= "gaussian",
-           pedigree = comp_data$tree,
-           data = comp_data$data,
-           nitt = nitt,
-           burnin = burnin,
-           thin = thin,
-           prior = prior)
-}, mc.cores=2)
+  formula <- f[[j]]
+  
+  m_multi[[j]][["multi"]] <-mod_list <- mclapply(1:2, function(i) {
+    MCMCglmm(fixed = formula,
+             random = ~ animal,
+             rcov = ~units,
+             family= "gaussian",
+             pedigree = comp_data$tree,
+             data = comp_data$data,
+             nitt = nitt,
+             burnin = burnin,
+             thin = thin,
+             prior = prior)
+  }, mc.cores=2)
+  
+  mod_mcmc <-  m_multi[["multi"]][[j]][[1]]
+  mod_mcmc_2 <-  m_multi[["multi"]][[j]][[2]]}
 
-mod_mcmc <-  m_indiv_height[["height"]][[j]][[1]]
-mod_mcmc_2 <-  m_indiv_height[["height"]][[j]][[2]]}
-
-#saveRDS(m_indiv_height, "m_height_phylog_parexp.rds")
+#saveRDS(m_multi, "m_multi.rds")
 
 ## Diagnositcs ----------------------------
+z <- "total.area"
+
 z <- "perimeter.area.frac.dim"
 
-mod_mcmc <- m_indiv_height[[z]][["height"]][[1]]
-mod_mcmc_2 <- m_indiv_height[[z]][["height"]][[2]]
+mod_mcmc <- m_multi[[z]][["height"]][[1]]
+mod_mcmc_2 <- m_multi[[z]][["height"]][[2]]
 
 bay_phylo_dia(mod_mcmc)
 bay_dia(mod_mcmc)
@@ -138,11 +141,11 @@ par(mfrow = c(2,3))
 rr <- c()
 r <- c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
 c <- tibble("a", "b")
-  for(i in r) {
-    sum <- as.data.frame(summary(m_indiv_height[[i]][["height"]][[1]][["Sol"]])[["statistics"]]); 
-    c <- rbind(c, c(sum$Mean[1], sum$Mean[2])); 
-    rr <- append(rr, paste(i))
-  }
+for(i in r) {
+  sum <- as.data.frame(summary(m_multi[[i]][["height"]][[1]][["Sol"]])[["statistics"]]); 
+  c <- rbind(c, c(sum$Mean[1], sum$Mean[2])); 
+  rr <- append(rr, paste(i))
+}
 
 c <- cbind(c[-1,], rr)
 
@@ -159,8 +162,8 @@ for(i in names(height[which(names(height) %in% c("total.area", "range.size", "ef
   abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = "#7000A8FF", lwd = 6)
 }
 
-m_indiv_height <- readRDS("m_indiv/m_height_phylog_parexp.rds")
+m_multi <- readRDS("m_indiv/m_height_phylog_parexp.rds")
 
 for(i in r){
-  print(summary(m_indiv_height[[i]][["height"]][[1]]))
+  print(summary(m_multi[[i]][["height"]][[1]]))
 }

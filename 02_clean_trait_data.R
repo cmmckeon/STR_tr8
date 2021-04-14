@@ -133,7 +133,7 @@ dry_Nmass$trait_name <- "Nmass_drymass"
 
 ## SLA ------------
 sla <- droplevels(mydata[mydata$trait_name %in% c("Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole excluded"
-                                                  # "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole included",
+                                                  # "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole included"
                                                   # "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded",
                                                   # "leaf area per leaf dry mass"
                                                   ),])

@@ -227,10 +227,30 @@ source("04_exploration_and_colinearity.R")
 ## 1. Metric ~ trait
 
 ```{r}
-source("05a_str_bayesian_bivariate_analysis.R")
+## Can source these scripts, but since you have the model object lists and the effect plots saved, generally easier to look at these as needed.
+# source("05a_str_bayesian_bivariate_analysis.R")
+# source("05b_str_bayesian_bivariate_analysis.R")
+# source("05c_str_bayesian_bivariate_analysis.R")
+# source("05d_str_sla_analysis.R")
+# source("05e_str_lifeform_analysis.R")
+# source("05f_str_woodiness_analysis.R")
 ```
 
+For the univartiate Metric ~ trait analysis, very little effect.
+Phylogenetic effect is not well estimated.
+Sample size is quite small.
+This might suggest that traits can't be examined in isolation, either from eachother or from climate.
 
+144 - height
+176 - woodiness
+137 - life form
+39 - Sla
+80 - Seed mass
+34 - leaf area
+
+```{r}
+
+```
 
 
 
