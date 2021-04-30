@@ -38,7 +38,7 @@ source("02_clean_trait_data.R")
 ## get range metrics
 Read in species range metrics.
 ```{r}
-metrics <- read.csv("Data_range_metrics.csv") ## for now this is the updated metrics as calculated by Anna Csergo in spring 2019
+metrics <- read.csv("Data_range_metrics.csv") ## metrics provided by Anna Csergo in spring 2019
 metrics <- metrics[metrics$Species %in% sp.list_full_TRY_BIEN & metrics$Model == "Occurrence",]
 metrics <- unique(metrics[, which(names(metrics) %in% 
                                     c("Species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape",
@@ -180,39 +180,73 @@ woodiness <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "tota
                                                       "prop.landscape", "perimeter.area.frac.dim","woodiness"))]))
 ```
 
-scale data
+
 ```{r}
-# for (i in names(Filter(is.numeric, height))) {
-#   height[, i] <- c(scale(height[,i])) +10
-# }
-# for (i in names(Filter(is.numeric, leaf_area))) {
-#   leaf_area[, i] <- c(scale(leaf_area[,i])) +10
-# }
-# for (i in names(Filter(is.numeric, seed_mass))) {
-#   seed_mass[, i] <- c(scale(seed_mass[,i])) +10
-# }
-# for (i in names(Filter(is.numeric, sla))) {
-#   sla[, i] <- c(scale(sla[,i])) +10
-# }
-# for (i in names(Filter(is.numeric, lifeform))) {
-#   lifeform[, i] <- c(scale(lifeform[,i])) +10
-# }
-# for (i in names(Filter(is.numeric, woodiness))) {
-#   woodiness[, i] <- c(scale(woodiness[,i])) +10
-# }
+
+for (i in names(Filter(is.numeric, woodiness[, which(names(woodiness) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  hist(log(height[,i]), main = paste(i)) 
+}
+
+for (i in names(Filter(is.numeric, woodiness[, which(names(woodiness) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  hist((height[,i]), main = paste(i)) 
+}
+
+```
+
+standardise data
+```{r}
+## log transform raw data
+for (i in names(Filter(is.numeric, height[, which(names(height) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  height[, i] <- c(log(height[,i])) 
+}
+for (i in names(Filter(is.numeric, leaf_area[, which(names(leaf_area) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  leaf_area[, i] <- c(log(leaf_area[,i])) 
+}
+for (i in names(Filter(is.numeric, seed_mass[, which(names(seed_mass) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  seed_mass[, i] <- c(log(seed_mass[,i])) 
+}
+for (i in names(Filter(is.numeric, sla[, which(names(sla) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  sla[, i] <- c(log(sla[,i])) +10
+}
+for (i in names(Filter(is.numeric, lifeform[, which(names(lifeform) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  lifeform[, i] <- c(log(lifeform[,i])) 
+}
+for (i in names(Filter(is.numeric, woodiness[, which(names(woodiness) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  woodiness[, i] <- c(log(woodiness[,i])) 
+}
+
+## scale raw data
+for (i in names(Filter(is.numeric, height))) {
+  height[, i] <- c(scale(height[,i])) 
+}
+for (i in names(Filter(is.numeric, leaf_area))) {
+  leaf_area[, i] <- c(scale(leaf_area[,i])) 
+}
+for (i in names(Filter(is.numeric, seed_mass))) {
+  seed_mass[, i] <- c(scale(seed_mass[,i])) 
+}
+for (i in names(Filter(is.numeric, sla))) {
+  sla[, i] <- c(scale(sla[,i])) +10
+}
+for (i in names(Filter(is.numeric, lifeform))) {
+  lifeform[, i] <- c(scale(lifeform[,i])) 
+}
+for (i in names(Filter(is.numeric, woodiness))) {
+  woodiness[, i] <- c(scale(woodiness[,i])) 
+}
 ```
 
 ```{r}
 
-# g <- seed_mass
-# 
-# ## Numeric variables
-# for (i in names(Filter(is.numeric, g))) {
-#   hist(log(g[,i]),
-#        breaks = 3000,
-#        main = paste(i),
-#        xlab = paste(i))
-# }
+g <- height
+
+## Numeric variables
+for (i in names(Filter(is.numeric, g))) {
+  hist(log(g[,i]),
+       breaks = 3000,
+       main = paste(i),
+       xlab = paste(i))
+}
 ```
 
 
@@ -239,7 +273,7 @@ source("04_exploration_and_colinearity.R")
 For the univartiate Metric ~ trait analysis, very little effect.
 Phylogenetic effect is not well estimated.
 Sample size is quite small.
-This might suggest that traits can't be examined in isolation, either from eachother or from climate.
+This might suggest that traits can't be examined in isolation, either from eachother or from climate information.
 
 144 - height
 176 - woodiness
@@ -249,7 +283,7 @@ This might suggest that traits can't be examined in isolation, either from eacho
 34 - leaf area
 
 ```{r}
-
+endem <- read.delim2("AFE_endemics.txt")
 ```
 
 

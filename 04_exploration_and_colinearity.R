@@ -50,7 +50,7 @@ for (i in names(woodiness[,2:7])) {
 
 ## range metric ~ trait relationshiops -----------------
 
-par(mfrow = c(6,6), mar =c(4,4,1,1)) ## b,l,t,r
+par(mfrow = c(6,6), mar =c(4,4,1,1)) ## b,l,t,r
 j <- list(height, leaf_area, sla, seed_mass)
 k <- list(lifeform, woodiness)
 ## total.area
@@ -200,7 +200,26 @@ plot.new()
 
 rm(a,b,c,d,e, j,k,ma,mb,mc,md,me)
 
+## metric colinearity -----------------
 
+f <- list()
+f[["total.area"]]  <- log(total.area) ~ log(height_max)   
+f[["range.size"]] <- log(range.size) ~ log(height_max)  
+f[["effective.mesh.size"]] <-  log(effective.mesh.size) ~ log(height_max)     
+f[["mean.shape.index"]] <- mean.shape.index ~ log(height_max)        
+f[["prop.landscape"]] <- prop.landscape ~ log(height_max)
+f[["perimeter.area.frac.dim"]] <- log(perimeter.area.frac.dim) ~ log(height_max)
+
+pairs(log(metrics[, which(names(metrics) %nin% c("species"))]))
+cor(log(metrics[, which(names(metrics) %nin% c("species"))]))
+
+m <- drop_na(metrics)
+cor(log(m[, which(names(m) %nin% c("species"))]))
+
+g <- lm(scale(log(total.area)) ~ scale(log(range.size)), data = metrics)
+summary(g)
+
+cor.test(log(metrics$total.area),log(metrics$range.size))
 
 ## the end ------------
 
