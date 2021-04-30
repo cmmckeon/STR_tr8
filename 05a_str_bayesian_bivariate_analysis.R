@@ -78,7 +78,7 @@ f[["perimeter.area.frac.dim"]] <- log(perimeter.area.frac.dim) ~ log(height_max)
 
 ## for quick checks
 m_list <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = (perimeter.area.frac.dim) ~ log(height_max),
+  MCMCglmm(fixed = (perimeter.area.frac.dim) ~ (height_max),
           random = ~ animal,
            rcov = ~units,
            family= "gaussian",
