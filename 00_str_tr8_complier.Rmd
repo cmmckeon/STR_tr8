@@ -184,45 +184,45 @@ woodiness <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "tota
 
 standardise data
 ```{r}
-# ## log transform raw data
-# for (i in names(Filter(is.numeric, height[, which(names(height) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-#   height[, i] <- c(log(height[,i])) 
-# }
-# for (i in names(Filter(is.numeric, leaf_area[, which(names(leaf_area) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-#   leaf_area[, i] <- c(log(leaf_area[,i])) 
-# }
-# for (i in names(Filter(is.numeric, seed_mass[, which(names(seed_mass) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-#   seed_mass[, i] <- c(log(seed_mass[,i])) 
-# }
-# for (i in names(Filter(is.numeric, sla[, which(names(sla) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-#   sla[, i] <- c(log(sla[,i])) +10
-# }
-# for (i in names(Filter(is.numeric, lifeform[, which(names(lifeform) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-#   lifeform[, i] <- c(log(lifeform[,i])) 
-# }
-# for (i in names(Filter(is.numeric, woodiness[, which(names(woodiness) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-#   woodiness[, i] <- c(log(woodiness[,i])) 
-# }
-# 
-# ## scale raw data
-# for (i in names(Filter(is.numeric, height))) {
-#   height[, i] <- c(scale(height[,i])) 
-# }
-# for (i in names(Filter(is.numeric, leaf_area))) {
-#   leaf_area[, i] <- c(scale(leaf_area[,i])) 
-# }
-# for (i in names(Filter(is.numeric, seed_mass))) {
-#   seed_mass[, i] <- c(scale(seed_mass[,i])) 
-# }
-# for (i in names(Filter(is.numeric, sla))) {
-#   sla[, i] <- c(scale(sla[,i])) +10
-# }
-# for (i in names(Filter(is.numeric, lifeform))) {
-#   lifeform[, i] <- c(scale(lifeform[,i])) 
-# }
-# for (i in names(Filter(is.numeric, woodiness))) {
-#   woodiness[, i] <- c(scale(woodiness[,i])) 
-# }
+## log transform raw data
+for (i in names(Filter(is.numeric, height[, which(names(height) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  height[, i] <- c(log(height[,i]))
+}
+for (i in names(Filter(is.numeric, leaf_area[, which(names(leaf_area) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  leaf_area[, i] <- c(log(leaf_area[,i]))
+}
+for (i in names(Filter(is.numeric, seed_mass[, which(names(seed_mass) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  seed_mass[, i] <- c(log(seed_mass[,i]))
+}
+for (i in names(Filter(is.numeric, sla[, which(names(sla) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  sla[, i] <- c(log(sla[,i])) +10
+}
+for (i in names(Filter(is.numeric, lifeform[, which(names(lifeform) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  lifeform[, i] <- c(log(lifeform[,i]))
+}
+for (i in names(Filter(is.numeric, woodiness[, which(names(woodiness) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  woodiness[, i] <- c(log(woodiness[,i]))
+}
+
+## scale raw data
+for (i in names(Filter(is.numeric, height))) {
+  height[, i] <- c(scale(height[,i]))
+}
+for (i in names(Filter(is.numeric, leaf_area))) {
+  leaf_area[, i] <- c(scale(leaf_area[,i]))
+}
+for (i in names(Filter(is.numeric, seed_mass))) {
+  seed_mass[, i] <- c(scale(seed_mass[,i]))
+}
+for (i in names(Filter(is.numeric, sla))) {
+  sla[, i] <- c(scale(sla[,i])) +10
+}
+for (i in names(Filter(is.numeric, lifeform))) {
+  lifeform[, i] <- c(scale(lifeform[,i]))
+}
+for (i in names(Filter(is.numeric, woodiness))) {
+  woodiness[, i] <- c(scale(woodiness[,i]))
+}
 ```
 
 
