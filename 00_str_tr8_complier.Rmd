@@ -39,6 +39,7 @@ source("02_clean_trait_data.R")
 Read in species range metrics.
 ```{r}
 metrics <- read.csv("Data_range_metrics.csv") ## metrics provided by Anna Csergo in spring 2019
+metrics$Species <- gsub(" ssp.*", "", metrics$Species)
 metrics <- metrics[metrics$Species %in% sp.list_full_TRY_BIEN & metrics$Model == "Occurrence",]
 metrics <- unique(metrics[, which(names(metrics) %in% 
                                     c("Species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape",
@@ -232,6 +233,14 @@ source("04_exploration_and_colinearity.R")
 ## if using early log and scaling, replace "log" with "#log"
 ```
 
+## get Climate values
+```{r}
+endem <- read.delim2("AFE_endemics.txt")
+endem <- endem[, which(names(endem) %in% c("afe", "lon", "lat"))]
+endem$afe <- gsub(" ", "_", endem$afe)
+endem <- endem[endem$afe %in% mydata$species,]
+names(endem) <- c("species", "x", "y")
+```
 
 
 ## Analysis
@@ -239,7 +248,7 @@ source("04_exploration_and_colinearity.R")
 
 ```{r}
 ## Can source these scripts, but since you have the model object lists and the effect plots saved, generally easier to look at these as needed.
-# source("05a_str_bayesian_bivariate_analysis.R")
+# source("05a_str_height_analysis.R")
 # source("05b_str_bayesian_bivariate_analysis.R")
 # source("05c_str_bayesian_bivariate_analysis.R")
 # source("05d_str_sla_analysis.R")
@@ -259,13 +268,12 @@ This might suggest that traits can't be examined in isolation, either from eacho
 80 - Seed mass
 34 - leaf area
 
+2. Metric ~ phylogeny
 ```{r}
-endem <- read.delim2("AFE_endemics.txt")
-endem <- endem[, which(names(endem) %in% c("afe", "lon", "lat"))]
-endem$afe <- gsub(" ", "_", endem$afe)
-endem <- endem[endem$afe %in% mydata$species,]
-names(endem) <- c("species", "x", "y")
+source("06_metric_phylogeny_analysis.R")
 ```
+
+
 
 
 

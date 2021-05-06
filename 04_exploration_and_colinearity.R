@@ -261,18 +261,23 @@ plot.new()
 rm(a,b,c,d,e, j,k,ma,mb,mc,md,me)
 
 ## metric colinearity -----------------
+m <- metrics
+for (i in names(Filter(is.numeric, m[, which(names(m) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  m[, i] <- c(log(m[,i]))
+}
+for (i in names(Filter(is.numeric, m))) {
+  m[, i] <- c(scale(m[,i]))
+}
 
-pairs(scale(log
-      (metrics[, which(names(metrics) %nin% c("species"))])))
+pairs(m[, which(names(m) %nin% c("species"))])
 
 # print(cor(metrics[, which(names(metrics) %nin% c("species"))]))
 # print(cor(log(metrics[, which(names(metrics) %nin% c("species"))])))
-print(cor(scale(log(metrics[, which(names(metrics) %nin% c("species"))]))))
+print(cor(m[, which(names(m) %nin% c("species"))]))
 
-# m <- drop_na(metrics)
-# print(cor(#log
-#     (m[, which(names(m) %nin% c("species"))])))
-# 
+m <- drop_na(metrics)
+print(cor(scale(log((m[, which(names(m) %nin% c("species"))])))))
+
 # g <- lm(total.area ~ range.size, data = metrics)
 # summary(g)
 # g <- lm(scale(log(total.area)) ~ scale(log(range.size)), data = metrics)
