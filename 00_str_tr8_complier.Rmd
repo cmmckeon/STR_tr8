@@ -134,6 +134,7 @@ mydata <- unique(merge(metrics, b, by = "species"))
 mydata$woodiness <- factor(mydata$woodiness)
 mydata$lifeform <- factor(mydata$lifeform)
 # ## get ModelDF species names in the right format to match with those in phylogenetic trees
+mydata$species <- factor(mydata$species)
 levels(mydata$species) <- gsub(" ", "_", levels(mydata$species))
 mydata$lifeform <- factor(mydata$lifeform, levels = c("phanerophyte", "chamaephyte", "hemicryptophyte", "cryptophyte", "therophyte"))
 rm(b)

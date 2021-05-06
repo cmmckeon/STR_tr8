@@ -1,7 +1,8 @@
 ## 00_str_functions.R
 ## Caroline McKeon 22/03/21
 
-library(BIEN)
+#library(BIEN)
+print("mannually library BIEN package")
 library(glmmTMB)
 library(tidyverse)
 library(MCMCglmm)
