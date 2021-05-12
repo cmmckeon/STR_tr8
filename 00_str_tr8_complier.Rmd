@@ -46,6 +46,16 @@ metrics <- unique(metrics[, which(names(metrics) %in%
                                       "perimeter.area.frac.dim"))])
 metrics <- metrics[c("Species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")]
 names(metrics) <- c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
+
+## log transform raw data
+for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+  metrics[, i] <- c(log(metrics[,i]))
+}
+
+## scale raw data
+for (i in names(Filter(is.numeric, metrics))) {
+  metrics[, i] <- c(scale(metrics[,i]))
+}
 ```
 
 ## get trait sumamry statistics
@@ -107,7 +117,7 @@ par(mfrow = c(4,4))
   for(j in stat){
 for(i in cont){
 
-    hist(log(x[[i]][,j]), main = paste(i,j), xlab = paste("log",j), cex = 1, breaks = 50)
+    hist(log(x[[i]][,j]), main = paste(i,j), xlab = paste(j), cex = 1, breaks = 50)
 }}
 ```
 
@@ -151,7 +161,7 @@ for (i in names(Filter(is.factor, mydata))) {
 
 ## Numeric variables
 for (i in names(Filter(is.numeric, mydata))) {
-  hist(log(mydata[,i]),
+  hist((mydata[,i]),
        breaks = 3000,
        main = paste(i),
        xlab = paste(i))
@@ -180,58 +190,18 @@ sla <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "total.area
                                                       "prop.landscape", "perimeter.area.frac.dim","sla_max"))]))
 woodiness <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
                                                       "prop.landscape", "perimeter.area.frac.dim","woodiness"))]))
+## log transform and standardise raw trait data
+height$height_max <- c(scale(log(height$height_max)))
+leaf_area$leaf_area_max <- c(scale(log(leaf_area$leaf_area_max)))
+seed_mass$seed_mass_max <- c(scale(log(seed_mass$seed_mass_max)))
+sla$sla_max <- c(scale(log(sla$sla_max)))
 ```
 
-
-
-standardise data
-```{r}
-## log transform raw data
-for (i in names(Filter(is.numeric, height[, which(names(height) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-  height[, i] <- c(log(height[,i]))
-}
-for (i in names(Filter(is.numeric, leaf_area[, which(names(leaf_area) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-  leaf_area[, i] <- c(log(leaf_area[,i]))
-}
-for (i in names(Filter(is.numeric, seed_mass[, which(names(seed_mass) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-  seed_mass[, i] <- c(log(seed_mass[,i]))
-}
-for (i in names(Filter(is.numeric, sla[, which(names(sla) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-  sla[, i] <- c(log(sla[,i])) +10
-}
-for (i in names(Filter(is.numeric, lifeform[, which(names(lifeform) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-  lifeform[, i] <- c(log(lifeform[,i]))
-}
-for (i in names(Filter(is.numeric, woodiness[, which(names(woodiness) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-  woodiness[, i] <- c(log(woodiness[,i]))
-}
-
-## scale raw data
-for (i in names(Filter(is.numeric, height))) {
-  height[, i] <- c(scale(height[,i]))
-}
-for (i in names(Filter(is.numeric, leaf_area))) {
-  leaf_area[, i] <- c(scale(leaf_area[,i]))
-}
-for (i in names(Filter(is.numeric, seed_mass))) {
-  seed_mass[, i] <- c(scale(seed_mass[,i]))
-}
-for (i in names(Filter(is.numeric, sla))) {
-  sla[, i] <- c(scale(sla[,i])) +10
-}
-for (i in names(Filter(is.numeric, lifeform))) {
-  lifeform[, i] <- c(scale(lifeform[,i]))
-}
-for (i in names(Filter(is.numeric, woodiness))) {
-  woodiness[, i] <- c(scale(woodiness[,i]))
-}
-```
 
 
 ## look at colinearity
 ```{r}
 source("04_exploration_and_colinearity.R")
-## if using early log and scaling, replace "log" with "#log"
 ```
 
 ## get Climate values

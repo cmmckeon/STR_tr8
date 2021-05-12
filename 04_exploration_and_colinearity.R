@@ -7,50 +7,50 @@
 par(mfrow = c(6,6), mar =c(4,4,1,1))
 
 for (i in names(height[,2:7])) {
-  hist(#log
+  hist(
     (height[,i]),
        breaks = 30,
        main = "height",
-       xlab = paste(c("#log",i), collapse = ""))
+       xlab = paste(c("",i), collapse = ""))
 }
 
 for (i in names(height[,2:7])) {
-  hist(#log
+  hist(
     (leaf_area[,i]),
        main = "LA",
-       xlab = paste(c("#log",i), collapse = ""))
+       xlab = paste(c("",i), collapse = ""))
 }
 
 for (i in names(sla[,2:7])) {
-  hist(#log
+  hist(
     (sla[,i]),
        breaks = 30,
        main = "sla",
-       xlab = paste(c("#log",i), collapse = ""))
+       xlab = paste(c("",i), collapse = ""))
 }
 
 for (i in names(seed_mass[,2:7])) {
-  hist(#log
+  hist(
     (seed_mass[,i]),
        breaks = 30,
        main = "seed mass",
-       xlab = paste(c("#log",i), collapse = ""))
+       xlab = paste(c("",i), collapse = ""))
 }
 
 for (i in names(lifeform[,2:7])) {
- hist(#log
+ hist(
    (lifeform[,i]),
       breaks = 30,
        main = "lifeform",
-      xlab = paste(c("#log",i), collapse = ""))
+      xlab = paste(c("",i), collapse = ""))
 }
 
 for (i in names(woodiness[,2:7])) {
-  hist(#log
+  hist(
        (woodiness[,i]),
        breaks = 30,
        main = "wood",
-       xlab = paste(c("#log",i), collapse = ""))
+       xlab = paste(c("",i), collapse = ""))
 }
 
 
@@ -61,52 +61,52 @@ j <- list(height, leaf_area, sla, seed_mass)
 k <- list(lifeform, woodiness)
 ## total.area
 for(i in 1:length(j)){
-  plot(#log
-    (total.area) ~ #log
+  plot(
+    (total.area) ~ 
     (j[[i]][,8]), data = j[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 for(i in 1:length(k)){
-  plot(#log
+  plot(
        (total.area) ~ k[[i]][,8], data = k[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 
 ## range.size
 for(i in 1:length(j)){
-  plot(#log
-       (range.size) ~ #log
+  plot(
+       (range.size) ~ 
        (j[[i]][,8]), data = j[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 for(i in 1:length(k)){
-  plot(#log
+  plot(
        (range.size) ~ k[[i]][,8], data = k[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 
 ## effective.mesh.size
 for(i in 1:length(j)){
-  plot(#log
-       (effective.mesh.size) ~ #log
+  plot(
+       (effective.mesh.size) ~ 
        (j[[i]][,8]), data = j[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 for(i in 1:length(k)){
-plot(#log
+plot(
      (effective.mesh.size) ~ k[[i]][,8], data = k[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 
 ## mean.shape.index
 for(i in 1:length(j)){
-  plot((mean.shape.index) ~ #log
+  plot((mean.shape.index) ~ 
        (j[[i]][,8]), data = j[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 for(i in 1:length(k)){
   plot((mean.shape.index) ~ k[[i]][,8], data = k[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 
 ## prop.landscape
 for(i in 1:length(j)){
-  plot((prop.landscape) ~ #log
+  plot((prop.landscape) ~ 
        (j[[i]][,8]), data = j[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 for(i in 1:length(k)){
   plot((prop.landscape) ~ k[[i]][,8], data = k[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 
 ## perimeter.area.frac.dim
 for(i in 1:length(j)){
-  plot(#log
-       (perimeter.area.frac.dim) ~ #log
+  plot(
+       (perimeter.area.frac.dim) ~ 
        (j[[i]][,8]), data = j[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 for(i in 1:length(k)){
-  plot(#log
+  plot(
        (perimeter.area.frac.dim) ~ k[[i]][,8], data = k[[i]], col = "black", cex = 0.7, cex.lab = 1.5, cex.main = 1.8)}
 
 
@@ -120,38 +120,38 @@ c <- droplevels(unique(merge(height, sla, by = "species")))
 d <- droplevels(unique(merge(height, seed_mass, by = "species"))) 
 e <- droplevels(unique(merge(height, leaf_area, by = "species")))
 
-ma <- lm(#log
+ma <- lm(
          (height_max) ~ lifeform, data = a)
-mb <- lm(#log
+mb <- lm(
          (height_max) ~ woodiness, data = b)
-mc <- lm(#log
-         (height_max) ~ #log
+mc <- lm(
+         (height_max) ~ 
          (sla_max), data = c)
-md <- lm(#log
-         (height_max) ~ #log
+md <- lm(
+         (height_max) ~ 
          (seed_mass_max), data = d)
-me <- lm(#log
-         (height_max) ~ #log
+me <- lm(
+         (height_max) ~ 
          (leaf_area_max), data = e)
 
-plot(#log
+plot(
      (height_max) ~ lifeform, data = a)
 mtext(paste("r2", round(summary(ma)$adj.r.squared, 4), col = ""), side =3)
-plot(#log
+plot(
      (height_max) ~ woodiness, data = b)
 mtext(paste("r2", round(summary(mb)$adj.r.squared, 4), col = ""), side =3)
-plot(#log
-     (c$height_max) ~ #log
+plot(
+     (c$height_max) ~ 
      (c$sla_max))
 abline(mc)
-mtext(paste("r2", round(summary(mc)$adj.r.squared, 4), "ns", col = ""), side =3, col = "red")
-plot(#log
-     (d$height_max) ~ #log
+mtext(paste("r2", round(summary(mc)$adj.r.squared, 4), col = ""), side =3)
+plot(
+     (d$height_max) ~ 
      (d$seed_mass_max))
 abline(md)
 mtext(paste("r2", round(summary(md)$adj.r.squared, 4), col = ""), side =3)
-plot(#log
-     (e$height_max) ~ #log
+plot(
+     (e$height_max) ~ 
      (e$leaf_area_max))
 abline(me)
 mtext(paste("r2", round(summary(me)$adj.r.squared, 4), "ns", col = ""), side =3, col = "red")
@@ -162,30 +162,30 @@ b <- droplevels(unique(merge(leaf_area, woodiness, by = "species")))
 c <- droplevels(unique(merge(leaf_area, sla, by = "species"))) 
 d <- droplevels(unique(merge(leaf_area, seed_mass, by = "species"))) 
 
-ma <- lm(#log
+ma <- lm(
          (leaf_area_max) ~ lifeform, data = a)
-mb <- lm(#log
+mb <- lm(
          (leaf_area_max) ~ woodiness, data = b)
-mc <- lm(#log
-         (leaf_area_max) ~ #log
+mc <- lm(
+         (leaf_area_max) ~ 
          (sla_max), data = c)
-md <- lm(#log
-         (leaf_area_max) ~ #log
+md <- lm(
+         (leaf_area_max) ~ 
          (seed_mass_max), data = d)
 
-plot(#log
+plot(
      (leaf_area_max) ~ lifeform, data = a)
 mtext(paste("r2", round(summary(ma)$adj.r.squared, 4), col = ""), side =3)
-plot(#log
+plot(
      (leaf_area_max) ~ woodiness, data = b)
-mtext(paste("r2", round(summary(mb)$adj.r.squared, 4), "ns", col = ""), side =3, col = "red")
-plot(#log
-     (c$leaf_area_max) ~ #log
+mtext(paste("r2", round(summary(mb)$adj.r.squared, 4), col = ""), side =3)
+plot(
+     (c$leaf_area_max) ~ 
        (c$sla_max))
 abline(mc)
-mtext(paste("r2", round(summary(mc)$adj.r.squared, 4), col = ""), side =3, col = "red")
-plot(#log
-     (d$leaf_area_max) ~ #log
+mtext(paste("r2", round(summary(mc)$adj.r.squared, 4), col = ""), side =3)
+plot(
+     (d$leaf_area_max) ~ 
      (d$seed_mass_max))
 abline(md)
 mtext(paste("r2", round(summary(md)$adj.r.squared, 4), col = ""), side =3)
@@ -196,25 +196,25 @@ a <- droplevels(unique(merge(seed_mass, lifeform, by = "species")))
 b <- droplevels(unique(merge(seed_mass, woodiness, by = "species")))
 c <- droplevels(unique(merge(seed_mass, sla, by = "species"))) 
 
-ma <- lm(#log
+ma <- lm(
          (seed_mass_max) ~ lifeform, data = a)
-mb <- lm(#log
+mb <- lm(
          (seed_mass_max) ~ woodiness, data = b)
-mc <- lm(#log
-         (seed_mass_max) ~ #log
+mc <- lm(
+         (seed_mass_max) ~ 
          (sla_max), data = c)
 
-plot(#log
+plot(
      (seed_mass_max) ~ lifeform, data = a)
 mtext(paste("r2", round(summary(ma)$adj.r.squared, 4), col = ""), side =3)
-plot(#log
+plot(
      (seed_mass_max) ~ woodiness, data = b)
 mtext(paste("r2", round(summary(mb)$adj.r.squared, 4), col = ""), side =3)
-plot(#log
-     (c$seed_mass_max) ~ #log
+plot(
+     (c$seed_mass_max) ~ 
      (c$sla_max))
 abline(mc)
-mtext(paste("r2", round(summary(mc)$adj.r.squared, 4), "ns", col = ""), side =3, col = "red")
+mtext(paste("r2", round(summary(mc)$adj.r.squared, 4), col = ""), side =3)
 plot.new()
 plot.new()
 
@@ -222,17 +222,17 @@ plot.new()
 a <- droplevels(unique(merge(sla, lifeform, by = "species"))) 
 b <- droplevels(unique(merge(sla, woodiness, by = "species")))
 
-ma <- lm(#log
+ma <- lm(
          (sla_max) ~ lifeform, data = a)
-mb <- lm(#log
+mb <- lm(
          (sla_max) ~ woodiness, data = b)
 
-plot(#log
+plot(
      (sla_max) ~ lifeform, data = a)
 mtext(paste("r2", round(summary(ma)$adj.r.squared, 4), col = ""), side =3)
-plot(#log
+plot(
      (sla_max) ~ woodiness, data = b)
-mtext(paste("r2", round(summary(mb)$adj.r.squared, 4), col = ""), side =3, col = "red")
+mtext(paste("r2", round(summary(mb)$adj.r.squared, 4), col = ""), side =3)
 plot.new()
 plot.new()
 plot.new()
@@ -262,12 +262,6 @@ rm(a,b,c,d,e, j,k,ma,mb,mc,md,me)
 
 ## metric colinearity -----------------
 m <- metrics
-for (i in names(Filter(is.numeric, m[, which(names(m) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-  m[, i] <- c(log(m[,i]))
-}
-for (i in names(Filter(is.numeric, m))) {
-  m[, i] <- c(scale(m[,i]))
-}
 
 pairs(m[, which(names(m) %nin% c("species"))])
 
@@ -276,15 +270,15 @@ pairs(m[, which(names(m) %nin% c("species"))])
 print(cor(m[, which(names(m) %nin% c("species"))]))
 
 m <- drop_na(metrics)
-print(cor(scale(log((m[, which(names(m) %nin% c("species"))])))))
+print(cor((m[, which(names(m) %nin% c("species"))])))
 
 # g <- lm(total.area ~ range.size, data = metrics)
 # summary(g)
 # g <- lm(scale(log(total.area)) ~ scale(log(range.size)), data = metrics)
 # summary(g)
 # 
-# print(cor.test(#log
-#                (metrics$total.area),#log
+# print(cor.test(
+#                (metrics$total.area),
 #                (metrics$range.size)))
 
 ## the end ------------

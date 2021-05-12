@@ -22,11 +22,11 @@ mcmc_data$animal <- mcmc_data$species
 comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
 
 # # priors----------------------------------------------------------------------------------------
-## normal prior (for models including phylogeny)
+## normal prior (for models including phyeny)
 prior <- list(R = list(V=1, nu=0.002), 
               G = list(G1 = list(V=1, nu=0.002)))
 
-## no phylogeny prior
+## no phyeny prior
 # prior <- list(R = list(V=1, nu=0.002))
 # 
 # ## this is a parameter expanded prior
@@ -52,28 +52,28 @@ par(mfrow = c(2,3))
 
 ## Numeric variables
 # for (i in names(Filter(is.numeric, height))) {
-#   hist(log(height[,i]),
+#   hist((height[,i]),
 #        breaks = 30,
 #        main = paste(i),
 #        xlab = paste(i))
 # }
 
-plot(log(total.area) ~ log(height_max), data = comp_data$data)
-plot(log(range.size) ~ log(height_max), data = comp_data$data)
-plot(log(effective.mesh.size) ~ log(height_max), data = comp_data$data)
-plot(mean.shape.index~ log(height_max), data = comp_data$data)
-plot(prop.landscape~ log(height_max), data = comp_data$data)
-plot(log(perimeter.area.frac.dim) ~ log(height_max), data = comp_data$data)
+plot((total.area) ~ (height_max), data = comp_data$data)
+plot((range.size) ~ (height_max), data = comp_data$data)
+plot((effective.mesh.size) ~ (height_max), data = comp_data$data)
+plot(mean.shape.index~ (height_max), data = comp_data$data)
+plot(prop.landscape~ (height_max), data = comp_data$data)
+plot((perimeter.area.frac.dim) ~ (height_max), data = comp_data$data)
 
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- log(total.area) ~ log(height_max)   
-f[["range.size"]] <- log(range.size) ~ log(height_max)  
-f[["effective.mesh.size"]] <-  log(effective.mesh.size) ~ log(height_max)     
-f[["mean.shape.index"]] <- mean.shape.index ~ log(height_max)        
-f[["prop.landscape"]] <- prop.landscape ~ log(height_max)
-f[["perimeter.area.frac.dim"]] <- log(perimeter.area.frac.dim) ~ log(height_max)
+f[["total.area"]]  <- (total.area) ~ (height_max)   
+f[["range.size"]] <- (range.size) ~ (height_max)  
+f[["effective.mesh.size"]] <-  (effective.mesh.size) ~ (height_max)     
+f[["mean.shape.index"]] <- mean.shape.index ~ (height_max)        
+f[["prop.landscape"]] <- prop.landscape ~ (height_max)
+f[["perimeter.area.frac.dim"]] <- (perimeter.area.frac.dim) ~ (height_max)
 
 
 ## for quick checks
@@ -118,7 +118,7 @@ m_indiv_height[[j]][["height"]] <-mod_list <- mclapply(1:2, function(i) {
 mod_mcmc <-  m_indiv_height[["height"]][[j]][[1]]
 mod_mcmc_2 <-  m_indiv_height[["height"]][[j]][[2]]}
 
-#saveRDS(m_indiv_height, "m_height_phylog_parexp.rds")
+#saveRDS(m_indiv_height, "m_height_phy_parexp.rds")
 
 ## Diagnositcs ----------------------------
 z <- "perimeter.area.frac.dim"
@@ -146,8 +146,8 @@ c <- tibble("a", "b")
 
 c <- cbind(c[-1,], rr)
 
-k <- list("log total area", "log range size", "log effective mesh size", "mean shape index",
-          "proportion of landscape", "log perimeter area fractality")
+k <- list(" total area", " range size", " effective mesh size", "mean shape index",
+          "proportion of landscape", " perimeter area fractality")
 names(k) <- r
 
 par(mfrow = c(2,3), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
@@ -155,11 +155,11 @@ par(mfrow = c(2,3), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab
 for(i in names(height[which(names(height) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
                                                  "perimeter.area.frac.dim"))])) {
   plot(f[[i]], data = comp_data$data, col = "grey", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
-       ylab = paste(k[[i]]), main = paste(k[[i]]), xlab = paste("log max height"), bty = "n")
+       ylab = paste(k[[i]]), main = paste(k[[i]]), xlab = paste(" max height"), bty = "n")
   abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = "#7000A8FF", lwd = 6)
 }
 
-m_indiv_height <- readRDS("m_indiv/m_height_phylog_parexp.rds")
+#m_indiv_height <- readRDS("m_indiv/m_height_phy_parexp.rds")
 
 for(i in r){
   print(summary(m_indiv_height[[i]][["height"]][[1]]))
