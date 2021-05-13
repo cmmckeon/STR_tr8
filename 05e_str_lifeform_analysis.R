@@ -27,11 +27,11 @@ mcmc_data$animal <- mcmc_data$species
 comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
 
 # # priors----------------------------------------------------------------------------------------
-## normal prior (for models including phylogeny)
+## normal prior (for models including phyeny)
 # prior <- list(R = list(V=1, nu=0.002), 
 #               G = list(G1 = list(V=1, nu=0.002)))
 
-## no phylogeny prior
+## no phyeny prior
 # prior <- list(R = list(V=1, nu=0.002))
 # 
 # ## this is a parameter expanded prior
@@ -60,9 +60,9 @@ par(mfrow = c(2,3))
 #        xlab = paste(i))
 # }
 
-plot(log(total.area) ~ lifeform, data = comp_data$data)
-plot(log(range.size) ~ lifeform, data = comp_data$data)
-plot(log(effective.mesh.size) ~ lifeform, data = comp_data$data)
+plot((total.area) ~ lifeform, data = comp_data$data)
+plot((range.size) ~ lifeform, data = comp_data$data)
+plot((effective.mesh.size) ~ lifeform, data = comp_data$data)
 plot(mean.shape.index~ lifeform, data = comp_data$data)
 plot(prop.landscape~ lifeform, data = comp_data$data)
 plot((perimeter.area.frac.dim) ~ lifeform, data = comp_data$data)
@@ -71,9 +71,9 @@ plot((perimeter.area.frac.dim) ~ lifeform, data = comp_data$data)
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- log(total.area) ~ lifeform 
-f[["range.size"]] <- log(range.size) ~ lifeform
-f[["effective.mesh.size"]] <-  log(effective.mesh.size) ~ lifeform    
+f[["total.area"]]  <- (total.area) ~ lifeform 
+f[["range.size"]] <- (range.size) ~ lifeform
+f[["effective.mesh.size"]] <-  (effective.mesh.size) ~ lifeform    
 f[["mean.shape.index"]] <- mean.shape.index ~ lifeform       
 f[["prop.landscape"]] <- prop.landscape ~ lifeform
 f[["perimeter.area.frac.dim"]] <- (perimeter.area.frac.dim) ~ lifeform
@@ -81,7 +81,7 @@ f[["perimeter.area.frac.dim"]] <- (perimeter.area.frac.dim) ~ lifeform
 
 ## for quick checks
 # m_list <-mod_list <- mclapply(1:2, function(i) {
-#   MCMCglmm(fixed = log(perimeter.area.frac.dim) ~ lifeform,
+#   MCMCglmm(fixed = (perimeter.area.frac.dim) ~ lifeform,
 #           #random = ~ animal,
 #            rcov = ~units,
 #            family= "gaussian",
@@ -154,7 +154,7 @@ for(i in r) {
 
 c <- cbind(c[-1,], rr)
 
-k <- list("log total area", "log range size", "log effective mesh size", "mean shape index",
+k <- list(" total area", " range size", " effective mesh size", "mean shape index",
           "proportion of landscape", "perimeter area fractality")
 names(k) <- r
 

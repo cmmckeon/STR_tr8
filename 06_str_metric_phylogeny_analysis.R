@@ -138,6 +138,7 @@ bay_phylo_dia(mod_mcmc)
 #   (mod_mcmc$VCV[,"animal"] + mod_mcmc$VCV[,"units"])
 print(summary(H))
 
+
 ## sla--------
 
 mcmc_data <- sla
@@ -223,15 +224,67 @@ H <- mod_mcmc$VCV[,"animal"]/
   (mod_mcmc$VCV[,"animal"] + mod_mcmc$VCV[,"units"])
 print(summary(H))
 
-## woodiness 1 and 2, life form 1-5.
+## woodiness--------
+woodiness$binary <- as.numeric(woodiness$woodiness)
+
+mcmc_data <- woodiness
+mcmc_data$animal <- mcmc_data$species
+comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
+
+m_woodiness_phy  <- mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = binary ~ 1,
+           random = ~ animal,
+           rcov = ~units,
+           family= "gaussian",
+           pedigree = comp_data$tree,
+           data = comp_data$data,
+           nitt = nitt,
+           burnin = burnin,
+           thin = thin,
+           prior = prior)
+}, mc.cores=2)
+
+mod_mcmc <-  m_woodiness_phy[[1]]
+mod_mcmc_2 <-  m_woodiness_phy[[2]]
+
+bay_phylo_dia(mod_mcmc)
+
+H <- mod_mcmc$VCV[,"animal"]/
+  (mod_mcmc$VCV[,"animal"] + mod_mcmc$VCV[,"units"])
+print(summary(H))
 
 
+## lifeform--------
+lifeform$binary <- as.numeric(lifeform$lifeform)
+
+mcmc_data <- lifeform
+mcmc_data$animal <- mcmc_data$species
+comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
+
+m_lifeform_phy  <- mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = binary ~ 1,
+           random = ~ animal,
+           rcov = ~units,
+           family= "gaussian",
+           pedigree = comp_data$tree,
+           data = comp_data$data,
+           nitt = nitt,
+           burnin = burnin,
+           thin = thin,
+           prior = prior)
+}, mc.cores=2)
+
+mod_mcmc <-  m_lifeform_phy[[1]]
+mod_mcmc_2 <-  m_lifeform_phy[[2]]
+
+bay_phylo_dia(mod_mcmc)
+
+H <- mod_mcmc$VCV[,"animal"]/
+  (mod_mcmc$VCV[,"animal"] + mod_mcmc$VCV[,"units"])
+print(summary(H))
 
 
-
-
-
-
+##end
 
 
 

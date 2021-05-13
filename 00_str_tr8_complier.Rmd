@@ -200,6 +200,8 @@ sla$sla_max <- c(scale(log(sla$sla_max)))
 
 
 ## look at colinearity
+## trait ~ trait
+## metric ~ metric
 ```{r}
 source("04_exploration_and_colinearity.R")
 ```
@@ -239,9 +241,14 @@ This might suggest that traits can't be examined in isolation, either from eacho
 80 - Seed mass
 34 - leaf area
 
-2. Metric ~ phylogeny
+2. metric ~ phylogeny and trait ~ phylogeny
 ```{r}
 source("06_metric_phylogeny_analysis.R")
+```
+
+3. 
+```{r}
+
 ```
 
 
