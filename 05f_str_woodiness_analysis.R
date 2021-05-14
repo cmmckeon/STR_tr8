@@ -173,3 +173,60 @@ for(i in r){
   print(summary(m_indiv_woodiness[[i]][["woodiness"]][[1]]))
 }
 
+## Cliamte ------------------
+#
+#
+#
+#
+## formula ------------------
+## set the formula for each spatial pattern metric
+f <- list()
+f[["effective.mesh.size"]] <-  (effective.mesh.size) ~ woodiness*nb   
+f[["mean.shape.index"]] <- mean.shape.index ~ woodiness*nb        
+f[["prop.landscape"]] <- prop.landscape ~ woodiness*nb 
+f[["perimeter.area.frac.dim"]] <- (perimeter.area.frac.dim) ~ woodiness*nb 
+
+
+## run a model for each spatial pattern metric
+m_nb_woodiness <- list()
+
+for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("effective.mesh.size", "mean.shape.index",
+                                                                           "prop.landscape", "perimeter.area.frac.dim"))])){
+  formula <- f[[j]]
+  
+  m_nb_woodiness[[j]][["woodiness"]] <-mod_list <- mclapply(1:2, function(i) {
+    MCMCglmm(fixed = formula,
+             random = ~ animal,
+             rcov = ~units,
+             family= "gaussian",
+             pedigree = comp_data$tree,
+             data = comp_data$data,
+             nitt = nitt,
+             burnin = burnin,
+             thin = thin,
+             prior = prior)
+  }, mc.cores=2)
+  
+  mod_mcmc <-  m_nb_woodiness[["woodiness"]][[j]][[1]]
+  mod_mcmc_2 <-  m_nb_woodiness[["woodiness"]][[j]][[2]]}
+
+#saveRDS(m_nb_woodiness, "m_woodiness_nb.rds")
+
+## Diagnositcs ----------------------------
+z <- 'effective.mesh.size'
+z <- "mean.shape.index"
+z <- "prop.landscape"
+z <- "perimeter.area.frac.dim"
+
+
+mod_mcmc <- m_nb_woodiness[[z]][["woodiness"]][[1]]
+mod_mcmc_2 <- m_nb_woodiness[[z]][["woodiness"]][[2]]
+
+bay_phylo_dia(mod_mcmc)
+#bay_dia(mod_mcmc)
+
+for(i in r){
+  print(summary(m_nb_woodiness[[i]][["woodiness"]][[1]]))
+}
+
+

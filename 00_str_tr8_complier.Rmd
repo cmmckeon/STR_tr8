@@ -35,6 +35,13 @@ Clean and collate trait data
 ```{r}
 source("02_clean_trait_data.R")
 ```
+## get Climate values (niche breadth)
+```{r}
+#source("03a_str_nichebreadth_pca.R")
+nb <- readRDS("Data_nichebreadth.rds")
+levels(nb$sp.list) <- gsub("_", " ", levels(nb$sp.list))
+```
+
 ## get range metrics
 Read in species range metrics.
 ```{r}
@@ -47,8 +54,11 @@ metrics <- unique(metrics[, which(names(metrics) %in%
 metrics <- metrics[c("Species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")]
 names(metrics) <- c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
 
+
+metrics <- unique(merge(metrics, nb[,which(names(nb) %in% c('sp.list', "nb"))], by.x = "species", by.y = "sp.list"))
+
 ## log transform raw data
-for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.shape.index", "prop.landscape", "nb"))]))) {
   metrics[, i] <- c(log(metrics[,i]))
 }
 
@@ -57,6 +67,9 @@ for (i in names(Filter(is.numeric, metrics))) {
   metrics[, i] <- c(scale(metrics[,i]))
 }
 ```
+
+
+
 
 ## get trait sumamry statistics
 Calculate summary stats for continuous traits
@@ -172,29 +185,31 @@ Set up phlyogeny
 ```{r}
 if(!exists("clean_tree")) {
   try(clean_tree <- read.tree("Data_str_clean_tree.tre"))
-  } else source("03_clean_phylogeny.R")
+  } else source("03b_clean_phylogeny.R")
 ```
 
 Set up individual datasets for analysis
 ```{r}
 ## Extract each dataset
-height <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
-                                                      "prop.landscape", "perimeter.area.frac.dim", "height_max"))]))
-leaf_area <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
-                                                      "prop.landscape", "perimeter.area.frac.dim","leaf_area_max"))]))
-lifeform <- unique(drop_na(mydata[, which(names(mydata) %in% c("species","total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
-                                                      "prop.landscape", "perimeter.area.frac.dim","lifeform"))]))
-seed_mass <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
-                                                      "prop.landscape", "perimeter.area.frac.dim","seed_mass_max"))]))
-sla <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
-                                                      "prop.landscape", "perimeter.area.frac.dim","sla_max"))]))
-woodiness <- unique(drop_na(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
-                                                      "prop.landscape", "perimeter.area.frac.dim","woodiness"))]))
+height <- unique(drop_na(droplevels(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "perimeter.area.frac.dim", "nb", "height_max"))])))
+
+leaf_area <- unique(drop_na(droplevels(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "perimeter.area.frac.dim","nb", "leaf_area_max"))])))
+lifeform <- unique(drop_na(droplevels(mydata[, which(names(mydata) %in% c("species","total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "perimeter.area.frac.dim", "nb", "lifeform"))])))
+seed_mass <- unique(drop_na(droplevels(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "perimeter.area.frac.dim", "nb", "seed_mass_max"))])))
+sla <- unique(drop_na(droplevels(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "perimeter.area.frac.dim", "nb", "sla_max"))])))
+woodiness <- unique(drop_na(droplevels(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                      "prop.landscape", "perimeter.area.frac.dim", "nb", "woodiness"))])))
 ## log transform and standardise raw trait data
 height$height_max <- c(scale(log(height$height_max)))
 leaf_area$leaf_area_max <- c(scale(log(leaf_area$leaf_area_max)))
 seed_mass$seed_mass_max <- c(scale(log(seed_mass$seed_mass_max)))
 sla$sla_max <- c(scale(log(sla$sla_max)))
+
 ```
 
 
@@ -204,15 +219,6 @@ sla$sla_max <- c(scale(log(sla$sla_max)))
 ## metric ~ metric
 ```{r}
 source("04_exploration_and_colinearity.R")
-```
-
-## get Climate values
-```{r}
-endem <- read.delim2("AFE_endemics.txt")
-endem <- endem[, which(names(endem) %in% c("afe", "lon", "lat"))]
-endem$afe <- gsub(" ", "_", endem$afe)
-endem <- endem[endem$afe %in% mydata$species,]
-names(endem) <- c("species", "x", "y")
 ```
 
 
@@ -243,13 +249,14 @@ This might suggest that traits can't be examined in isolation, either from eacho
 
 2. metric ~ phylogeny and trait ~ phylogeny
 ```{r}
-source("06_metric_phylogeny_analysis.R")
+#source("06_metric_phylogeny_analysis.R")
 ```
 
-3. 
+3. metric ~ multiple traits
 ```{r}
-
+#source("07_str_multitrait_analysis.R")
 ```
+
 
 
 

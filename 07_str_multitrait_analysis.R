@@ -9,9 +9,12 @@ multi <- data.frame(unique(mydata[, which(names(mydata) %in% c("species", "total
 #   b <- unique(merge(b, mydata[,which(names(mydata) %in% c('species', i))], by = "species"))
 # }
 
-multi <- droplevels(unique(merge(woodiness[, which(names(woodiness) %in% c("species", "woodiness"))], lifeform, by = "species"))) ## 143
-multi <- droplevels(unique(merge(multi, height[, which(names(height) %in% c("species", "height_max"))], by = "species"))) ## 141
-multi <- droplevels(unique(merge(multi, seed_mass[, which(names(seed_mass) %in% c("species", "seed_mass_max"))], by = "species"))) ## 90
+multi <- droplevels(unique(merge(woodiness[, which(names(woodiness) %in% c("species", "woodiness"))], lifeform, by = "species"))) ## 126 unique
+multi <- droplevels(unique(merge(woodiness[, which(names(woodiness) %in% c("species", "woodiness"))], height, by = "species"))) ## 
+multi <- droplevels(unique(merge(lifeform[, which(names(lifeform) %in% c("species", "lifeform"))], height, by = "species"))) ## 
+multi <- droplevels(unique(merge(multi, height[, which(names(height) %in% c("species", "height_max"))], by = "species"))) ## 124 unique
+multi <- droplevels(unique(merge(multi, seed_mass[, which(names(seed_mass) %in% c("species", "seed_mass_max"))], by = "species"))) ## 77 unique
+multi <- droplevels(unique(merge(multi, sla[, which(names(sla) %in% c("species", "sla_max"))], by = "species"))) ## 77 unique
 
 
 ## set up ###################
@@ -23,11 +26,11 @@ mcmc_data$animal <- mcmc_data$species
 comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
 
 # # priors----------------------------------------------------------------------------------------
-## normal prior (for models including phylogeny)
+## normal prior (for models including phyeny)
 prior <- list(R = list(V=1, nu=0.002), 
               G = list(G1 = list(V=1, nu=0.002)))
 
-## no phylogeny prior
+## no phyeny prior
  prior <- list(R = list(V=1, nu=0.002))
 # 
 # ## this is a parameter expanded prior
@@ -51,35 +54,29 @@ par(mfrow = c(2,3))
 
 ## Quick look at model dataframe
 
-# Numeric variables
-# for (i in names(Filter(is.numeric, multi))) {
-#   hist((multi[,i]),
-#        breaks = 30,
-#        main = paste(i),
-#        xlab = paste(i))
-# }
+#Numeric variables
+for (i in names(Filter(is.numeric, multi))) {
+  hist((multi[,i]),
+       breaks = 30,
+       main = paste(i),
+       xlab = paste(i))
+}
 
-# plot(log(total.area) ~ log(height_max), data = comp_data$data)
-# plot(log(range.size) ~ log(height_max), data = comp_data$data)
-# plot(log(effective.mesh.size) ~ log(height_max), data = comp_data$data)
-# plot(mean.shape.index~ log(height_max), data = comp_data$data)
-# plot(prop.landscape~ log(height_max), data = comp_data$data)
-# plot(log(perimeter.area.frac.dim) ~ log(height_max), data = comp_data$data)
 
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- log(total.area) ~ log(height_max)*woodiness*log(seed_mass_max)   
-f[["range.size"]] <- log(range.size) ~ log(height_max)*woodiness*log(seed_mass_max)      
-f[["effective.mesh.size"]] <-  log(effective.mesh.size) ~ log(height_max)*woodiness*log(seed_mass_max)        
-f[["mean.shape.index"]] <- mean.shape.index ~ log(height_max)*woodiness*log(seed_mass_max)           
-f[["prop.landscape"]] <- prop.landscape ~ log(height_max)*woodiness*log(seed_mass_max)    
-f[["perimeter.area.frac.dim"]] <- log(perimeter.area.frac.dim) ~ log(height_max)*woodiness*log(seed_mass_max)     
+f[["total.area"]]  <- (total.area) ~ (height_max)*(lifeform)#woodiness  
+f[["range.size"]] <- (range.size) ~ (height_max)*(lifeform)#woodiness     
+f[["effective.mesh.size"]] <-  (effective.mesh.size) ~ (height_max)*(lifeform)#woodiness       
+f[["mean.shape.index"]] <- mean.shape.index ~ (height_max)*(lifeform)#woodiness          
+f[["prop.landscape"]] <- prop.landscape ~ (height_max)*(lifeform)#woodiness   
+f[["perimeter.area.frac.dim"]] <- (perimeter.area.frac.dim) ~ (height_max)*(lifeform)#woodiness    
 
 
 ## for quick checks
 m_list <-mod_list <- mclapply(1:2, function(i) {
-  MCMCglmm(fixed = log(total.area) ~ woodiness*log(height_max) + woodiness*log(seed_mass_max),
+  MCMCglmm(fixed = (total.area) ~ (height_max)*woodiness*(lifeform),
            random = ~ animal,
            rcov = ~units,
            family= "gaussian",
@@ -119,15 +116,19 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
   mod_mcmc <-  m_multi[["multi"]][[j]][[1]]
   mod_mcmc_2 <-  m_multi[["multi"]][[j]][[2]]}
 
-#saveRDS(m_multi, "m_multi.rds")
+#saveRDS(m_multi, "m_multi_height_lifeform.rds")
+
 
 ## Diagnositcs ----------------------------
 z <- "total.area"
-
+z <- "range.size"
+z <- 'effective.mesh.size'
+z <- "mean.shape.index"
+z <- "prop.landscape"
 z <- "perimeter.area.frac.dim"
 
-mod_mcmc <- m_multi[[z]][["height"]][[1]]
-mod_mcmc_2 <- m_multi[[z]][["height"]][[2]]
+mod_mcmc <- m_multi[[z]][["multi"]][[1]]
+mod_mcmc_2 <- m_multi[[z]][["multi"]][[2]]
 
 bay_phylo_dia(mod_mcmc)
 bay_dia(mod_mcmc)
@@ -149,8 +150,8 @@ for(i in r) {
 
 c <- cbind(c[-1,], rr)
 
-k <- list("log total area", "log range size", "log effective mesh size", "mean shape index",
-          "proportion of landscape", "log perimeter area fractality")
+k <- list(" total area", " range size", " effective mesh size", "mean shape index",
+          "proportion of landscape", " perimeter area fractality")
 names(k) <- r
 
 par(mfrow = c(2,3), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
@@ -158,11 +159,11 @@ par(mfrow = c(2,3), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab
 for(i in names(height[which(names(height) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
                                                  "perimeter.area.frac.dim"))])) {
   plot(f[[i]], data = comp_data$data, col = "grey", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
-       ylab = paste(k[[i]]), main = paste(k[[i]]), xlab = paste("log max height"), bty = "n")
+       ylab = paste(k[[i]]), main = paste(k[[i]]), xlab = paste(" max height"), bty = "n")
   abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = "#7000A8FF", lwd = 6)
 }
 
-m_multi <- readRDS("m_indiv/m_height_phylog_parexp.rds")
+m_multi <- readRDS("m_indiv/m_height_phy_parexp.rds")
 
 for(i in r){
   print(summary(m_multi[[i]][["height"]][[1]]))

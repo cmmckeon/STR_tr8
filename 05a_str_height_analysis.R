@@ -164,3 +164,84 @@ for(i in names(height[which(names(height) %in% c("total.area", "range.size", "ef
 for(i in r){
   print(summary(m_indiv_height[[i]][["height"]][[1]]))
 }
+
+
+## Cliamte -----------------
+#
+#
+#
+#
+
+## formula ------------------
+## set the formula for each spatial pattern metric
+f <- list()
+f[["total.area"]]  <- (total.area) ~ (height_max)*nb   
+f[["range.size"]] <- (range.size) ~ (height_max)*nb    
+f[["effective.mesh.size"]] <-  (effective.mesh.size) ~ (height_max)*nb       
+f[["mean.shape.index"]] <- mean.shape.index ~ (height_max)*nb          
+f[["prop.landscape"]] <- prop.landscape ~ (height_max)*nb  
+f[["perimeter.area.frac.dim"]] <- (perimeter.area.frac.dim) ~ (height_max)*nb  
+
+
+## for quick checks
+m_list <-mod_list <- mclapply(1:2, function(i) {
+  MCMCglmm(fixed = (total.area) ~ (height_max)*nb,
+           random = ~ animal,
+           rcov = ~units,
+           family= "gaussian",
+           pedigree = comp_data$tree,
+           data = comp_data$data,
+           nitt = nitt,
+           burnin = burnin,
+           thin = thin,
+           prior = prior)
+}, mc.cores=2)
+
+mod_mcmc <-  m_list[[1]]
+mod_mcmc_2 <- m_list[[2]]
+
+
+
+## run a model for each spatial pattern metric
+m_nb_height <- list()
+
+for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                                           "prop.landscape", "perimeter.area.frac.dim"))])){
+  formula <- f[[j]]
+  
+  m_nb_height[[j]][["height"]] <-mod_list <- mclapply(1:2, function(i) {
+    MCMCglmm(fixed = formula,
+             random = ~ animal,
+             rcov = ~units,
+             family= "gaussian",
+             pedigree = comp_data$tree,
+             data = comp_data$data,
+             nitt = nitt,
+             burnin = burnin,
+             thin = thin,
+             prior = prior)
+  }, mc.cores=2)
+  
+  mod_mcmc <-  m_nb_height[["height"]][[j]][[1]]
+  mod_mcmc_2 <-  m_nb_height[["height"]][[j]][[2]]}
+
+#saveRDS(m_nb_height, "m_nb_height.rds")
+
+## Diagnositcs ----------------------------
+z <- "total.area"
+z <- "range.size"
+z <- 'effective.mesh.size'
+z <- "mean.shape.index"
+z <- "prop.landscape"
+z <- "perimeter.area.frac.dim"
+
+mod_mcmc <- m_nb_height[[z]][["height"]][[1]]
+mod_mcmc_2 <- m_nb_height[[z]][["height"]][[2]]
+
+bay_phylo_dia(mod_mcmc)
+#bay_dia(mod_mcmc)
+
+
+for(i in r){
+  print(summary(m_nb_height[[i]][["height"]][[1]]))
+}
