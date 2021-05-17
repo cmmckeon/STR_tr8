@@ -1,7 +1,7 @@
 ## 07_str_multitrait_analysis
 ## cm
 ## 12/04/21
-
+ 
 # make multi-trait model data frame
 multi <- data.frame(unique(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", 
                                                            "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim"))]))
