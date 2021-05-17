@@ -217,7 +217,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
              pedigree = comp_data$tree,
              data = comp_data$data,
              nitt = nitt,
-             burnin = burnin,
+             burnin = burnin, 
              thin = thin,
              prior = prior)
   }, mc.cores=2)
