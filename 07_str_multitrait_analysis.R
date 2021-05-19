@@ -166,5 +166,5 @@ for(i in names(height[which(names(height) %in% c("total.area", "range.size", "ef
 m_multi <- readRDS("m_indiv/m_height_phy_parexp.rds")
 
 for(i in r){
-  print(summary(m_multi[[i]][["height"]][[1]]))
+  print(summary(m_multi[[i]][["multi"]][[1]]))
 }

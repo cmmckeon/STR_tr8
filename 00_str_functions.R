@@ -34,6 +34,7 @@ library(viridis)
 library(ggplot2)
 library(wec)
 library(DHARMa)
+library(raster)
 
 '%nin%' = Negate('%in%')
 

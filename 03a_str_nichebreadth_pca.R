@@ -29,7 +29,7 @@ endem$lon <- as.numeric(as.character(endem$lon))
 endem$lat <- as.numeric(as.character(endem$lat))
 endem$afe <- gsub(" ssp.*", "", endem$afe)
 endem$afe <- gsub(" ", "_", endem$afe)
-names(endem) <- c("species", "x", "y")
+names(endem) <- c("species", "y", "x")
 sp <- endem
 
 ## make dataframe with just the lat and long co-ordinates of PREDICTS data that is relevant to my analysis
