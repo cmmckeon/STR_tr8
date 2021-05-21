@@ -193,7 +193,6 @@ Set up individual datasets for analysis
 ## Extract each dataset
 height <- unique(drop_na(droplevels(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
                                                       "prop.landscape", "perimeter.area.frac.dim", "nb", "height_max"))])))
-
 leaf_area <- unique(drop_na(droplevels(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
                                                       "prop.landscape", "perimeter.area.frac.dim","nb", "leaf_area_max"))])))
 lifeform <- unique(drop_na(droplevels(mydata[, which(names(mydata) %in% c("species","total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
@@ -217,7 +216,7 @@ sla$sla_max <- c(scale(log(sla$sla_max)))
 ## look at colinearity
 ## trait ~ trait
 ## metric ~ metric
-```{r}
+```{r, fig.width=10, fig.height=9}
 source("04_exploration_and_colinearity.R")
 ```
 

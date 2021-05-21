@@ -146,8 +146,8 @@ c <- tibble("a", "b")
 
 c <- cbind(c[-1,], rr)
 
-k <- list(" total area", " range size", " effective mesh size", "mean shape index",
-          "proportion of landscape", " perimeter area fractality")
+k <- list("total area", "range size", "effective mesh size", "mean shape index",
+          "proportion of landscape", "perimeter area fractality")
 names(k) <- r
 
 par(mfrow = c(2,3), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")

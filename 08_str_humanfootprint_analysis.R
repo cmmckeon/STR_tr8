@@ -50,8 +50,8 @@ hf <- raster("Data_wildareas-v3-2009-human-footprint.tif")
 ## Map human footprint dataa
 pal <- colorRampPalette(c('#0C276C', '#3B9088', '#EEFF00', '#ffffff'))
 hf_map <- calc(hf, fun=function(x){ x[x > 100] <- NA; return(x)} )
-par(bty = "n", mar=c(0.02,0.02,2,0.2))
-plot(hf_map, col = pal(50), main = "Human footprint 2009", yaxt="n", xaxt="n")
+#par(bty = "n", mar=c(0.02,0.02,2,0.2))
+#plot(hf_map, col = pal(50), main = "Human footprint 2009", yaxt="n", xaxt="n")
 hf_repro <- projectRaster(hf, mat)
 plot(hf_repro)
 
@@ -72,13 +72,14 @@ for (i in unique(sp$species)){
                                       proj4string =  temp@crs)
         rast_list[i] <- rasterize(sp2, temp, field = 1)
 }
-        
-all <- brick(r, temp, rast_list)
+
+all <- brick(rast_list)        
+all <- brick(r, temp, all)
 plot(all)
 all <- aggregate(all, fact= 6)
 
-sp4 <- projectRaster(all, crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-plot(sp4)
+#sp4 <- projectRaster(all, crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+#plot(sp4)
 
 
 ## #extract climate values for coordinates in (full) PREDICTS dataset
@@ -96,20 +97,22 @@ for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1",
 rat <- as.data.frame(names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2"))])
 names(rat) <- "species"
 for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2"))]){
-        # rat$gm_mean[rat$species == i] <- gm_mean(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1])/
-        #         gm_mean(ratio_data$layer.1[ratio_data$layer.2 == 0 & ratio_data[,i] == 0])
+        rat$gm_mean[rat$species == i] <- gm_mean(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1])/
+                gm_mean(ratio_data$layer.1[ratio_data$layer.2 == 0 & ratio_data[,i] == 0])
         rat$mean[rat$species == i] <- mean(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)/
                 mean(ratio_data$layer.1[ratio_data$layer.2 == 0 & ratio_data[,i] == 0], na.rm = TRUE)
         rat$median[rat$species == i] <- median(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)/
                 median(ratio_data$layer.1[ratio_data$layer.2 == 0 & ratio_data[,i] == 0], na.rm = TRUE)
+        rat$reg_mean[rat$species == i] <- mean(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)
 }
 
-par(mfrow = c(3,1))
+par(mfrow = c(4,1))
 hist(rat$gm_mean, breaks = 100)
 hist(rat$mean, breaks = 100)
 hist(rat$median, breaks = 100)
+hist(rat$reg_mean, breaks = 100)
 
-
+#saveRDS(rat, "Data_occ_humanfootprint_ratio.rds")
 
 ## metrics ~ human footprint ratio --------
 ## read in and handle data------------------------------------------------------------------------------------------------
@@ -128,11 +131,14 @@ levels(metrics$species) <- gsub(" ", "_", levels(metrics$species))
 levels(metrics$species) <- gsub("-", ".", levels(metrics$species))
 metrics <- metrics[metrics$perimeter.area.frac.dim != "Inf",]
 
+
 m <- drop_na(metrics)
 m$perimeter.area.frac.dim <- (m$perimeter.area.frac.dim + sqrt(min(m$perimeter.area.frac.dim)^2)) + 1
 for (i in names(Filter(is.numeric, m[, which(names(m) %nin% c("mean.shape.index", "prop.landscape"))]))) {
         m[, i] <- c(log(m[,i]))
 }
+m <- merge(m, rat, by = "species")
+
 for (i in names(Filter(is.numeric, m))) {
         m[, i] <- c(scale(m[,i]))
 }
@@ -145,7 +151,7 @@ for (i in names(Filter(is.numeric, m))) {
              xlab = paste(i))
 }
 
-m <- merge(m, rat, by = "species")
+
 
 mcmc_data <- m
 mcmc_data$animal <- mcmc_data$species
@@ -173,12 +179,12 @@ print(c("effect size will be:", eff_ss))
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- total.area ~ gm_mean   
-f[["range.size"]] <- range.size ~ gm_mean  
-f[["effective.mesh.size"]] <-  effective.mesh.size ~ gm_mean     
-f[["mean.shape.index"]] <- mean.shape.index ~ gm_mean        
-f[["prop.landscape"]] <- prop.landscape ~ gm_mean
-f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ gm_mean
+f[["total.area"]]  <- total.area ~ median   
+f[["range.size"]] <- range.size ~ median  
+f[["effective.mesh.size"]] <-  effective.mesh.size ~ median     
+f[["mean.shape.index"]] <- mean.shape.index ~ median        
+f[["prop.landscape"]] <- prop.landscape ~ median
+f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ median
 
 
 
@@ -218,7 +224,25 @@ mod_mcmc_2 <- m_metric_hf[[z]][["hf"]][[2]]
 bay_phylo_dia(mod_mcmc)
 
 
+## no phyeny prior
+prior <- list(R = list(V=1, nu=0.002))
 
+m_list <- mod_list <- mclapply(1:2, function(i) {
+        MCMCglmm(fixed = perimeter.area.frac.dim ~ reg_mean,
+                 rcov = ~units,
+                 family= "gaussian",
+                 pedigree = comp_data$tree,
+                 data = comp_data$data,
+                 nitt = nitt,
+                 burnin = burnin,
+                 thin = thin,
+                 prior = prior)}, mc.cores=2)
+
+
+mod_mcmc <- m_list[[1]]
+mod_mcmc_2 <- m_list[[2]]
+
+bay_dia(mod_mcmc)
 
 
 

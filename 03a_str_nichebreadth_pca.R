@@ -29,8 +29,10 @@ endem$lon <- as.numeric(as.character(endem$lon))
 endem$lat <- as.numeric(as.character(endem$lat))
 endem$afe <- gsub(" ssp.*", "", endem$afe)
 endem$afe <- gsub(" ", "_", endem$afe)
-names(endem) <- c("species", "y", "x")
+names(endem) <- c("species", "y", "x") 
 sp <- endem
+
+sp <- sp[, c("species", "x", "y")]
 
 ## make dataframe with just the lat and long co-ordinates of PREDICTS data that is relevant to my analysis
 sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
@@ -38,7 +40,7 @@ sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
 ## #extract climate values for coordinates in (full) PREDICTS dataset
 full_clim <- data.frame(raster::extract(clim_map,sp_co)) 
 ## create dataset with both climate values and co-ordinates of the values
-full_clim <- cbind(full_clim,endem_co)
+full_clim <- cbind(full_clim,sp_co)
 env <- unique(full_clim)
 names(env) <- c("map", "mat", "map_var", "mat_var","Longitude", "Latitude") 
 env <- drop_na(env)

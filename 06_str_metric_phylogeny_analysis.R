@@ -108,6 +108,21 @@ mod_mcmc_2 <- m_metric_phy[[z]][["phy"]][[2]]
 
 bay_phylo_dia(mod_mcmc)
 
+r <- c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
+
+par(mfrow = c(1, 7))
+plot.new()
+for(i in r){
+  mod_mcmc <- m_metric_phy[[i]][["phy"]][[1]]
+  print(i)
+  H <- as.numeric(mod_mcmc$VCV[,"animal"]/
+    (mod_mcmc$VCV[,"animal"] + mod_mcmc$VCV[,"units"]))
+  print(summary(H))
+  hist(H, main = paste("phy est", i, sep = " "), breaks = 100, xlim = c(0,1))
+}
+
+k <- as.numeric(H)
+summary(k)
 
 ## traits -------
 ## height --------
