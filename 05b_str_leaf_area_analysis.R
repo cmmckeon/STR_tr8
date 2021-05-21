@@ -149,7 +149,7 @@ k <- list(" total area", " range size", " effective mesh size", "mean shape inde
           "proportion of landscape", " perimeter area fractality")
 names(k) <- r
 
-par(mfrow = c(2,3), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
+#par(mfrow = c(2,3), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
 #par(mfrow = c(2,3), mar=c(4.5,4,2,2), col="white", col.main = "white", col.lab = "white", bg="transparent")
 for(i in names(leaf_area[which(names(leaf_area) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
                                                  "perimeter.area.frac.dim"))])) {

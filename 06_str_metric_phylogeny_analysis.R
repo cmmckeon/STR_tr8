@@ -4,6 +4,8 @@
 ## metrics ~ phylogeny --------
 ## read in and handle data------------------------------------------------------------------------------------------------
 
+plotTree(clean_tree,type="fan",fsize=0.1,lwd=0.5, ftype="i", part = 0.93)
+
 metrics <- read.csv("Data_range_metrics.csv") ## metrics provided by Anna Csergo in spring 2019
 metrics <- metrics[metrics$Model == "Occurrence",]
 metrics <- unique(metrics[, which(names(metrics) %in% 
@@ -110,6 +112,11 @@ bay_phylo_dia(mod_mcmc)
 
 r <- c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
 
+for(i in r){
+  print(i)
+  print(summary(m_metric_phy[[i]][["phy"]][[1]]))
+}
+
 par(mfrow = c(1, 7))
 plot.new()
 for(i in r){
@@ -125,6 +132,17 @@ k <- as.numeric(H)
 summary(k)
 
 ## traits -------
+
+
+par(mfrow = c(6,1))
+ts <- list(height, sla, seed_mass, leaf_area, woodiness, lifeform)
+t <- c("height", "sla", "seed_mass", "leaf_area", "woodiness", "lifeform")
+for(i in 1:length(ts)){
+  new_tree <- drop.tip(clean_tree, as.character(setdiff(clean_tree$tip.label, 
+                                                        unique(ts[[i]][["species"]]))))
+  plotTree(new_tree,type="fan",fsize=0.1,lwd=0.5, ftype="i", part = 0.93, main = paste(t[i]))
+}
+
 ## height --------
 
 mcmc_data <- height
