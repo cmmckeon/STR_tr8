@@ -259,9 +259,21 @@ This might suggest that traits can't be examined in isolation, either from eacho
 
 ## 4. metric ~ humanfootprint
 ```{r}
-source("08_str_humanfootprint_analysis.R")
+#source("08_str_humanfootprint_analysis.R")
 ```
 
+
+
+## 5. plots
+```{r}
+# m_indiv_height <- readRDS("m_indiv/m_height_phy_parexp.rds")
+# m_indiv_seed_mass <- readRDS("m_indiv/m_seed_mass_phylo_parexp.rds")
+# m_indiv_sla <- readRDS("m_indiv/m_sla_phylo_parexp.rds")
+# m_indiv_leaf_area <- readRDS("m_indiv/m_leaf_area.rds")
+# m_indiv_woodiness <- readRDS("m_indiv/m_woodiness_phlyo_parexp.rds")
+# m_indiv_lifeform <- readRDS("m_indiv/m_lifeform_phlyo_parexp.rds")
+source("09_str_plots.R")
+```
 
 
 

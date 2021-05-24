@@ -162,3 +162,64 @@ for(i in names(leaf_area[which(names(leaf_area) %in% c("total.area", "range.size
 for(i in r){
   print(summary(m_indiv_leaf_area[[i]][["leaf_area"]][[1]]))
 }
+
+
+
+## climate ------------
+#
+#
+#
+#
+
+
+## formula ------------------
+## set the formula for each spatial pattern metric
+f <- list()
+f[["effective.mesh.size"]] <-  (effective.mesh.size) ~ leaf_area_max*nb     
+f[["mean.shape.index"]] <- mean.shape.index ~ leaf_area_max*nb        
+f[["prop.landscape"]] <- prop.landscape ~ leaf_area_max*nb
+f[["perimeter.area.frac.dim"]] <- (perimeter.area.frac.dim) ~ leaf_area_max*nb
+
+
+## run a model for each spatial pattern metric
+m_nb_leaf_area <- list()
+
+for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% 
+                                         c("effective.mesh.size", "mean.shape.index", 
+                                           "prop.landscape", "perimeter.area.frac.dim"))])){
+  formula <- f[[j]]
+  
+  m_nb_leaf_area[[j]][["leaf_area"]] <-mod_list <- mclapply(1:2, function(i) {
+    MCMCglmm(fixed = formula,
+             # random = ~ animal,
+             rcov = ~units,
+             family= "gaussian",
+             # pedigree = comp_data$tree,
+             data = comp_data$data,
+             nitt = nitt,
+             burnin = burnin,
+             thin = thin,
+             prior = prior)
+  }, mc.cores=2)
+  
+  mod_mcmc <-  m_nb_leaf_area[["leaf_area"]][[j]][[1]]
+  mod_mcmc_2 <-  m_nb_leaf_area[["leaf_area"]][[j]][[2]]}
+
+#saveRDS(m_nb_leaf_area, "m_nb_leaf_area.rds")
+
+## Diagnositcs ----------------------------
+z <- 'effective.mesh.size'
+z <- "mean.shape.index"
+z <- "prop.landscape"
+z <- "perimeter.area.frac.dim"
+
+mod_mcmc <- m_nb_leaf_area[[z]][["leaf_area"]][[1]]
+mod_mcmc_2 <- m_nb_leaf_area[[z]][["leaf_area"]][[2]]
+
+bay_dia(mod_mcmc)
+
+for(i in r){
+  print(summary(m_nb_leaf_area[[i]][["leaf_area"]][[1]]))
+}
+
+

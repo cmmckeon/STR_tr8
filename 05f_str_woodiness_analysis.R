@@ -173,7 +173,7 @@ for(i in r){
   print(summary(m_indiv_woodiness[[i]][["woodiness"]][[1]]))
 }
 
-## Cliamte ------------------
+## Climate ------------------
 #
 #
 #
@@ -210,7 +210,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("effe
   mod_mcmc <-  m_nb_woodiness[["woodiness"]][[j]][[1]]
   mod_mcmc_2 <-  m_nb_woodiness[["woodiness"]][[j]][[2]]}
 
-#saveRDS(m_nb_woodiness, "m_woodiness_nb.rds")
+saveRDS(m_nb_woodiness, "m_nb_woodiness.rds")
 
 ## Diagnositcs ----------------------------
 z <- 'effective.mesh.size'

@@ -225,11 +225,28 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
   mod_mcmc <-  m_nb_height[["height"]][[j]][[1]]
   mod_mcmc_2 <-  m_nb_height[["height"]][[j]][[2]]}
 
+for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("prop.landscape", "perimeter.area.frac.dim"))])){
+  formula <- f[[j]]
+  
+  m_nb_height[[j]][["height"]] <-mod_list <- mclapply(1:2, function(i) {
+    MCMCglmm(fixed = formula,
+             random = ~ animal,
+             rcov = ~units,
+             family= "gaussian",
+             pedigree = comp_data$tree,
+             data = comp_data$data,
+             nitt = nitt,
+             burnin = burnin, 
+             thin = thin,
+             prior = prior)
+  }, mc.cores=2)
+  
+  mod_mcmc <-  m_nb_height[["height"]][[j]][[1]]
+  mod_mcmc_2 <-  m_nb_height[["height"]][[j]][[2]]}
+
 #saveRDS(m_nb_height, "m_nb_height.rds")
 
 ## Diagnositcs ----------------------------
-z <- "total.area"
-z <- "range.size"
 z <- 'effective.mesh.size'
 z <- "mean.shape.index"
 z <- "prop.landscape"
