@@ -186,24 +186,7 @@ f[["mean.shape.index"]] <- mean.shape.index ~ lifeform*nb
 f[["prop.landscape"]] <- prop.landscape ~ lifeform*nb
 f[["perimeter.area.frac.dim"]] <- (perimeter.area.frac.dim) ~ lifeform*nb
 
-
-## for quick checks
-# m_list <-mod_list <- mclapply(1:2, function(i) {
-#   MCMCglmm(fixed = (perimeter.area.frac.dim) ~ lifeform,
-#           #random = ~ animal,
-#            rcov = ~units,
-#            family= "gaussian",
-#            #pedigree = comp_data$tree,
-#            data = comp_data$data,
-#            nitt = nitt,
-#            burnin = burnin,
-#            thin = thin,
-#            prior = prior)
-# }, mc.cores=2)
-# 
-# mod_mcmc <-  m_list[[1]]
-# mod_mcmc_2 <- m_list[[2]]
-
+prior <- list(R = list(V=1, nu=0.002))
 
 ## run a model for each spatial pattern metric
 m_nb_lifeform <- list()
@@ -214,7 +197,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("effe
   
   m_nb_lifeform[[j]][["lifeform"]] <-mod_list <- mclapply(1:2, function(i) {
     MCMCglmm(fixed = formula,
-             random = ~ animal,
+            # random = ~ animal,
              rcov = ~units,
              family= "gaussian",
              pedigree = comp_data$tree,
@@ -228,7 +211,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("effe
   mod_mcmc <-  m_nb_lifeform[["lifeform"]][[j]][[1]]
   mod_mcmc_2 <-  m_nb_lifeform[["lifeform"]][[j]][[2]]}
 
-#saveRDS(m_nb_lifeform, "m_lifeform_nb.rds")
+#saveRDS(m_nb_lifeform, "m_nb_lifeform.rds")
 
 ## Diagnositcs ----------------------------
 z <- 'effective.mesh.size'
@@ -240,5 +223,9 @@ z <- "perimeter.area.frac.dim"
 mod_mcmc <- m_nb_lifeform[[z]][["lifeform"]][[1]]
 mod_mcmc_2 <- m_nb_lifeform[[z]][["lifeform"]][[2]]
 
-bay_phylo_dia(mod_mcmc)
+bay_dia(mod_mcmc)
+
+for(i in r){
+  print(summary(m_nb_lifeform[[i]][["lifeform"]][[1]]))
+}
 

@@ -4,7 +4,7 @@
 ## metrics ~ phylogeny --------
 ## read in and handle data------------------------------------------------------------------------------------------------
 
-plotTree(clean_tree,type="fan",fsize=0.1,lwd=0.5, ftype="i", part = 0.93)
+#plotTree(clean_tree,type="fan",fsize=0.1,lwd=0.5, ftype="i", part = 0.93)
 
 metrics <- read.csv("Data_range_metrics.csv") ## metrics provided by Anna Csergo in spring 2019
 metrics <- metrics[metrics$Model == "Occurrence",]
@@ -125,7 +125,7 @@ for(i in r){
   H <- as.numeric(mod_mcmc$VCV[,"animal"]/
     (mod_mcmc$VCV[,"animal"] + mod_mcmc$VCV[,"units"]))
   print(summary(H))
-  hist(H, main = paste("phy est", i, sep = " "), breaks = 100, xlim = c(0,1))
+  hist(H, main = paste(i), breaks = 100, xlim = c(0,1))
 }
 
 k <- as.numeric(H)
@@ -134,14 +134,14 @@ summary(k)
 ## traits -------
 
 
-par(mfrow = c(6,1))
-ts <- list(height, sla, seed_mass, leaf_area, woodiness, lifeform)
-t <- c("height", "sla", "seed_mass", "leaf_area", "woodiness", "lifeform")
-for(i in 1:length(ts)){
-  new_tree <- drop.tip(clean_tree, as.character(setdiff(clean_tree$tip.label, 
-                                                        unique(ts[[i]][["species"]]))))
-  plotTree(new_tree,type="fan",fsize=0.1,lwd=0.5, ftype="i", part = 0.93, main = paste(t[i]))
-}
+# par(mfrow = c(6,1))
+# ts <- list(height, sla, seed_mass, leaf_area, woodiness, lifeform)
+# t <- c("height", "sla", "seed_mass", "leaf_area", "woodiness", "lifeform")
+# for(i in 1:length(ts)){
+#   new_tree <- drop.tip(clean_tree, as.character(setdiff(clean_tree$tip.label, 
+#                                                         unique(ts[[i]][["species"]]))))
+#   plotTree(new_tree,type="fan",fsize=0.1,lwd=0.5, ftype="i", part = 0.93, main = paste(t[i]))
+# }
 
 ## height --------
 
@@ -170,7 +170,7 @@ bay_phylo_dia(mod_mcmc)
 # H <- mod_mcmc$VCV[,"animal"]/
 #   (mod_mcmc$VCV[,"animal"] + mod_mcmc$VCV[,"units"])
 print(summary(H))
-
+phy_h <- H
 
 ## sla--------
 
@@ -199,6 +199,7 @@ bay_phylo_dia(mod_mcmc)
 H <- mod_mcmc$VCV[,"animal"]/
   (mod_mcmc$VCV[,"animal"] + mod_mcmc$VCV[,"units"])
 print(summary(H))
+phy_sla <- H
 
 ## seed mass--------
 
@@ -228,6 +229,7 @@ H <- mod_mcmc$VCV[,"animal"]/
   (mod_mcmc$VCV[,"animal"] + mod_mcmc$VCV[,"units"])
 print(summary(H))
 
+phy_sm <-  H
 
 ## la--------
 
@@ -256,6 +258,7 @@ bay_phylo_dia(mod_mcmc)
 H <- mod_mcmc$VCV[,"animal"]/
   (mod_mcmc$VCV[,"animal"] + mod_mcmc$VCV[,"units"])
 print(summary(H))
+phy_la <- H
 
 ## woodiness--------
 woodiness$binary <- as.numeric(woodiness$woodiness)
@@ -285,6 +288,7 @@ bay_phylo_dia(mod_mcmc)
 H <- mod_mcmc$VCV[,"animal"]/
   (mod_mcmc$VCV[,"animal"] + mod_mcmc$VCV[,"units"])
 print(summary(H))
+phy_wood <- H
 
 
 ## lifeform--------
@@ -315,6 +319,19 @@ bay_phylo_dia(mod_mcmc)
 H <- mod_mcmc$VCV[,"animal"]/
   (mod_mcmc$VCV[,"animal"] + mod_mcmc$VCV[,"units"])
 print(summary(H))
+phy_lf <- H
+
+par(mfrow = c(1,6), margin(0.2,0.2,0.2,0.2), cex.axis = 1)
+hist(phy_lf, breaks = 50, main = "life form", ylab = "", xlab = "", xlim = c(0,1))
+hist(phy_wood, breaks = 50, main = "woodiness",ylab = "", xlab = "", xlim = c(0,1))
+hist(phy_sla, breaks = 50, main = "SLA",ylab = "", xlab = "", xlim = c(0,1))
+hist(phy_sm, breaks = 50, main = "seed mass",ylab = "", xlab = "",xlim = c(0,1))
+hist(phy_h, breaks = 50, main = "height", ylab = "", xlab = "",xlim = c(0,1))
+hist(phy_la, breaks = 50, main = "leaf mass", ylab = "", xlab = "",xlim = c(0,1))
+
+
+
+
 
 
 ##end

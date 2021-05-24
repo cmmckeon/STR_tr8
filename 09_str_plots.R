@@ -375,6 +375,16 @@ for(i in names(lifeform[which(names(lifeform) %in% c("total.area", "range.size",
 
 
 
+par(mfrow = c(1,6), margin(4,4,4,4))
+ts <- list(height, sla, seed_mass, leaf_area, woodiness, lifeform)
+t <- c("height", "sla", "seed_mass", "leaf_area", "woodiness", "lifeform")
+for(i in 1:length(ts)){
+  new_tree <- drop.tip(clean_tree, as.character(setdiff(clean_tree$tip.label, 
+                                                        unique(ts[[i]][["species"]]))))
+  plotTree(new_tree,type="fan",fsize=0.1,lwd=0.5, ftype="i", part = 0.93, main = paste(t[i]))
+  mtext(paste(t[i]))
+  
+}
 
 
 
