@@ -244,7 +244,7 @@ for(i in names(seed_mass[which(names(seed_mass) %in% c("total.area", "range.size
 }
 
 ## sla --------
-mcmc_data <- sla[sla$sla_max < 600,]
+mcmc_data <- sla[sla$sla_max < 4,]
 mcmc_data$animal <- mcmc_data$species
 comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
 f <- list()
@@ -331,7 +331,7 @@ for(i in r) {
 c <- cbind(c[-1,], rr)
 
 colz <- as.data.frame(cbind(c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
-                              "perimeter.area.frac.dim") ,c("purple","purple","#7000A8FF", "#7000A8FF", "purple", "grey")))
+                              "perimeter.area.frac.dim") ,c("grey","grey","#7000A8FF", "#7000A8FF", "grey", "grey")))
 for(i in names(woodiness[which(names(woodiness) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
                                                        "prop.landscape", "perimeter.area.frac.dim"))])) {
   plot(f[[i]], data = comp_data$data, cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
