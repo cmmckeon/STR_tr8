@@ -143,7 +143,7 @@ metrics <- merge(metrics, rat, by = "species")
 m <- drop_na(metrics)
 
 for (i in names(Filter(is.numeric, metrics))) {
-        metrics[, i] <- c(scale(metrics[,i], na.rm = TRUE))
+        metrics[, i] <- c(scale(metrics[,i]))
 }
 
 
@@ -182,12 +182,12 @@ print(c("effect size will be:", eff_ss))
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- total.area ~ nb   
-f[["range.size"]] <- range.size ~ nb  
-f[["effective.mesh.size"]] <-  effective.mesh.size ~ nb     
-f[["mean.shape.index"]] <- mean.shape.index ~ nb        
-f[["prop.landscape"]] <- prop.landscape ~ nb
-f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ nb
+f[["total.area"]]  <- total.area ~ mean   
+f[["range.size"]] <- range.size ~ mean  
+f[["effective.mesh.size"]] <-  effective.mesh.size ~ mean     
+f[["mean.shape.index"]] <- mean.shape.index ~ mean        
+f[["prop.landscape"]] <- prop.landscape ~ mean
+f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ mean
 
 
 
