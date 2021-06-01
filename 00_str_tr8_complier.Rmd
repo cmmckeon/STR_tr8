@@ -47,7 +47,7 @@ Read in species range metrics.
 ```{r}
 metrics <- read.csv("Data_range_metrics.csv") ## metrics provided by Anna Csergo in spring 2019
 metrics$Species <- gsub(" ssp.*", "", metrics$Species)
-metrics <- metrics[metrics$Species %in% sp.list_full_TRY_BIEN & metrics$Model == "Occurrence",]
+metrics <- metrics[metrics$Model == "Occurrence",]
 metrics <- unique(metrics[, which(names(metrics) %in% 
                                     c("Species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape",
                                       "perimeter.area.frac.dim"))])
@@ -56,16 +56,28 @@ names(metrics) <- c("species", "total.area", "range.size", "effective.mesh.size"
 
 
 metrics <- unique(merge(metrics, nb[,which(names(nb) %in% c('sp.list', "nb"))], by.x = "species", by.y = "sp.list"))
+#ßmetrics <- metrics[metrics$perimeter.area.frac.dim != "Inf",]
+metrics <- metrics[metrics$species != "Helleborus lividus",]
 
 ## log transform raw data
+metrics$perimeter.area.frac.dim <- (metrics$perimeter.area.frac.dim + sqrt(min(metrics$perimeter.area.frac.dim)^2)) + 1
 for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.shape.index", "prop.landscape", "nb"))]))) {
-  metrics[, i] <- c(log(metrics[,i]))
-}
+        metrics[, i] <- c(log(metrics[,i]))
+        }
 
-## scale raw data
 for (i in names(Filter(is.numeric, metrics))) {
-  metrics[, i] <- c(scale(metrics[,i]))
-}
+        metrics[, i] <- c(scale(metrics[,i]))
+        }
+
+# ## log transform raw data
+# for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.shape.index", "prop.landscape", "nb"))]))) {
+#   metrics[, i] <- c(log(metrics[,i]))
+# }
+# 
+# ## scale raw data
+# for (i in names(Filter(is.numeric, metrics))) {
+#   metrics[, i] <- c(scale(metrics[,i]))
+# }
 ```
 
 

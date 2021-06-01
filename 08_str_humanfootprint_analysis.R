@@ -113,6 +113,7 @@ hist(rat$median, breaks = 100)
 hist(rat$reg_mean, breaks = 100)
 
 #saveRDS(rat, "Data_occ_humanfootprint_ratio.rds")
+rat <- readRDS("Data_occ_humanfootprint_ratio.rds")
 
 ## metrics ~ human footprint ratio --------
 ## read in and handle data------------------------------------------------------------------------------------------------
@@ -127,25 +128,26 @@ names(metrics) <- c("species", "total.area", "range.size", "effective.mesh.size"
 
 metrics$species <- gsub(" ssp.*", "", metrics$species)
 metrics$species <- factor(metrics$species)
+#metrics <- unique(merge(metrics, nb[,which(names(nb) %in% c('sp.list', "nb"))], by.x = "species", by.y = "sp.list"))
 levels(metrics$species) <- gsub(" ", "_", levels(metrics$species))
 levels(metrics$species) <- gsub("-", ".", levels(metrics$species))
-metrics <- metrics[metrics$perimeter.area.frac.dim != "Inf",]
+#metrics <- metrics[metrics$perimeter.area.frac.dim != "Inf",]
+metrics <- metrics[metrics$species != "Helleborus lividus",]
 
-
-m <- drop_na(metrics)
-m$perimeter.area.frac.dim <- (m$perimeter.area.frac.dim + sqrt(min(m$perimeter.area.frac.dim)^2)) + 1
-for (i in names(Filter(is.numeric, m[, which(names(m) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-        m[, i] <- c(log(m[,i]))
+#m <- drop_na(metrics)
+metrics$perimeter.area.frac.dim <- (metrics$perimeter.area.frac.dim + sqrt(min(metrics$perimeter.area.frac.dim, na.rm = T)^2)) + 1
+for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+        metrics[, i] <- c(log(metrics[,i]))
 }
-m <- merge(m, rat, by = "species")
+metrics <- merge(metrics, rat, by = "species")
 
-for (i in names(Filter(is.numeric, m))) {
-        m[, i] <- c(scale(m[,i]))
+for (i in names(Filter(is.numeric, metrics))) {
+        metrics[, i] <- c(scale(metrics[,i], na.rm = TRUE))
 }
 
 
-for (i in names(Filter(is.numeric, m))) {
-        hist((m[,i]),
+for (i in names(Filter(is.numeric, metrics))) {
+        hist((metrics[,i]),
              breaks = 3000,
              main = paste(i),
              xlab = paste(i))
@@ -153,7 +155,7 @@ for (i in names(Filter(is.numeric, m))) {
 
 
 
-mcmc_data <- m
+mcmc_data <- metrics
 mcmc_data$animal <- mcmc_data$species
 ## create comparative dataset
 comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
@@ -179,23 +181,23 @@ print(c("effect size will be:", eff_ss))
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- total.area ~ median   
-f[["range.size"]] <- range.size ~ median  
-f[["effective.mesh.size"]] <-  effective.mesh.size ~ median     
-f[["mean.shape.index"]] <- mean.shape.index ~ median        
-f[["prop.landscape"]] <- prop.landscape ~ median
-f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ median
+f[["total.area"]]  <- total.area ~ nb   
+f[["range.size"]] <- range.size ~ nb  
+f[["effective.mesh.size"]] <-  effective.mesh.size ~ nb     
+f[["mean.shape.index"]] <- mean.shape.index ~ nb        
+f[["prop.landscape"]] <- prop.landscape ~ nb
+f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ nb
 
 
 
 ## model ---------------
-m_metric_hf <- list()
+m_metric_nb <- list()
 
 for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
                                                                            "prop.landscape", "perimeter.area.frac.dim"))])){
         formula <- f[[j]]
         
-        m_metric_hf[[j]][["hf"]]  <-mod_list <- mclapply(1:2, function(i) {
+        m_metric_nb[[j]][["hf"]]  <-mod_list <- mclapply(1:2, function(i) {
                 MCMCglmm(fixed = formula,
                          random = ~ animal,
                          rcov = ~units,
@@ -208,7 +210,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
                          prior = prior)
         }, mc.cores=2)}
 
-#saveRDS(m_metric_hf, "m_metric_hf.rds")
+#saveRDS(m_metric_nb, "m_metric_nb.rds")
 
 ## diagnostics -------------
 z <- "total.area"
@@ -223,26 +225,74 @@ mod_mcmc_2 <- m_metric_hf[[z]][["hf"]][[2]]
 
 bay_phylo_dia(mod_mcmc)
 
+for(i in r){
+        print(summary(m_metric_nb[[i]][["hf"]][[1]]))
+}
+
+
+
+## rough plots ----------
+par(mfrow = c(2,3))
+## extract the posterior estiamtes
+rr <- c()
+r <- c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
+c <- tibble("a", "b")
+for(i in r) {
+        sum <- as.data.frame(summary(m_metric_nb[[i]][["hf"]][[1]][["Sol"]])[["statistics"]]); 
+        c <- rbind(c, c(sum$Mean[1], sum$Mean[2])); 
+        rr <- append(rr, paste(i))}
+c <- cbind(c[-1,], rr)
+
+k <- list(" total area", " range size", " effective mesh size", "mean shape index",
+          "proportion of landscape", " perimeter area fractality")
+names(k) <- r
+
+colz <- as.data.frame(cbind(c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
+                              "perimeter.area.frac.dim") ,c("#7000A8FF","#7000A8FF","#7000A8FF", "#7000A8FF", "#7000A8FF", "grey")))
+#par(mfrow = c(2,3), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
+#par(mfrow = c(2,3), mar=c(4.5,4,2,2), col="white", col.main = "white", col.lab = "white", bg="transparent")
+for(i in names(comp_data$data[which(names(comp_data$data) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
+                                                       "perimeter.area.frac.dim"))])) {
+        plot(f[[i]], data = comp_data$data, col = "grey", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
+             ylab = paste(k[[i]]), main = paste(k[[i]]), xlab = paste("nb"), bty = "n")
+        abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = paste(colz$V2[colz$V1 ==i ]), lwd = 6)
+}
+
+
+
+
 
 ## no phyeny prior
 prior <- list(R = list(V=1, nu=0.002))
 
-m_list <- mod_list <- mclapply(1:2, function(i) {
-        MCMCglmm(fixed = perimeter.area.frac.dim ~ reg_mean,
-                 rcov = ~units,
-                 family= "gaussian",
-                 pedigree = comp_data$tree,
-                 data = comp_data$data,
-                 nitt = nitt,
-                 burnin = burnin,
-                 thin = thin,
-                 prior = prior)}, mc.cores=2)
+m_metric_hf_no_phy <- list()
+
+for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+                                                                           "prop.landscape", "perimeter.area.frac.dim"))])){
+        formula <- f[[j]]
+        
+        m_metric_hf_no_phy[[j]][["hf"]]  <-mod_list <- mclapply(1:2, function(i) {
+                MCMCglmm(fixed = formula,
+                         rcov = ~units,
+                         family= "gaussian",
+                         pedigree = comp_data$tree,
+                         data = comp_data$data,
+                         nitt = nitt,
+                         burnin = burnin,
+                         thin = thin,
+                         prior = prior)
+        }, mc.cores=2)}
 
 
-mod_mcmc <- m_list[[1]]
-mod_mcmc_2 <- m_list[[2]]
+
+mod_mcmc <- m_metric_hf_no_phy[[z]][["hf"]][[1]]
+mod_mcmc_2 <- m_metric_hf_no_phy[[z]][["hf"]][[2]]
 
 bay_dia(mod_mcmc)
+
+for(i in r){
+        print(summary(m_metric_hf_no_phy[[i]][["hf"]][[1]]))
+}
 
 
 

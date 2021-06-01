@@ -18,6 +18,7 @@ multi <- droplevels(unique(merge(woodiness[, which(names(woodiness) %in% c("spec
 multi <- droplevels(unique(merge(multi, height[, which(names(height) %in% c("species", "height_max"))], by = "species"))) ## 124 unique
 multi <- droplevels(unique(merge(multi, seed_mass[, which(names(seed_mass) %in% c("species", "seed_mass_max"))], by = "species"))) ## 77 unique
 multi <- droplevels(unique(merge(multi, sla[, which(names(sla) %in% c("species", "sla_max"))], by = "species"))) ## 77 unique
+multi <- droplevels(unique(merge(multi, woodiness[, which(names(woodiness) %in% c("species", "woodiness"))], by = "species"))) ## 77 unique
 
 
 ## set up ###################
@@ -27,6 +28,9 @@ mcmc_data <- multi
 mcmc_data$animal <- mcmc_data$species
 ## create comparative dataset
 comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
+View(comp_data[["data"]])
+length(comp_data[["data"]]$species) 
+length(unique(comp_data[["data"]]$species)) 
 
 # # priors----------------------------------------------------------------------------------------
 ## normal prior (for models including phyeny)
@@ -152,10 +156,10 @@ for(i in r){
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["effective.mesh.size"]] <-  (effective.mesh.size) ~ nb*height_max*lifeform*seed_mass_max     
-f[["mean.shape.index"]] <- mean.shape.index ~ nb*height_max*lifeform*seed_mass_max        
-f[["prop.landscape"]] <- prop.landscape ~ nb*height_max*lifeform*seed_mass_max 
-f[["perimeter.area.frac.dim"]] <- (perimeter.area.frac.dim) ~ nb*height_max*lifeform*seed_mass_max  
+f[["effective.mesh.size"]] <-  (effective.mesh.size) ~ nb*lifeform*sla_max     
+f[["mean.shape.index"]] <- mean.shape.index ~ nb*lifeform*sla_max        
+f[["prop.landscape"]] <- prop.landscape ~ nb*lifeform*sla_max 
+f[["perimeter.area.frac.dim"]] <- (perimeter.area.frac.dim) ~ nb*lifeform*sla_max  
 
 
 ## run a model for each spatial pattern metric
@@ -181,7 +185,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("effe
   mod_mcmc <-  m_multi[["multi"]][[j]][[1]]
   mod_mcmc_2 <-  m_multi[["multi"]][[j]][[2]]}
 
-#saveRDS(m_multi, "m_multi/m_multi_nb_h_lf_sm.rds")
+#saveRDS(m_multi, "m_multi/m_multi_nb_lf_sla.rds")
 
 ## Diagnositcs ----------------------------
 z <- 'effective.mesh.size'
