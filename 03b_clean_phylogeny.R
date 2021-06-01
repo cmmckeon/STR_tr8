@@ -8,6 +8,7 @@ library(caper)
 library(ape)
 library(phytools)
 library(phangorn)
+library()
 
 ## look at phylogenetic tree options and species listoverlap with my usable PREDICTS data
 
@@ -22,7 +23,7 @@ if(exists("treefile")) {
 tip_labels <- as.character(treefile$tip.label) ## 356305 species (well, tips..)
 
 #### drop unused species from phylogeny 
-omit_spe <- as.character(setdiff(treefile$tip.label, unique(mydata$species)))
+omit_spe <- as.character(setdiff(treefile$tip.label, unique(metrics$species)))
 clean_tree <- drop.tip(treefile, omit_spe)
 
 ## label nodes
@@ -49,27 +50,31 @@ if(exists("clean_tree")) {
 } else warning("failed to create clean_tree")
 #str(clean_tree)
 
+
+
+
+
 ## trying another tree to see if that increases overlap
 # ## ZANNA 2013
 # ## read in file
 treefile <- read.tree(file ="Vascular_Plants_rooted.dated.tre")
-omit_spe <- as.character(setdiff(treefile$tip.label, unique(mydata$species)))
-clean_tree <- drop.tip(treefile, omit_spe)
+omit_spe <- as.character(setdiff(treefile$tip.label, unique(metrics$species)))
+zanne_tree <- drop.tip(treefile, omit_spe)
 
 ## label nodes
-clean_tree$node.label <- c(1:length(clean_tree$node.label))  
+zanne_tree$node.label <- c(1:length(zanne_tree$node.label))  
 
 ## make tree ultrametric
-clean_tree <- nnls.tree(cophenetic(clean_tree),clean_tree,rooted=TRUE)
+zanne_tree <- nnls.tree(cophenetic(zanne_tree),zanne_tree,rooted=TRUE)
 ## "RSS: 0.574181455739743"
 
 #### check trees similarity this should equal 1
-tips<-clean_tree$tip.label
-cor(as.vector(cophenetic(clean_tree)[tips,tips]),
-    as.vector(cophenetic(clean_tree)[tips,tips]))
+tips<-zanne_tree$tip.label
+cor(as.vector(cophenetic(zanne_tree)[tips,tips]),
+    as.vector(cophenetic(zanne_tree)[tips,tips]))
 ### 1
 
-clean_tips <- as.character(clean_tree$tip.label)
+clean_tips <- as.character(zanne_tree$tip.label)
 #
 # #plot(treefile, cex = 0.3)
 # ## look at which species are represented in the tree
@@ -78,6 +83,6 @@ clean_tips <- as.character(clean_tree$tip.label)
 sp_zanne <- Reduce(intersect, list(noquote(tip_labels), unique(metrics$species))) ## only 2823 species.... brutal
 
 
-merged_tree <- merge_tree(clean_tree, codeml_tree)
+merged_tree <- merge_tree(clean_tree, zanne_tree)
 
 

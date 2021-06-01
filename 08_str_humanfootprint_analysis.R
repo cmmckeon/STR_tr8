@@ -140,6 +140,7 @@ for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.
         metrics[, i] <- c(log(metrics[,i]))
 }
 metrics <- merge(metrics, rat, by = "species")
+m <- drop_na(metrics)
 
 for (i in names(Filter(is.numeric, metrics))) {
         metrics[, i] <- c(scale(metrics[,i], na.rm = TRUE))
