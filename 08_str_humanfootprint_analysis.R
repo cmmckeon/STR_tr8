@@ -29,16 +29,15 @@ names(endem) <- c("species", "y", "x")
 sp <- endem
 
 
-patch <- shapefile("AFEcells/cgrs_grid.shp")
-o <- shapefile("AFEcells/crgs_AFEocc.shp")
-plot(patch)
-plot(o)
-
-or <- rasterize(o, mat)
-plot(or)
-
-eu_10k <- shapefile("grid_eu25_etrs_laea_10k/grid_eu25_etrs_laea_10k.shp")
-plot(eu_10k)
+# patch <- shapefile("AFEcells/cgrs_grid.shp")
+# o <- shapefile("AFEcells/crgs_AFEocc.shp")
+# plot(patch)
+# plot(o)
+# 
+# or <- rasterize(o, mat)
+# plot(or)
+# eu_10k <- shapefile("grid_eu25_etrs_laea_10k/grid_eu25_etrs_laea_10k.shp")
+# plot(eu_10k)
 
 ## make dataframe with just the lat and long co-ordinates of data that is relevant to my analysis
 sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
@@ -65,13 +64,13 @@ hf_map <- calc(hf, fun=function(x){ x[x > 100] <- NA; return(x)} )
 #par(bty = "n", mar=c(0.02,0.02,2,0.2))
 #plot(hf_map, col = pal(50), main = "Human footprint 2009", yaxt="n", xaxt="n")
 hf_repro <- projectRaster(hf, mat)
-plot(hf_repro)
+#plot(hf_repro)
 
 r <- calc(hf_repro, fun=function(x){ x[x > 50] <- NA; return(x)} )
-plot(r, col = pal(50))
+#plot(r, col = pal(50))
 temp <- calc(r, fun=function(x){ x[x >= 0] <- 0; return(x)} )
-plot(temp)
-plot(temp, col = pal(50))
+#plot(temp)
+#plot(temp, col = pal(50))
 
 sp <- sp[, c("x", "y", "species")]
 plot(sp)
@@ -87,9 +86,9 @@ for (i in unique(sp$species)){
 
 all <- brick(rast_list)        
 all <- brick(r, temp, all)
-plot(all)
+#plot(all)
 all2 <- aggregate(all, fact= 3)
-all2 <- aggregate(all, fact= 6)
+all <- aggregate(all, fact= 6)
 
 #sp4 <- projectRaster(all, crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 #plot(sp4)
@@ -122,7 +121,7 @@ hist(rat$mean, breaks = 100)
 hist(rat$median, breaks = 100)
 hist(rat$reg_mean, breaks = 100)
 
-#saveRDS(rat, "Data_occ_humanfootprint_ratio.rds")
+#saveRDS(rat, "Data_occ_humanfootprint_ratio_agg3.rds")
 rat <- readRDS("Data_occ_humanfootprint_ratio.rds")
 
 ## metrics ~ human footprint ratio --------
@@ -200,13 +199,13 @@ f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ mean
 
 
 ## model ---------------
-m_metric_nb <- list()
+m_metric_hf <- list()
 
 for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
                                                                            "prop.landscape", "perimeter.area.frac.dim"))])){
         formula <- f[[j]]
         
-        m_metric_nb[[j]][["hf"]]  <-mod_list <- mclapply(1:2, function(i) {
+        m_metric_hf[[j]][["hf"]]  <-mod_list <- mclapply(1:2, function(i) {
                 MCMCglmm(fixed = formula,
                          random = ~ animal,
                          rcov = ~units,
@@ -219,7 +218,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
                          prior = prior)
         }, mc.cores=2)}
 
-#saveRDS(m_metric_nb, "m_metric_nb.rds")
+#saveRDS(m_metric_hf, "m_metric_hf_agg3.rds")
 
 ## diagnostics -------------
 z <- "total.area"
@@ -235,7 +234,7 @@ mod_mcmc_2 <- m_metric_hf[[z]][["hf"]][[2]]
 bay_phylo_dia(mod_mcmc)
 
 for(i in r){
-        print(summary(m_metric_nb[[i]][["hf"]][[1]]))
+        print(summary(m_metric_hf[[i]][["hf"]][[1]]))
 }
 
 

@@ -5,10 +5,10 @@
 ################ set up
 #install.packages(c("ape", "phytools", "ggtree", "caper"))
 library(caper)
-library(ape)
 library(phytools)
 library(phangorn)
-library(phylobase)
+library(ape)
+
 
 ## look at phylogenetic tree options and species listoverlap with my usable data
 
@@ -64,6 +64,7 @@ cor(as.vector(cophenetic(clean_tree)[tips,tips]),
 clean_tips <- as.character(clean_tree$tip.label)
 ## save
 sss <- clean_tree
+clean_tree <- sss
 #write.tree(clean_tree, file = "Data_str_clean_tree.tre")
 
 #plotTree(clean_tree,type="fan",fsize=0.1,lwd=0.5, ftype="i", part = 0.93)
@@ -76,23 +77,25 @@ if(exists("clean_tree")) {
 #plotTree(clean_tree,fsize=0.1,lwd=0.5, ftype="i", part = 0.93)
 
 ## add other species from our data set that have genus matches in the tree
-new <- as.character(droplevels(metrics$species[which(metrics$species %nin% clean_tips)]))
+new <- as.character(droplevels(unique(metrics$species[which(metrics$species %nin% clean_tips)])))
 
 genera<-sapply(clean_tree$tip.label,function(x) strsplit(x,"_")[[1]][1])
 genera<-sort(unique(genera))
 
 new_genera <- sapply(new,function(x) strsplit(x,"_")[[1]][1])
-new_species <- as.data.frame(cbind(new_genera[-119], new[-119]))
+new_species <- as.data.frame(cbind(new_genera[-103], new[-103]))
 
 new_species <- merge(as.data.frame(genera), new_species, by.x = "genera", by.y = "V1")
 
 species <- as.character(new_species$V2)
 
 for(i in 1:length(species)) {
-  clean_tree <- add.species.to.genus(clean_tree,species[i],where="random")}
+  clean_tree <- add.species.to.genus(clean_tree, species[i], where="random")}
 #clean_tree <- add.species.to.genus(clean_tree, species, where="random")
 new_clean_tips <- as.character(clean_tree$tip.label)
 
+
+dd <- Reduce(intersect, list(species, clean_tips)) ##
 
 ## Liam Revell's phytool blog code. How incredibly helpful
 # species.tree <- clean_tree
