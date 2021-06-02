@@ -26,7 +26,7 @@ metrics$species <- factor(metrics$species)
 levels(metrics$species) <- gsub(" ", "_", levels(metrics$species))
 levels(metrics$species) <- gsub("-", ".", levels(metrics$species))
 #metrics <- metrics[metrics$perimeter.area.frac.dim != "Inf",]
-metrics <- metrics[metrics$species != "Helleborus lividus",]
+metrics <- metrics[metrics$species != "Helleborus_lividus",]
 
 #m <- drop_na(metrics)
 metrics$perimeter.area.frac.dim <- (metrics$perimeter.area.frac.dim + sqrt(min(metrics$perimeter.area.frac.dim, na.rm = T)^2)) + 1
@@ -61,10 +61,9 @@ tips<-clean_tree$tip.label
 cor(as.vector(cophenetic(clean_tree)[tips,tips]),
     as.vector(cophenetic(clean_tree)[tips,tips]))
 ### 1
-sss <- clean_tree
-clean_tree <- sss
 clean_tips <- as.character(clean_tree$tip.label)
 ## save
+sss <- clean_tree
 #write.tree(clean_tree, file = "Data_str_clean_tree.tre")
 
 #plotTree(clean_tree,type="fan",fsize=0.1,lwd=0.5, ftype="i", part = 0.93)

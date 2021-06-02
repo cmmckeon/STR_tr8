@@ -28,7 +28,19 @@ endem$afe <- gsub(" ", "_", endem$afe)
 names(endem) <- c("species", "y", "x")
 sp <- endem
 
-## make dataframe with just the lat and long co-ordinates of PREDICTS data that is relevant to my analysis
+
+patch <- shapefile("AFEcells/cgrs_grid.shp")
+o <- shapefile("AFEcells/crgs_AFEocc.shp")
+plot(patch)
+plot(o)
+
+or <- rasterize(o, mat)
+plot(or)
+
+eu_10k <- shapefile("grid_eu25_etrs_laea_10k/grid_eu25_etrs_laea_10k.shp")
+plot(eu_10k)
+
+## make dataframe with just the lat and long co-ordinates of data that is relevant to my analysis
 sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
 
 par(mfrow = c(1,1))
@@ -47,7 +59,7 @@ hf <- raster("Data_wildareas-v3-2009-human-footprint.tif")
 #                crs = "+proj=longlat +datum=WGS84 +no_defs +towgs84=0,0,0 +units=m")
 
 
-## Map human footprint dataa
+## Map human footprint data
 pal <- colorRampPalette(c('#0C276C', '#3B9088', '#EEFF00', '#ffffff'))
 hf_map <- calc(hf, fun=function(x){ x[x > 100] <- NA; return(x)} )
 #par(bty = "n", mar=c(0.02,0.02,2,0.2))
@@ -76,23 +88,21 @@ for (i in unique(sp$species)){
 all <- brick(rast_list)        
 all <- brick(r, temp, all)
 plot(all)
-all <- aggregate(all, fact= 6)
+all2 <- aggregate(all, fact= 3)
+all2 <- aggregate(all, fact= 6)
 
 #sp4 <- projectRaster(all, crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 #plot(sp4)
 
 
-## #extract climate values for coordinates in (full) PREDICTS dataset
-ratio_data <- as.data.frame(all, xy = T)
-
-
+## #extract climate values for coordinates in dataset
+ratio_data <- as.data.frame(all2, xy = T)
 
 f <- ratio_data
 
 for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2"))]){
        ratio_data[,i][which(is.na(ratio_data[,i]))] <- 0
         }
-        
 
 rat <- as.data.frame(names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2"))])
 names(rat) <- "species"
@@ -132,20 +142,18 @@ metrics$species <- factor(metrics$species)
 levels(metrics$species) <- gsub(" ", "_", levels(metrics$species))
 levels(metrics$species) <- gsub("-", ".", levels(metrics$species))
 #metrics <- metrics[metrics$perimeter.area.frac.dim != "Inf",]
-metrics <- metrics[metrics$species != "Helleborus lividus",]
+metrics <- metrics[metrics$species != "Helleborus_lividus",]
 
 #m <- drop_na(metrics)
 metrics$perimeter.area.frac.dim <- (metrics$perimeter.area.frac.dim + sqrt(min(metrics$perimeter.area.frac.dim, na.rm = T)^2)) + 1
-for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.shape.index", "prop.landscape"))]))) {
+for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.shape.index", "prop.landscape", "perimeter.area.frac.dim"))]))) {
         metrics[, i] <- c(log(metrics[,i]))
 }
 metrics <- merge(metrics, rat, by = "species")
-m <- drop_na(metrics)
 
 for (i in names(Filter(is.numeric, metrics))) {
         metrics[, i] <- c(scale(metrics[,i]))
 }
-
 
 for (i in names(Filter(is.numeric, metrics))) {
         hist((metrics[,i]),
