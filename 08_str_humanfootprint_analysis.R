@@ -3,7 +3,15 @@
 
 #load environmental data
 mat <-raster('bio1.bil') ## mean annual temperature (C*10)
+map <-raster('bio12.bil') ## mean annual precipatation (mm)
+map_var <-raster('bio15.bil') ## mean annual precip coeff variation
+mat_var <-raster('bio4.bil') ## mean annual temp SD*100
+## make climate variables into one object (raster brick)
+clim_map <- brick(map, mat, map_var, mat_var) 
 mat <- crop(mat, extent(-33,67,30, 82))
+clim_map <- projectRaster(clim_map, mat)
+plot(clim_map)
+
 plot(mat)
 #mat <- projectRaster(mat, crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 
@@ -85,17 +93,17 @@ for (i in unique(sp$species)){
 }
 
 all <- brick(rast_list)        
-all <- brick(r, temp, all)
+all <- brick(r, temp, all, clim_map)
 #plot(all)
-all2 <- aggregate(all, fact= 3)
-all <- aggregate(all, fact= 6)
+# all2 <- aggregate(all, fact= 3)
+# all <- aggregate(all, fact= 6)
 
 #sp4 <- projectRaster(all, crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 #plot(sp4)
 
 
 ## #extract climate values for coordinates in dataset
-ratio_data <- as.data.frame(all2, xy = T)
+ratio_data <- as.data.frame(all, xy = T)
 
 f <- ratio_data
 
@@ -113,6 +121,10 @@ for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1",
         rat$median[rat$species == i] <- median(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)/
                 median(ratio_data$layer.1[ratio_data$layer.2 == 0 & ratio_data[,i] == 0], na.rm = TRUE)
         rat$reg_mean[rat$species == i] <- mean(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)
+        rat$mat_mean[rat$species == i] <- mean(ratio_data$mat[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)
+        rat$mat_var_mean[rat$species == i] <- mean(ratio_data$mat_var[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)
+        rat$map_mean[rat$species == i] <- mean(ratio_data$map[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)
+        rat$map_var_mean[rat$species == i] <- mean(ratio_data$map_var[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)
 }
 
 par(mfrow = c(4,1))
@@ -121,8 +133,8 @@ hist(rat$mean, breaks = 100)
 hist(rat$median, breaks = 100)
 hist(rat$reg_mean, breaks = 100)
 
-#saveRDS(rat, "Data_occ_humanfootprint_ratio_agg3.rds")
-rat <- readRDS("Data_occ_humanfootprint_ratio.rds")
+#saveRDS(rat, "Data_occ_humanfootprint_ratio_no_agg.rds")
+rat <- readRDS("Data_occ_humanfootprint_ratio_no_agg.rds")
 
 ## metrics ~ human footprint ratio --------
 ## read in and handle data------------------------------------------------------------------------------------------------
@@ -137,7 +149,7 @@ names(metrics) <- c("species", "total.area", "range.size", "effective.mesh.size"
 
 metrics$species <- gsub(" ssp.*", "", metrics$species)
 metrics$species <- factor(metrics$species)
-#metrics <- unique(merge(metrics, nb[,which(names(nb) %in% c('sp.list', "nb"))], by.x = "species", by.y = "sp.list"))
+metrics <- unique(merge(metrics, nb[,which(names(nb) %in% c('sp.list', "nb"))], by.x = "species", by.y = "sp.list"))
 levels(metrics$species) <- gsub(" ", "_", levels(metrics$species))
 levels(metrics$species) <- gsub("-", ".", levels(metrics$species))
 #metrics <- metrics[metrics$perimeter.area.frac.dim != "Inf",]
@@ -145,7 +157,8 @@ metrics <- metrics[metrics$species != "Helleborus_lividus",]
 
 #m <- drop_na(metrics)
 metrics$perimeter.area.frac.dim <- (metrics$perimeter.area.frac.dim + sqrt(min(metrics$perimeter.area.frac.dim, na.rm = T)^2)) + 1
-for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.shape.index", "prop.landscape", "perimeter.area.frac.dim"))]))) {
+for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.shape.index", "prop.landscape", 
+                                                                          "perimeter.area.frac.dim", "nb"))]))) {
         metrics[, i] <- c(log(metrics[,i]))
 }
 metrics <- merge(metrics, rat, by = "species")
@@ -189,12 +202,12 @@ print(c("effect size will be:", eff_ss))
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- total.area ~ mean   
-f[["range.size"]] <- range.size ~ mean  
-f[["effective.mesh.size"]] <-  effective.mesh.size ~ mean     
-f[["mean.shape.index"]] <- mean.shape.index ~ mean        
-f[["prop.landscape"]] <- prop.landscape ~ mean
-f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ mean
+f[["total.area"]]  <- total.area ~ nb   
+f[["range.size"]] <- range.size ~ nb  
+f[["effective.mesh.size"]] <-  effective.mesh.size ~ nb     
+f[["mean.shape.index"]] <- mean.shape.index ~ nb        
+f[["prop.landscape"]] <- prop.landscape ~ nb
+f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ nb
 
 
 
@@ -218,7 +231,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
                          prior = prior)
         }, mc.cores=2)}
 
-#saveRDS(m_metric_hf, "m_metric_hf_agg3.rds")
+#saveRDS(m_metric_hf, "m_metric_nb.rds")
 
 ## diagnostics -------------
 z <- "total.area"
@@ -241,12 +254,12 @@ for(i in r){
 
 ## rough plots ----------
 par(mfrow = c(2,3))
-## extract the posterior estiamtes
+## extract the posterior estimates
 rr <- c()
 r <- c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
 c <- tibble("a", "b")
 for(i in r) {
-        sum <- as.data.frame(summary(m_metric_nb[[i]][["hf"]][[1]][["Sol"]])[["statistics"]]); 
+        sum <- as.data.frame(summary(m_metric_hf[[i]][["hf"]][[1]][["Sol"]])[["statistics"]]); 
         c <- rbind(c, c(sum$Mean[1], sum$Mean[2])); 
         rr <- append(rr, paste(i))}
 c <- cbind(c[-1,], rr)
@@ -256,7 +269,7 @@ k <- list(" total area", " range size", " effective mesh size", "mean shape inde
 names(k) <- r
 
 colz <- as.data.frame(cbind(c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
-                              "perimeter.area.frac.dim") ,c("#7000A8FF","#7000A8FF","#7000A8FF", "#7000A8FF", "#7000A8FF", "grey")))
+                              "perimeter.area.frac.dim") ,c("#7000A8FF","#7000A8FF","grey", "#7000A8FF", "grey",  "grey")))
 #par(mfrow = c(2,3), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
 #par(mfrow = c(2,3), mar=c(4.5,4,2,2), col="white", col.main = "white", col.lab = "white", bg="transparent")
 for(i in names(comp_data$data[which(names(comp_data$data) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", 
