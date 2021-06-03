@@ -111,6 +111,8 @@ for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1",
        ratio_data[,i][which(is.na(ratio_data[,i]))] <- 0
         }
 
+colnames(ratio_data)[which(names(ratio_data) %in% c("bio1", "bio4", "bio12", "bio15"))] <- c("mat", "mat_var", "map", "map_var")
+
 rat <- as.data.frame(names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2"))])
 names(rat) <- "species"
 for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2"))]){
