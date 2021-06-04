@@ -104,18 +104,18 @@ all <- brick(r, temp, all, clim_map)
 
 ## #extract climate values for coordinates in dataset
 ratio_data <- as.data.frame(all, xy = T)
+colnames(ratio_data)[which(names(ratio_data) %in% c("bio1", "bio4", "bio12", "bio15"))] <- c("mat", "mat_var", "map", "map_var")
 
 f <- ratio_data
 
-for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2"))]){
+for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))]){
        ratio_data[,i][which(is.na(ratio_data[,i]))] <- 0
         }
 
-colnames(ratio_data)[which(names(ratio_data) %in% c("bio1", "bio4", "bio12", "bio15"))] <- c("mat", "mat_var", "map", "map_var")
 
-rat <- as.data.frame(names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2"))])
+rat <- as.data.frame(names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))])
 names(rat) <- "species"
-for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2"))]){
+for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))]){
         rat$gm_mean[rat$species == i] <- gm_mean(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1])/
                 gm_mean(ratio_data$layer.1[ratio_data$layer.2 == 0 & ratio_data[,i] == 0])
         rat$mean[rat$species == i] <- mean(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)/
@@ -153,7 +153,6 @@ metrics$species <- gsub(" ssp.*", "", metrics$species)
 metrics$species <- factor(metrics$species)
 metrics <- unique(merge(metrics, nb[,which(names(nb) %in% c('sp.list', "nb"))], by.x = "species", by.y = "sp.list"))
 levels(metrics$species) <- gsub(" ", "_", levels(metrics$species))
-levels(metrics$species) <- gsub("-", ".", levels(metrics$species))
 #metrics <- metrics[metrics$perimeter.area.frac.dim != "Inf",]
 metrics <- metrics[metrics$species != "Helleborus_lividus",]
 
@@ -164,6 +163,7 @@ for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.
         metrics[, i] <- c(log(metrics[,i]))
 }
 metrics <- merge(metrics, rat, by = "species")
+levels(metrics$species) <- gsub("-", ".", levels(metrics$species))
 
 for (i in names(Filter(is.numeric, metrics))) {
         metrics[, i] <- c(scale(metrics[,i]))
@@ -176,6 +176,19 @@ for (i in names(Filter(is.numeric, metrics))) {
              xlab = paste(i))
 }
 
+
+upper.panel<-function(x, y){
+        points(x,y, pch=21, col=c("grey"), cex = 0.5)
+        r <- round(cor(x, y), digits=2)
+        txt <- paste0("R = ", r)
+        usr <- par("usr"); on.exit(par(usr))
+        par(usr = c(0, 1, 0, 1))
+        text(0.8, 0.9, txt, cex =0.7)
+}
+
+rat_ <- drop_na(metrics)
+pairs(rat_[, which(names(rat_) %nin% c("species"))], 
+      lower.panel = NULL, upper.panel = upper.panel)
 
 
 mcmc_data <- metrics
@@ -204,12 +217,12 @@ print(c("effect size will be:", eff_ss))
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- total.area ~ nb   
-f[["range.size"]] <- range.size ~ nb  
-f[["effective.mesh.size"]] <-  effective.mesh.size ~ nb     
-f[["mean.shape.index"]] <- mean.shape.index ~ nb        
-f[["prop.landscape"]] <- prop.landscape ~ nb
-f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ nb
+f[["total.area"]]  <- total.area ~ mean
+f[["range.size"]] <- range.size ~ mean
+f[["effective.mesh.size"]] <-  effective.mesh.size ~ mean
+f[["mean.shape.index"]] <- mean.shape.index ~ mean       
+f[["prop.landscape"]] <- prop.landscape ~ mean
+f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ mean
 
 
 
@@ -233,7 +246,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
                          prior = prior)
         }, mc.cores=2)}
 
-#saveRDS(m_metric_hf, "m_metric_nb.rds")
+#saveRDS(m_metric_hf, "m_metric_hf_mean_no_agg.rds")
 
 ## diagnostics -------------
 z <- "total.area"

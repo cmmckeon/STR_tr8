@@ -22,7 +22,7 @@ names(metrics) <- c("species", "total.area", "range.size", "effective.mesh.size"
 
 metrics$species <- gsub(" ssp.*", "", metrics$species)
 metrics$species <- factor(metrics$species)
-#metrics <- unique(merge(metrics, nb[,which(names(nb) %in% c('sp.list', "nb"))], by.x = "species", by.y = "sp.list"))
+metrics <- unique(merge(metrics, nb[,which(names(nb) %in% c('sp.list', "nb"))], by.x = "species", by.y = "sp.list"))
 levels(metrics$species) <- gsub(" ", "_", levels(metrics$species))
 levels(metrics$species) <- gsub("-", ".", levels(metrics$species))
 #metrics <- metrics[metrics$perimeter.area.frac.dim != "Inf",]
@@ -34,6 +34,9 @@ for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.
   metrics[, i] <- c(log(metrics[,i]))
 }
 
+for (i in names(Filter(is.numeric, metrics))) {
+  metrics[, i] <- c(scale(metrics[,i]))
+}
 
 ## SMITH 2018 "open tree" tree
 
