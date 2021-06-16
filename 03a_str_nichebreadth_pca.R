@@ -28,11 +28,15 @@ endem <- endem[, which(names(endem) %in% c("afe", "lon", "lat"))]
 endem$lon <- as.numeric(as.character(endem$lon))
 endem$lat <- as.numeric(as.character(endem$lat))
 endem$afe <- gsub(" ssp.*", "", endem$afe)
-endem$afe <- gsub(" ", "_", endem$afe)
+endem$afe <- gsub(" ssp.*", "", endem$afe)
+endem$afe <- gsub(" s.lat.", "", endem$afe)
+endem$afe <- gsub(" s.str.", "", endem$afe)
+endem$afe <- gsub("coll.", "coll", endem$afe)
+endem$afe[endem$afe == "Saxifraga osloënsis"] <- "Saxifraga osloensis"
 names(endem) <- c("species", "y", "x") 
 sp <- endem
 
-sp <- sp[, c("species", "x", "y")]
+sp <- sp[, c("species", "x", "y")] ## 735 unique species
 
 ## make dataframe with just the lat and long co-ordinates of PREDICTS data that is relevant to my analysis
 sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
@@ -40,10 +44,12 @@ sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
 ## #extract climate values for coordinates in (full) PREDICTS dataset
 full_clim <- data.frame(raster::extract(clim_map,sp_co)) 
 ## create dataset with both climate values and co-ordinates of the values
-full_clim <- cbind(full_clim,sp_co)
+full_clim <- cbind(full_clim,sp)
 env <- unique(full_clim)
-names(env) <- c("map", "mat", "map_var", "mat_var","Longitude", "Latitude") 
+names(env) <- c("map", "mat", "map_var", "mat_var", "species", "Longitude", "Latitude") 
 env <- drop_na(env)
+#saveRDS(env, "Data_occurences_cliamte_values.rds")
+env <- env[, which(names(env) %in% c("map", "mat", "map_var", "mat_var", "Longitude", "Latitude") )]
 
 
 # sample environmental values for all occurences
@@ -86,6 +92,12 @@ for(i in 1:length(sp.list)) {
   #niche breadth: weighted average across the two PCA axes in one value
   nb$nb[nb$num == i] <- mean(sd(scores.sp1[,1])*pca.cal$eig[1]+sd(scores.sp1[,2])*pca.cal$eig[2])
 }
+
+## tidy up to make sure this dataset is maximally compatible with traits and range metrics
+levels(nb$sp.list) <- gsub("_", " ", levels(nb$sp.list))
+nb$sp.list <- as.character(nb$sp.list)
+nb$sp.list[nb$sp.list == "Arabis collna"] <- "Arabis collina"
+nb$sp.list[nb$sp.list == "Dianthus collnus"] <- "Dianthus collinus"
 
 #saveRDS(nb, "Data_nichebreadth.rds")
 

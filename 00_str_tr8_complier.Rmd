@@ -39,38 +39,33 @@ source("02_clean_trait_data.R")
 ```{r}
 #source("03a_str_nichebreadth_pca.R")
 nb <- readRDS("Data_nichebreadth.rds")
-levels(nb$sp.list) <- gsub("_", " ", levels(nb$sp.list))
 ```
 
 ## get range metrics
-Read in species range metrics.
+Read in and clean species range metric data
 ```{r}
 metrics <- read.csv("Data_range_metrics.csv") ## metrics provided by Anna Csergo in spring 2019
-metrics$Species <- gsub(" ssp.*", "", metrics$Species)
+metrics$Species <- gsub(" ssp.*", "", metrics$Species) ## 701 unique species
 metrics <- metrics[metrics$Model == "Occurrence",]
-metrics <- unique(metrics[, which(names(metrics) %in% 
-                                    c("Species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape",
-                                      "perimeter.area.frac.dim"))])
+metrics <- unique(metrics[, which(names(metrics) %in% c("Species", "total.area", "range.size", "effective.mesh.size", 
+                                                        "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim"))])
 metrics <- metrics[c("Species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")]
 names(metrics) <- c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
 
+metrics$species[grep("oslo", metrics$species, useBytes = TRUE)] <- "Saxifraga osloensis"
 
 metrics <- unique(merge(metrics, nb[,which(names(nb) %in% c('sp.list', "nb"))], by.x = "species", by.y = "sp.list"))
-#metrics <- metrics[metrics$perimeter.area.frac.dim != "Inf",]
-metrics <- metrics[metrics$species != "Helleborus lividus",]
+metrics <- metrics[metrics$species != "Helleborus lividus",] ## had infinity value
 
-## log transform raw data
+## log and scale raw data
 metrics$perimeter.area.frac.dim <- (metrics$perimeter.area.frac.dim + sqrt(min(metrics$perimeter.area.frac.dim, na.rm = T)^2)) + 1
 for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.shape.index", "prop.landscape", "nb"))]))) {
         metrics[, i] <- c(log(metrics[,i]))
         }
-
 for (i in names(Filter(is.numeric, metrics))) {
         metrics[, i] <- c(scale(metrics[,i]))
         }
-length(unique(metrics$species))
-# length(unique(metrics$species[grep(" ssp.*", metrics$species)]))
-# f <- as.data.frame(droplevels(metrics$species[grep(" ssp.*", metrics$species)]))
+length(unique(metrics$species)) ## 700 unique species
 ```
 
 
@@ -99,10 +94,10 @@ rm(a)
 
 ## Extract each dataset
 height <- x[["height"]] ## 195 species
-leaf_area <- x[["leaf_area"]] ## 41 speceis
-lifeform <- x[["lifeform"]] ## 165 species
+leaf_area <- x[["leaf_area"]] ## 41 species
+lifeform <- x[["lifeform"]] ## 165 species (40610?!)
 seed_mass <- x[["seed_mass"]] ## 96 species
-sla <- x[["sla"]] ## 86 species
+sla <- x[["sla"]] ## 50 species
 woodiness <- x[["woodiness"]] ## 238 species
 
 lifeform$lifeform <- factor(lifeform$lifeform, levels = c("phanerophyte", "chamaephyte", "hemicryptophyte", "cryptophyte", "therophyte"))
@@ -147,6 +142,8 @@ plot(factor(woodiness$woodiness))
 ```
 
 Merge trait and metric dataframes
+
+STILL TO DO - clean life form species names!!!!
 ```{r}
 b <- data.frame(unique(mydata$species))
 names(b) <- "species"
@@ -166,6 +163,8 @@ mydata$species <- factor(mydata$species)
 levels(mydata$species) <- gsub(" ", "_", levels(mydata$species))
 mydata$lifeform <- factor(mydata$lifeform, levels = c("phanerophyte", "chamaephyte", "hemicryptophyte", "cryptophyte", "therophyte"))
 rm(b)
+
+
 ```
 
 

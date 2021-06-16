@@ -10,33 +10,10 @@ library(phangorn)
 library(ape)
 
 
-## look at phylogenetic tree options and species listoverlap with my usable data
+## look at phylogenetic tree options and species list overlap with my usable data
 
-metrics <- read.csv("Data_range_metrics.csv") ## metrics provided by Anna Csergo in spring 2019
-metrics <- metrics[metrics$Model == "Occurrence",]
-metrics <- unique(metrics[, which(names(metrics) %in% 
-                                    c("Species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape",
-                                      "perimeter.area.frac.dim"))])
-metrics <- metrics[c("Species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")]
-names(metrics) <- c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
-
-metrics$species <- gsub(" ssp.*", "", metrics$species)
 metrics$species <- factor(metrics$species)
-metrics <- unique(merge(metrics, nb[,which(names(nb) %in% c('sp.list', "nb"))], by.x = "species", by.y = "sp.list"))
 levels(metrics$species) <- gsub(" ", "_", levels(metrics$species))
-levels(metrics$species) <- gsub("-", ".", levels(metrics$species))
-#metrics <- metrics[metrics$perimeter.area.frac.dim != "Inf",]
-metrics <- metrics[metrics$species != "Helleborus_lividus",]
-
-#m <- drop_na(metrics)
-metrics$perimeter.area.frac.dim <- (metrics$perimeter.area.frac.dim + sqrt(min(metrics$perimeter.area.frac.dim, na.rm = T)^2)) + 1
-for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.shape.index", "prop.landscape"))]))) {
-  metrics[, i] <- c(log(metrics[,i]))
-}
-
-for (i in names(Filter(is.numeric, metrics))) {
-  metrics[, i] <- c(scale(metrics[,i]))
-}
 
 ## SMITH 2018 "open tree" tree
 
@@ -77,7 +54,7 @@ if(exists("clean_tree")) {
 } else warning("failed to create clean_tree")
 #str(clean_tree)
 
-#plotTree(clean_tree,fsize=0.1,lwd=0.5, ftype="i", part = 0.93)
+plotTree(clean_tree,fsize=0.1,lwd=0.5, ftype="i", part = 0.93)
 
 ## add other species from our data set that have genus matches in the tree
 new <- as.character(droplevels(unique(metrics$species[which(metrics$species %nin% clean_tips)])))
@@ -86,19 +63,20 @@ genera<-sapply(clean_tree$tip.label,function(x) strsplit(x,"_")[[1]][1])
 genera<-sort(unique(genera))
 
 new_genera <- sapply(new,function(x) strsplit(x,"_")[[1]][1])
-new_species <- as.data.frame(cbind(new_genera[-103], new[-103]))
+new_species <- as.data.frame(cbind(new_genera, new))
+#new_species <- as.data.frame(cbind(new_genera[-103], new[-103]))
 
-new_species <- merge(as.data.frame(genera), new_species, by.x = "genera", by.y = "V1")
+new_species <- merge(as.data.frame(genera), new_species, by.x = "genera", by.y = "new")
+#new_species <- merge(as.data.frame(genera), new_species, by.x = "genera", by.y = "V1")
 
-species <- as.character(new_species$V2)
+species <- as.character(new_species$new)
 
 for(i in 1:length(species)) {
   clean_tree <- add.species.to.genus(clean_tree, species[i], where="random")}
-#clean_tree <- add.species.to.genus(clean_tree, species, where="random")
-new_clean_tips <- as.character(clean_tree$tip.label)
+new_clean_tips <- unique(as.character(clean_tree$tip.label))
 
+#write.tree(clean_tree, file = "Data_str_clean_tree.tre")
 
-dd <- Reduce(intersect, list(species, clean_tips)) ##
 
 ## Liam Revell's phytool blog code. How incredibly helpful
 # species.tree <- clean_tree
@@ -118,9 +96,9 @@ dd <- Reduce(intersect, list(species, clean_tips)) ##
 #      lwd=3)
 # add.simmap.legend(colors=setNames(cols[2:length(cols)],genera),fsize=0.5,
 #                   prompt=FALSE,x=400,y=700)
-## saving - pixels*10
-
-#plot(species.tree,type="fan",fsize=0.1,lwd=0.7, ftype="i", part = 0.96, colors = cols)
+# # saving - pixels*10
+# 
+# plot(species.tree,type="fan",fsize=0.1,lwd=0.7, ftype="i", part = 0.96, colors = cols)
 
 
 # ## trying another tree to see if that increases overlap - it doesn't
