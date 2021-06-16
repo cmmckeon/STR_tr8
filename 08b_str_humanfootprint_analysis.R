@@ -56,6 +56,14 @@ rat_ <- drop_na(metrics)
 pairs(rat_[, which(names(rat_) %nin% c("species"))], 
       lower.panel = NULL, upper.panel = upper.panel)
 
+# list <- c()
+# for (i in names(metrics)){
+#   list[i] <-length(which(is.na(metrics[,i])))
+# }
+# 
+# print(list) ## all variables should be zero
+
+metrics <- metrics[which(!is.na(metrics$mean)),]
 
 mcmc_data <- metrics
 mcmc_data$animal <- mcmc_data$species
@@ -83,7 +91,7 @@ print(c("effect size will be:", eff_ss))
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- total.area ~ mean
+f[["total.area"]]  <- total.area ~ mean #*mat_mean*mat_var_mean*map_mean*map_var_mean
 f[["range.size"]] <- range.size ~ mean
 f[["effective.mesh.size"]] <-  effective.mesh.size ~ mean
 f[["mean.shape.index"]] <- mean.shape.index ~ mean       
@@ -102,7 +110,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
         m_metric_hf[[j]][["hf"]]  <-mod_list <- mclapply(1:2, function(i) {
                 MCMCglmm(fixed = formula,
                          random = ~ animal,
-                         rcov = ~units,
+                         rcov = ~ units,
                          family= "gaussian",
                          pedigree = comp_data$tree,
                          data = comp_data$data,
