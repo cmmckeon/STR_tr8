@@ -68,6 +68,13 @@ for (i in names(Filter(is.numeric, metrics))) {
 length(unique(metrics$species)) ## 700 unique species
 ```
 
+## get phylogeny
+Set up phylogeny
+```{r}
+if(!exists("clean_tree")) {
+  try(clean_tree <- read.tree("Data_str_clean_tree.tre"))
+  } else source("03b_clean_phylogeny.R")
+```
 
 
 
@@ -184,13 +191,7 @@ for (i in names(Filter(is.numeric, mydata))) {
        xlab = paste(i))
 }
 ```
-## get phylogeny
-Set up phlyogeny
-```{r}
-if(!exists("clean_tree")) {
-  try(clean_tree <- read.tree("Data_str_clean_tree.tre"))
-  } else source("03b_clean_phylogeny.R")
-```
+
 
 Set up individual datasets for analysis
 ```{r}
@@ -263,7 +264,8 @@ This might suggest that traits can't be examined in isolation, either from eacho
 
 ## 4. metric ~ humanfootprint
 ```{r}
-#source("08_str_humanfootprint_analysis.R")
+#source("08a_str_get_hf_ratio.R")
+#source("08b_str_humanfootprint_analysis.R")
 ```
 
 

@@ -33,6 +33,9 @@ endem$afe <- gsub(" s.lat.", "", endem$afe)
 endem$afe <- gsub(" s.str.", "", endem$afe)
 endem$afe <- gsub("coll.", "coll", endem$afe)
 endem$afe[endem$afe == "Saxifraga osloënsis"] <- "Saxifraga osloensis"
+endem$afe <- as.character(endem$afe)
+endem$afe[endem$afe == "Arabis collna"] <- "Arabis collina"
+endem$afe[endem$afe == "Dianthus collnus"] <- "Dianthus collinus"
 names(endem) <- c("species", "y", "x") 
 sp <- endem
 
@@ -48,7 +51,7 @@ full_clim <- cbind(full_clim,sp)
 env <- unique(full_clim)
 names(env) <- c("map", "mat", "map_var", "mat_var", "species", "Longitude", "Latitude") 
 env <- drop_na(env)
-#saveRDS(env, "Data_occurences_cliamte_values.rds")
+#saveRDS(env, "Data_occurences_climate_values.rds")
 env <- env[, which(names(env) %in% c("map", "mat", "map_var", "mat_var", "Longitude", "Latitude") )]
 
 
@@ -95,9 +98,6 @@ for(i in 1:length(sp.list)) {
 
 ## tidy up to make sure this dataset is maximally compatible with traits and range metrics
 levels(nb$sp.list) <- gsub("_", " ", levels(nb$sp.list))
-nb$sp.list <- as.character(nb$sp.list)
-nb$sp.list[nb$sp.list == "Arabis collna"] <- "Arabis collina"
-nb$sp.list[nb$sp.list == "Dianthus collnus"] <- "Dianthus collinus"
 
 #saveRDS(nb, "Data_nichebreadth.rds")
 
