@@ -91,12 +91,12 @@ print(c("effect size will be:", eff_ss))
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- total.area ~ mean #*mat_mean*mat_var_mean*map_mean*map_var_mean
-f[["range.size"]] <- range.size ~ mean
-f[["effective.mesh.size"]] <-  effective.mesh.size ~ mean
-f[["mean.shape.index"]] <- mean.shape.index ~ mean       
-f[["prop.landscape"]] <- prop.landscape ~ mean
-f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ mean
+f[["total.area"]]  <- total.area ~ mean #mat_mean*mat_var_mean*map_mean*map_var_mean
+f[["range.size"]] <- range.size ~ mean #mat_mean*mat_var_mean*map_mean*map_var_mean
+f[["effective.mesh.size"]] <-  effective.mesh.size ~ mean #mat_mean*mat_var_mean*map_mean*map_var_mean
+f[["prop.landscape"]] <- prop.landscape ~ mean #mat_mean*mat_var_mean*map_mean*map_var_mean
+f[["mean.shape.index"]] <- mean.shape.index ~ mean #mat_mean*mat_var_mean*map_mean*map_var_mean  
+f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ mean #mat_mean*mat_var_mean*map_mean*map_var_mean
 
 
 
@@ -118,10 +118,13 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
                          burnin = burnin,
                          thin = thin,
                          prior = prior)
-        }, mc.cores=2)}
+        }, mc.cores=2)
+        Sys.sleep(20)}
 
-#saveRDS(m_metric_hf, "m_metric_hf_mean_no_agg.rds")
+#saveRDS(m_metric_hf, "m_metric_hf.rds")
+#saveRDS(m_metric_hf, "m_metric_clim_hf.rds")
 
+#m_metric_hf <- readRDS("m_metric_hf.rds")
 ## diagnostics -------------
 z <- "total.area"
 z <- "range.size"
@@ -130,13 +133,13 @@ z <- "mean.shape.index"
 z <- "prop.landscape"
 z <- "perimeter.area.frac.dim"
 
-mod_mcmc <- m_metric_hf[[z]][["hf"]][[1]]
-mod_mcmc_2 <- m_metric_hf[[z]][["hf"]][[2]]
+mod_mcmc <- m_metric_clim_hf[[z]][["hf"]][[1]]
+mod_mcmc_2 <- m_metric_clim_hf[[z]][["hf"]][[2]]
 
 bay_phylo_dia(mod_mcmc)
 
 for(i in r){
-        print(summary(m_metric_hf[[i]][["hf"]][[1]]))
+        print(summary(m_metric_clim_hf[[i]][["hf"]][[1]]))
 }
 
 
@@ -173,67 +176,36 @@ for(i in names(comp_data$data[which(names(comp_data$data) %in% c("total.area", "
 
 
 ## no phyeny prior
-prior <- list(R = list(V=1, nu=0.002))
-
-m_metric_hf_no_phy <- list()
-
-for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
-                                                                           "prop.landscape", "perimeter.area.frac.dim"))])){
-        formula <- f[[j]]
-        
-        m_metric_hf_no_phy[[j]][["hf"]]  <-mod_list <- mclapply(1:2, function(i) {
-                MCMCglmm(fixed = formula,
-                         rcov = ~units,
-                         family= "gaussian",
-                         pedigree = comp_data$tree,
-                         data = comp_data$data,
-                         nitt = nitt,
-                         burnin = burnin,
-                         thin = thin,
-                         prior = prior)
-        }, mc.cores=2)}
-
-
-
-mod_mcmc <- m_metric_hf_no_phy[[z]][["hf"]][[1]]
-mod_mcmc_2 <- m_metric_hf_no_phy[[z]][["hf"]][[2]]
-
-bay_dia(mod_mcmc)
-
-for(i in r){
-        print(summary(m_metric_hf_no_phy[[i]][["hf"]][[1]]))
-}
-
-
-
- # library(sf)
- # h <- crop(hf_map, extent(-33,67,30, 82))
- # d <- st_make_grid(temp, cellsize = 0.5)
- # par(bg = "white")
- # plot(temp)
- # par(bg = "transparent")
- # plot(d)
- # plot(h)
- # plot(bees)
- 
+# prior <- list(R = list(V=1, nu=0.002))
+# 
+# m_metric_hf_no_phy <- list()
+# 
+# for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
+#                                                                            "prop.landscape", "perimeter.area.frac.dim"))])){
+#         formula <- f[[j]]
+#         
+#         m_metric_hf_no_phy[[j]][["hf"]]  <-mod_list <- mclapply(1:2, function(i) {
+#                 MCMCglmm(fixed = formula,
+#                          rcov = ~units,
+#                          family= "gaussian",
+#                          pedigree = comp_data$tree,
+#                          data = comp_data$data,
+#                          nitt = nitt,
+#                          burnin = burnin,
+#                          thin = thin,
+#                          prior = prior)
+#         }, mc.cores=2)}
+# 
+# 
+# 
+# mod_mcmc <- m_metric_hf_no_phy[[z]][["hf"]][[1]]
+# mod_mcmc_2 <- m_metric_hf_no_phy[[z]][["hf"]][[2]]
+# 
+# bay_dia(mod_mcmc)
+# 
+# for(i in r){
+#         print(summary(m_metric_hf_no_phy[[i]][["hf"]][[1]]))
+# }
 
 
-
-##
-# sp2 <- SpatialPointsDataFrame(sp[,c("x", "y")], 
-# as.data.frame(sp[,3]),
-# proj4string =  temp@crs)
-# plot(sp2)
-# sp3 <- rasterize(sp2, temp, field = 1)
-# plot(sp3)
-# all <- brick(r, temp, sp3)
-# plot(all)
-# all <- aggregate(all, fact= 6)
-
-
-
-# sp$val <- 1
-# bees <- rasterFromXYZ(sp[, c("x", "y", "val")])
-# bees <- aggregate(bees, fact = 36)
-# plot(bees)
 
