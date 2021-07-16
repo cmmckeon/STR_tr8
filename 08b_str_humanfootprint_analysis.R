@@ -64,6 +64,7 @@ pairs(rat_[, which(names(rat_) %nin% c("species"))],
 # print(list) ## all variables should be zero
 
 metrics <- metrics[which(!is.na(metrics$mean)),]
+#saveRDS(metrics, "Data_metrics_for_hf_analysis.rds")
 
 mcmc_data <- metrics
 mcmc_data$animal <- mcmc_data$species

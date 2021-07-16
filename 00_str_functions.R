@@ -35,6 +35,7 @@ library(ggplot2)
 library(wec)
 library(DHARMa)
 library(raster)
+library(gclus)
 
 '%nin%' = Negate('%in%')
 

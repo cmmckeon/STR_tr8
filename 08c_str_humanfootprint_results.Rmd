@@ -6,17 +6,10 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, fig.height = 10, fig.width = 16)
+knitr::opts_chunk$set(fig.width=16, fig.height=10) 
+source("00_str_functions.R")
 ```
-
-
-read in models
-```{r}
-m_metric_hf <- readRDS("m_metric_hf.rds")
-m_metric_clim <- readRDS("m_metric_clim.rds")
-m_metric_clim_hf <- readRDS("m_metric_clim_hf.rds")
-```
-
 
 ```{r plotting themes}
 # blank theme
@@ -42,6 +35,51 @@ r <- c("total.area", "range.size", "effective.mesh.size", "prop.landscape", "mea
 
 ```
 
+read in data and models
+```{r}
+metrics <- readRDS("Data_metrics_for_hf_analysis.rds")
+clean_tree <- read.tree("Data_str_clean_tree.tre")
+
+m_metric_hf <- readRDS("m_metric_hf.rds")
+m_metric_clim <- readRDS("m_metric_clim.rds")
+m_metric_clim_hf <- readRDS("m_metric_clim_hf.rds")
+```
+
+prep for exploring model results
+```{r}
+mcmc_data <- metrics
+mcmc_data$animal <- mcmc_data$species
+## create comparative dataset
+comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
+
+f <- list()
+f[["total.area"]]  <- total.area ~ mat_mean*mat_var_mean*map_mean*map_var_mean*mean
+f[["range.size"]] <- range.size ~ mat_mean*mat_var_mean*map_mean*map_var_mean*mean
+f[["effective.mesh.size"]] <-  effective.mesh.size ~mat_mean*mat_var_mean*map_mean*map_var_mean*mean
+f[["prop.landscape"]] <- prop.landscape ~ mat_mean*mat_var_mean*map_mean*map_var_mean*mean
+f[["mean.shape.index"]] <- mean.shape.index ~ mat_mean*mat_var_mean*map_mean*map_var_mean*mean  
+f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ mat_mean*mat_var_mean*map_mean*map_var_mean*mean
+```
+
+
+```{r eval=FALSE, include=FALSE}
+z <- "total.area"
+# z <- "range.size"
+# z <- 'effective.mesh.size'
+# z <- "mean.shape.index"
+# z <- "prop.landscape"
+# z <- "perimeter.area.frac.dim"
+
+mod_mcmc <- m_metric_clim_hf[[z]][["hf"]][[1]]
+mod_mcmc_2 <- m_metric_clim_hf[[z]][["hf"]][[2]]
+
+#bay_phylo_dia(mod_mcmc)
+
+for(i in r){
+        print(summary(m_metric_clim_hf[[i]][["hf"]][[1]]))
+}
+
+```
 
 DIC table
 ```{r}
@@ -72,10 +110,9 @@ dic_table  %>%
 #   header = c("", "DIC comparison" =2), bold = TRUE, color = "black")
 ```
 
-  
 
-
-```{r}
+something's going wrong here all of a sudden
+```{r eval=FALSE, include=FALSE}
 par(mfrow = c(6,2), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
 k <- list("total area", " range size", " effective mesh size", "proportion of landscape", "mean shape index",
           "perimeter area fractality")
@@ -132,43 +169,99 @@ sum <- list()
 for(i in r) {
 sum[[i]] <- as.data.frame(summary(m_metric_clim_hf[[i]][["hf"]][[1]][["Sol"]])[["statistics"]]);
 sum[[i]] <- setDT(sum[[i]], keep.rownames = TRUE)[]
+sum[[i]]$ci <- sum[[i]]$SD*qnorm(.95)
+sum[[i]] <- sum[[i]][2:6,] 
+sum[[i]]$rn <- c("MAT", "MAT_var", "MAP", "MAP_var", "HF")
+sum[[i]]$rn <- factor(sum[[i]]$rn,
+                      levels = c("MAP", "MAP_var", "MAT", "MAT_var", "HF"))
 }
-#sum[[i]]$ci <- sum[[i]]$'Naive SE'*qnorm(.95)
+
+
 ```
 
-```{r}
+```{r fig.width=6, fig.height=7}
 par(mfrow = c(6,1), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
 p <- list()
 for(i in r){
-  print(ggplot(sum[[i]][2:6,],  aes(rn, Mean)) + 
-  geom_pointrange(data = sum[[i]][2:6,],
-                    aes(rn, Mean, ymin= Mean - SD, ymax= Mean + SD), 
+  p[[i]] <-  ggplot(sum[[i]],  aes(rn, Mean, colour = rn)) + 
+      geom_hline(yintercept= 0, alpha = 0.8) +
+  geom_line() +
+  geom_pointrange(data = sum[[i]],
+                    aes(rn, Mean, colour = rn, ymin= Mean - ci, ymax= Mean + ci), 
                     position = position_dodge(0.5), size = 1.5) +
   
-    theme(axis.title.x = element_blank(), title = element_blank(),
-         axis.line = element_line(colour = 'black', size = 1.5)) +
-   theme(axis.text.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+    theme(axis.line = element_line(colour = 'black', size = 1.5), 
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+           plot.title = element_text(hjust = 0.5, size = 20)) +
+    
   scale_x_discrete(labels = get_wraper(10)) +
-  labs(colour = "Life form", title = paste(i)) +
+  labs(colour = "Climate and HF", title = paste(i)) +
   scale_color_viridis(discrete = TRUE) +
-    ylim(-1, 1)) }
+    ylim(-1.1, 1) }
+
+p[[1]] <- p[[1]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank()) 
+p[[2]] <- p[[2]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank(),
+                         axis.text.y = element_blank(), axis.title.y = element_blank(),
+                         axis.ticks.y = element_blank()) 
+p[[3]] <- p[[3]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank()) 
+p[[4]] <- p[[4]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank(),
+                         axis.text.y = element_blank(), axis.title.y = element_blank(),
+                         axis.ticks.y = element_blank())  
+p[[6]] <- p[[6]] + theme(axis.text.y = element_blank(), axis.title.y = element_blank(),
+                         axis.ticks.y = element_blank())  
+
+resp <-ggarrange(p[[1]],p[[2]],p[[3]],p[[4]],p[[5]],p[[6]], labels = c("A", "B", "C", "D", "E", "F"), nrow = 3, ncol = 2, common.legend = TRUE, legend = "bottom")
+annotate_figure(resp, top = text_grob("Effects of climate and human footprint on range metrics", #color = "black", 
+                                      face = "bold", size = 20))
 ```
+
+
+
 
 
 ```{r}
+colfunc <- colorRampPalette(c("#A715AD","white", "#FFB000"))
 
-p[[1]]
-p[[2]]
-p[[3]]
-p[[4]]
-p[[5]]
-p[[6]]
+
+# cols <- as.character(c(1:66))
+# cols[] <- "black"
+# ## get correlation matrix
+# dta.r = abs(cor(rat_[, which(names(rat_) %in% c("total.area", "range.size", "effective.mesh.size",
+#                                       "mean.shape.index", "prop.landscape",
+#                                       "perimeter.area.frac.dim", 
+#                                       "mean", "mat_mean", "mat_var_mean", 
+#                                       "map_mean", "map_var_mean"))])) 
+# # get colors for these correlations
+# dta.col <- dmat.color(dta.r, colors = colfunc(100), byrank = NULL, breaks = 100) 
+# 
+# cpairs(rat_[, which(names(rat_) %in% c("total.area", "range.size", "effective.mesh.size",
+#                                       "mean.shape.index", "prop.landscape",
+#                                       "perimeter.area.frac.dim", 
+#                                       "mean", "mat_mean", "mat_var_mean", 
+#                                       "map_mean", "map_var_mean"))], 
+#        panel.colors=dta.col, gap=0.5,lower.panel = NULL)
+
+upper.panel<-function(x, y){
+        r <- round(cor(x, y), digits=2)
+       # points(x,y, pch=21, col = dta.col, cex = 0.5)
+        points(x,y, pch=21, col=c("grey"), cex = 0.5)
+       # points(x,y, pch=21, col=colfunc(100)[r], cex = 0.5)
+        txt <- paste0("R = ", r)
+        #text(0.5, 0.5, txt, cex = 6* abs(cor(x, y)))
+        usr <- par("usr"); on.exit(par(usr))
+        par(usr = c(0, 1, 0, 1))
+        text(0.8, 0.9, txt, cex =2)
+}
+
+rat_ <- drop_na(metrics)
+pairs(rat_[, which(names(rat_) %in% c("total.area", "range.size", "effective.mesh.size",
+                                      "mean.shape.index", "prop.landscape",
+                                      "perimeter.area.frac.dim", 
+                                      "mean", "mat_mean", "mat_var_mean", 
+                                      "map_mean", "map_var_mean"))],
+      lower.panel = NULL, upper.panel = upper.panel)
 ```
-
-
-
-
-
 
 
 
