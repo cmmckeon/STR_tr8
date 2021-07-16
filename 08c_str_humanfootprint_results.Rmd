@@ -2,7 +2,9 @@
 title: "08c_str_humanfootprint_results"
 author: "Caroline McKeon"
 date: "7/15/2021"
-output: html_document
+output:
+  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -95,19 +97,34 @@ for(i in r){
 names(l) <- c("Metrics", "Climate", "Human_footprint", "Climate*Human_footprint")
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 #https://haozhu233.github.io/kableExtra/awesome_table_in_html.html for colour by cell value
 library(knitr)
 library(kableExtra)
 library(tidyverse)
-dic_table <- as_tibble(l)
 
+dic_table <- l
+
+for(i in 1:4){
+dic_table[i,4] <- paste("**", dic_table[i,4], "**", sep = "")
+}
+
+dic_table[6,3] <- paste("**", dic_table[5,3], "**", sep = "")
+dic_table[5,2] <- paste("**", dic_table[6,2], "**", sep = "")
+
+for(i in 1:4){
+dic_table[,i] <- as.character(dic_table[,i])}
+
+dic_table <- as_tibble(dic_table)
 dic_table  %>%
-  kable(booktabs = T) %>%
+  knitr::kable(booktabs = T) %>%
   kable_styling(bootstrap_options = "striped", full_width = F)
+
 # add_header_above(
 #   dic_table,
 #   header = c("", "DIC comparison" =2), bold = TRUE, color = "black")
+
+
 ```
 
 
@@ -179,7 +196,7 @@ sum[[i]]$rn <- factor(sum[[i]]$rn,
 
 ```
 
-```{r fig.width=6, fig.height=7}
+```{r fig.width=14, fig.height=15}
 par(mfrow = c(6,1), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
 p <- list()
 for(i in r){
@@ -220,7 +237,7 @@ annotate_figure(resp, top = text_grob("Effects of climate and human footprint on
 
 
 
-```{r}
+```{r fig.width=10, fig.height=10ß}
 colfunc <- colorRampPalette(c("#A715AD","white", "#FFB000"))
 
 
