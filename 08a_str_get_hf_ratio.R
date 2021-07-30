@@ -114,7 +114,7 @@ names(rat) <- "species"
 for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))]){
   rat$gm_mean[rat$species == i] <- gm_mean(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1])/
     gm_mean(ratio_data$layer.1[ratio_data$layer.2 == 0 & ratio_data[,i] == 0])
-  rat$mean[rat$species == i] <- mean(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)/
+  rat$hf_mean[rat$species == i] <- mean(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)/
     mean(ratio_data$layer.1[ratio_data$layer.2 == 0 & ratio_data[,i] == 0], na.rm = TRUE)
   rat$median[rat$species == i] <- median(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)/
     median(ratio_data$layer.1[ratio_data$layer.2 == 0 & ratio_data[,i] == 0], na.rm = TRUE)
@@ -127,7 +127,7 @@ for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1",
 
 par(mfrow = c(4,2), mar = c(4,4,4,4))
 hist(rat$gm_mean, breaks = 100)
-hist(rat$mean, breaks = 100)
+hist(rat$hf_mean, breaks = 100)
 hist(rat$median, breaks = 100)
 hist(rat$reg_mean, breaks = 100)
 hist(rat$mat_mean, breaks = 100)

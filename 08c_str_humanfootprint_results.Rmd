@@ -4,12 +4,12 @@ author: "Caroline McKeon"
 date: "7/15/2021"
 output:
   html_document: default
+  pdf_document: default
   word_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, fig.height = 10, fig.width = 16)
-knitr::opts_chunk$set(fig.width=16, fig.height=10) 
 source("00_str_functions.R")
 ```
 
@@ -37,7 +37,7 @@ r <- c("total.area", "range.size", "effective.mesh.size", "prop.landscape", "mea
 
 ```
 
-read in data and models
+## read in data and models
 ```{r}
 metrics <- readRDS("Data_metrics_for_hf_analysis.rds")
 clean_tree <- read.tree("Data_str_clean_tree.tre")
@@ -45,6 +45,8 @@ clean_tree <- read.tree("Data_str_clean_tree.tre")
 m_metric_hf <- readRDS("m_metric_hf.rds")
 m_metric_clim <- readRDS("m_metric_clim.rds")
 m_metric_clim_hf <- readRDS("m_metric_clim_hf.rds")
+m_metric_null <- readRDS("m_metric_null.rds")
+r2 <- readRDS("Data_r2_all_models.rds")
 ```
 
 prep for exploring model results
@@ -82,22 +84,35 @@ for(i in r){
 }
 
 ```
+## future WAIC/loo
+```{r}
+
+# check <- broom.mixed::tidy(m_metric_clim_hf[["total.area"]][["hf"]][[1]], effects = "fixed", conf.int = TRUE, conf.level = 0.95)
+# 
+# loo1 <- loo(check, save_psis = TRUE)
+```
 
 DIC table
 ```{r}
-l <- data.frame(cbind(r, c(1:6), c(1:6), c(1:6)))
+l <- data.frame(cbind(r, c(1:6), c(1:6), c(1:6), c(1:6)))
 l[,2] <- as.character(l[,2])
 l[,3] <- as.character(l[,3])
 l[,4] <- as.character(l[,4])
+l[,5] <- as.character(l[,5])
 for(i in r){
   l[,2][l$r == i] <- round(m_metric_clim[[i]][["hf"]][[1]][["DIC"]],2)
   l[,3][l$r == i] <- round(m_metric_hf[[i]][["hf"]][[1]][["DIC"]],2)
   l[,4][l$r == i] <- round(m_metric_clim_hf[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,5][l$r == i] <- round(m_metric_null[[i]][["hf"]][[1]][["DIC"]],2)
 }
-names(l) <- c("Metrics", "Climate", "Human_footprint", "Climate*Human_footprint")
+names(l) <- c("Metrics", "Climate", "Human_footprint", "Climate*Human_footprint", "null")
+l[,2] <- as.numeric(l[,2])
+l[,3] <- as.numeric(l[,3])
+l[,4] <- as.numeric(l[,4])
+l[,5] <- as.numeric(l[,5])
 ```
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 #https://haozhu233.github.io/kableExtra/awesome_table_in_html.html for colour by cell value
 library(knitr)
 library(kableExtra)
@@ -105,12 +120,18 @@ library(tidyverse)
 
 dic_table <- l
 
+dic_table$Delta_DIC <- 0
+
+dic_table$Delta_DIC[1:4] <- dic_table[1:4,4] - dic_table[1:4,5]
+dic_table$Delta_DIC[5] <- dic_table[5,2] - dic_table[5,5]
+dic_table$Delta_DIC[6] <- dic_table[6,5] - dic_table[6,5]
+
 for(i in 1:4){
 dic_table[i,4] <- paste("**", dic_table[i,4], "**", sep = "")
 }
 
-dic_table[6,3] <- paste("**", dic_table[5,3], "**", sep = "")
-dic_table[5,2] <- paste("**", dic_table[6,2], "**", sep = "")
+dic_table[5,2] <- paste("**", dic_table[5,2], "**", sep = "")
+dic_table[6,5] <- paste("**", dic_table[6,5], "**", sep = "")
 
 for(i in 1:4){
 dic_table[,i] <- as.character(dic_table[,i])}
@@ -120,11 +141,24 @@ dic_table  %>%
   knitr::kable(booktabs = T) %>%
   kable_styling(bootstrap_options = "striped", full_width = F)
 
+c("range size", "range division", "patch shape")
+
 # add_header_above(
 #   dic_table,
 #   header = c("", "DIC comparison" =2), bold = TRUE, color = "black")
 
-
+dic_table 
+```
+```{r}
+#   bayes_R2 <- function(fit) {
+#        #y_pred <- rstanarm::posterior_linpred(fit)
+#        y_pred <- tidybayes::add_linpred_draws(fit)
+#        var_fit <- apply(y_pred, 1, var)
+#        var_res <- as.matrix(fit, pars = c("sigma"))^2
+#        var_fit / (var_fit + var_res)
+# }
+# 
+# bayes_R2(m_metric_clim_hf[["total.area"]][["hf"]][[1]])
 ```
 
 
@@ -181,30 +215,44 @@ for(i in names(comp_data$data[which(names(comp_data$data) %in% c("total.area", "
 # }
 ```
 
+## table of model results for plotting
 ```{r}
+# sum <- list()
+# for(i in r) {
+# sum[[i]] <- as.data.frame(summary(m_metric_clim_hf[[i]][["hf"]][[1]][["Sol"]])[["statistics"]]);
+# sum[[i]] <- setDT(sum[[i]], keep.rownames = TRUE)[]
+# sum[[i]]$ci <- sum[[i]]$SD*qnorm(.95)
+# sum[[i]] <- sum[[i]][2:6,] 
+# sum[[i]]$rn <- c("MAT", "MAT_var", "MAP", "MAP_var", "HF")
+# sum[[i]]$rn <- factor(sum[[i]]$rn,
+#                       levels = c("MAP", "MAP_var", "MAT", "MAT_var", "HF"))
+# }
+
 sum <- list()
 for(i in r) {
-sum[[i]] <- as.data.frame(summary(m_metric_clim_hf[[i]][["hf"]][[1]][["Sol"]])[["statistics"]]);
+sum[[i]] <- as.data.frame(summary(m_metric_clim_hf[[i]][["hf"]][[1]])$solutions);
 sum[[i]] <- setDT(sum[[i]], keep.rownames = TRUE)[]
-sum[[i]]$ci <- sum[[i]]$SD*qnorm(.95)
-sum[[i]] <- sum[[i]][2:6,] 
+sum[[i]] <- sum[[i]][2:6,]
 sum[[i]]$rn <- c("MAT", "MAT_var", "MAP", "MAP_var", "HF")
 sum[[i]]$rn <- factor(sum[[i]]$rn,
                       levels = c("MAP", "MAP_var", "MAT", "MAT_var", "HF"))
 }
 
+## woaw....
+check <- broom.mixed::tidy(m_metric_clim_hf[["total.area"]][["hf"]][[1]], effects = "fixed", conf.int = TRUE, conf.level = 0.95)
 
 ```
 
+## plot effect sizes
 ```{r fig.width=14, fig.height=15}
 par(mfrow = c(6,1), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
 p <- list()
 for(i in r){
-  p[[i]] <-  ggplot(sum[[i]],  aes(rn, Mean, colour = rn)) + 
+  p[[i]] <-  ggplot(sum[[i]],  aes(rn, post.mean, colour = rn)) + 
       geom_hline(yintercept= 0, alpha = 0.8) +
   geom_line() +
   geom_pointrange(data = sum[[i]],
-                    aes(rn, Mean, colour = rn, ymin= Mean - ci, ymax= Mean + ci), 
+                    aes(rn, post.mean, colour = rn, ymin= `l-95% CI`, ymax= `u-95% CI`), 
                     position = position_dodge(0.5), size = 1.5) +
   
     theme(axis.line = element_line(colour = 'black', size = 1.5), 
@@ -213,7 +261,7 @@ for(i in r){
            plot.title = element_text(hjust = 0.5, size = 20)) +
     
   scale_x_discrete(labels = get_wraper(10)) +
-  labs(colour = "Climate and HF", title = paste(i)) +
+  labs(colour = "Climate and HF", title = paste(i), y = "Effect Size") +
   scale_color_viridis(discrete = TRUE) +
     ylim(-1.1, 1) }
 
@@ -236,8 +284,8 @@ annotate_figure(resp, top = text_grob("Effects of climate and human footprint on
 
 
 
-
-```{r fig.width=10, fig.height=10ß}
+## pairs plots for collinearity
+```{r fig.width=10, fig.height=10}
 colfunc <- colorRampPalette(c("#A715AD","white", "#FFB000"))
 
 
@@ -259,32 +307,100 @@ colfunc <- colorRampPalette(c("#A715AD","white", "#FFB000"))
 #                                       "map_mean", "map_var_mean"))], 
 #        panel.colors=dta.col, gap=0.5,lower.panel = NULL)
 
+
+
 upper.panel<-function(x, y){
         r <- round(cor(x, y), digits=2)
-       # points(x,y, pch=21, col = dta.col, cex = 0.5)
+       # points(x,y, pch=21, col = metrics$mat_var_col, cex = 0.5)
         points(x,y, pch=21, col=c("grey"), cex = 0.5)
        # points(x,y, pch=21, col=colfunc(100)[r], cex = 0.5)
         txt <- paste0("R = ", r)
         #text(0.5, 0.5, txt, cex = 6* abs(cor(x, y)))
         usr <- par("usr"); on.exit(par(usr))
         par(usr = c(0, 1, 0, 1))
-        text(0.8, 0.9, txt, cex =2)
+        text(0.8, 0.9, txt, cex =1)
 }
 
 rat_ <- drop_na(metrics)
+# pairs(rat_[, which(names(rat_) %in% c("total.area", "range.size", "effective.mesh.size",
+#                                       "mean.shape.index", "prop.landscape",
+#                                       "perimeter.area.frac.dim", 
+#                                       "mean", "mat_mean", "mat_var_mean", 
+#                                       "map_mean", "map_var_mean"))],
+#       lower.panel = NULL, upper.panel = upper.panel)
+
 pairs(rat_[, which(names(rat_) %in% c("total.area", "range.size", "effective.mesh.size",
-                                      "mean.shape.index", "prop.landscape",
-                                      "perimeter.area.frac.dim", 
-                                      "mean", "mat_mean", "mat_var_mean", 
+                                      "prop.landscape","mean.shape.index",
+                                      "perimeter.area.frac.dim"))],
+      lower.panel = NULL, upper.panel = upper.panel)
+
+pairs(rat_[, which(names(rat_) %in% c("mean", "mat_mean", "mat_var_mean", 
                                       "map_mean", "map_var_mean"))],
       lower.panel = NULL, upper.panel = upper.panel)
+
+                                      
+```
+
+## visualise collinearity
+```{r}
+par(mfrow = c(1,3), pch = 20, cex = 1)
+
+rbPal <- colorRampPalette(c('red','blue'))
+rbPal <- colorRampPalette(v <- viridis(400, alpha = 1, begin = 0, end = 1, direction = 1, option = "D"))
+
+metrics$mean_col <- rbPal(820)[as.numeric(cut(metrics$mean,breaks = 820))]
+metrics$mat_var_col <- rbPal(820)[as.numeric(cut(metrics$mat_var_mean,breaks = 820))]
+metrics$t.a_col <- rbPal(820)[as.numeric(cut(metrics$total.area,breaks = 820))]
+
+plot(metrics$total.area ~ metrics$mat_var_mean, col = metrics$mean_col)
+plot(metrics$total.area ~ metrics$mean, col = metrics$mat_var_col)
+plot(metrics$mat_var_mean ~ metrics$mean, col = metrics$t.a_col)
 ```
 
 
 
+## plot r2s
+```{r fig.width=8, fig.height=6}
+r2$model <- factor(r2$model, levels = c("null",  "hf", "clim",  "clim_hf"))
+short <- r2[r2$r == "total.area",]
 
+ ggplot(short,  aes(model, mode_r2_mar, colour = model)) + 
+  geom_pointrange(data = short,
+                    aes(model, mode_r2_mar, colour = model, ymin= `lower_r2_mar`, ymax= `upper_r2_mar`), 
+                    position = position_dodge(width = 0.5), size = 2) +
+     geom_pointrange(data = short,
+                    aes(model, mean_r2_cond, colour = model, ymin= `lower_r2_cond`, ymax= `upper_r2_cond`),
+                    position = position_dodge(width = 0.5), size = 2, shape = 1) +
+  
+    theme(axis.line = element_line(colour = 'black', size = 1.5), 
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+           plot.title = element_text(hjust = 0.5, size = 20)) +
+  labs(colour = "Model", title = paste(i), y = "R2") +
+  scale_color_viridis(discrete = TRUE) +
+    ylim(-0.01, 1) 
 
+```
 
+```{r fig.width=8, fig.height=6}
+r2$r <- factor(r2$r, levels = c("total.area", "range.size", "effective.mesh.size", "prop.landscape", 
+"mean.shape.index", "perimeter.area.frac.dim"))
+ ggplot(r2,  aes(r, mode_r2_mar, colour = model)) + 
+  geom_pointrange(data = r2,
+                    aes(r, mode_r2_mar, colour = model, ymin= `lower_r2_mar`, ymax= `upper_r2_mar`), 
+                    position = position_dodge(width = 0.5), size = 2) +
+     geom_pointrange(data = r2,
+                    aes(r, mean_r2_cond, colour = model, ymin= `lower_r2_cond`, ymax= `upper_r2_cond`),
+                    position = position_dodge(width = 0.5), size = 2, shape = 1) +
+  
+    theme(axis.line = element_line(colour = 'black', size = 1.5), 
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+           plot.title = element_text(hjust = 0.5, size = 20)) +
+  labs(colour = "Model", title = paste(i), y = "R2") +
+  scale_color_viridis(discrete = TRUE) +
+    ylim(-0.01, 1) 
+```
 
 
 

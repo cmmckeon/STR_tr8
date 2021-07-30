@@ -25,7 +25,7 @@ metrics <- merge(metrics, rat, by = "species")
 #m <- drop_na(metrics)
 for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %in% 
                                                    c("map_mean", "map_var_mean"))]))) {
-  metrics[, i] <- c(log(metrics[,i]))
+  metrics[, i] <- c(log(metrics[,i])) 
 }
 
 for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %in% 
@@ -54,6 +54,9 @@ upper.panel<-function(x, y){
 
 rat_ <- drop_na(metrics)
 pairs(rat_[, which(names(rat_) %nin% c("species"))], 
+      lower.panel = NULL, upper.panel = upper.panel)
+
+pairs(rat_[, which(names(rat_) %in% c(r, "mean", "mat_mean", "mat_var_mean", "map_mean", "map_var_mean"))], 
       lower.panel = NULL, upper.panel = upper.panel)
 
 # list <- c()
@@ -92,12 +95,12 @@ print(c("effect size will be:", eff_ss))
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- total.area ~ mean #mat_mean*mat_var_mean*map_mean*map_var_mean
-f[["range.size"]] <- range.size ~ mean #mat_mean*mat_var_mean*map_mean*map_var_mean
-f[["effective.mesh.size"]] <-  effective.mesh.size ~ mean #mat_mean*mat_var_mean*map_mean*map_var_mean
-f[["prop.landscape"]] <- prop.landscape ~ mean #mat_mean*mat_var_mean*map_mean*map_var_mean
-f[["mean.shape.index"]] <- mean.shape.index ~ mean #mat_mean*mat_var_mean*map_mean*map_var_mean  
-f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ mean #mat_mean*mat_var_mean*map_mean*map_var_mean
+f[["total.area"]]  <- total.area ~ map_var_mean #mat_mean*mat_var_mean*map_mean*map_var_mean
+f[["range.size"]] <- range.size ~ map_var_mean #mat_mean*mat_var_mean*map_mean*map_var_mean
+f[["effective.mesh.size"]] <-  effective.mesh.size ~ map_var_mean #mat_mean*mat_var_mean*map_mean*map_var_mean
+f[["prop.landscape"]] <- prop.landscape ~ map_var_mean #mat_mean*mat_var_mean*map_mean*map_var_mean
+f[["mean.shape.index"]] <- mean.shape.index ~ map_var_mean #mat_mean*mat_var_mean*map_mean*map_var_mean  
+f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ map_var_mean #mat_mean*mat_var_mean*map_mean*map_var_mean
 
 
 
@@ -108,6 +111,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
                                                                            "prop.landscape", "perimeter.area.frac.dim"))])){
         formula <- f[[j]]
         
+        print(j)
         m_metric_hf[[j]][["hf"]]  <-mod_list <- mclapply(1:2, function(i) {
                 MCMCglmm(fixed = formula,
                          random = ~ animal,
@@ -122,7 +126,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
         }, mc.cores=2)
         Sys.sleep(20)}
 
-#saveRDS(m_metric_hf, "m_metric_hf.rds")
+#saveRDS(m_metric_hf, "m_metric_map_var_mean.rds")
 #saveRDS(m_metric_hf, "m_metric_clim_hf.rds")
 
 #m_metric_hf <- readRDS("m_metric_hf.rds")
@@ -149,7 +153,7 @@ for(i in r){
 par(mfrow = c(2,3))
 ## extract the posterior estimates
 rr <- c()
-r <- c("total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
+r <- c("total.area", "range.size", "effective.mesh.size", "prop.landscape", "mean.shape.index","perimeter.area.frac.dim")
 c <- tibble("a", "b")
 for(i in r) {
         sum <- as.data.frame(summary(m_metric_hf[[i]][["hf"]][[1]][["Sol"]])[["statistics"]]); 
@@ -208,5 +212,143 @@ for(i in names(comp_data$data[which(names(comp_data$data) %in% c("total.area", "
 #         print(summary(m_metric_hf_no_phy[[i]][["hf"]][[1]]))
 # }
 
+
+# xa <- lm(total.area ~ mat_mean*mat_var_mean*map_mean*map_var_mean*mean, data = metrics)
+# xb <- lm(total.area ~ mat_mean*mat_var_mean*map_mean*map_var_mean, data = metrics)
+# xc <- lm(total.area ~ mean, data = metrics)
+# xd <- lm(total.area ~ 1, data = metrics)
+# summary(x)
+
+
+## Nakagawa's R2 for MCMCGlmm
+## THANK YOU NAKAGAWA
+
+library(arm)
+# install.packages("lme4")
+# the verson 1.0-5
+library(lme4)
+# install.packages("MCMCglmm")
+library(MCMCglmm)
+# adding this for vectorisation
+library(tidyverse)
+library(purrr)
+# using this so everybody can read and write files easily
+library(here)
+
+## climate  models
+rsqrd <- as.data.frame(r)
+for(i in r){
+  mmF <- m_metric_clim[[i]][["hf"]][[1]]
+  
+  # MCMCglmm - marginal with crebile intervals
+  vmVarF<-numeric(1000)
+  for(j in 1:1000){
+    Var<-var(as.vector(mmF$Sol[j,] %*% t(mmF$X)))
+    vmVarF[j]<-Var}
+  
+  R2m<-vmVarF/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_mar[rsqrd$r == i] <- mean(R2m)
+  rsqrd$mode_r2_mar[rsqrd$r == i] <-  posterior.mode(R2m)
+  rsqrd$lower_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[1]
+  rsqrd$upper_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[2]
+  
+  # MCMCglmm - conditional with crebile intervals
+  R2c<-(vmVarF+mmF$VCV[,1])/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_cond[rsqrd$r == i] <-mean(R2c)
+  rsqrd$mode_r2_cond[rsqrd$r == i] <-posterior.mode(R2c)
+  rsqrd$lower_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[1]
+  rsqrd$upper_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[2]
+}
+
+r2_clim <- rsqrd
+r2_clim$model <- "clim"
+
+
+## human footprint models
+rsqrd <- as.data.frame(r)
+for(i in r){
+  mmF <- m_metric_hf[[i]][["hf"]][[1]]
+  
+  # MCMCglmm - marginal with crebile intervals
+  vmVarF<-numeric(1000)
+  for(j in 1:1000){
+    Var<-var(as.vector(mmF$Sol[j,] %*% t(mmF$X)))
+    vmVarF[j]<-Var}
+  
+  R2m<-vmVarF/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_mar[rsqrd$r == i] <- mean(R2m)
+  rsqrd$mode_r2_mar[rsqrd$r == i] <-  posterior.mode(R2m)
+  rsqrd$lower_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[1]
+  rsqrd$upper_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[2]
+  
+  # MCMCglmm - conditional with crebile intervals
+  R2c<-(vmVarF+mmF$VCV[,1])/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_cond[rsqrd$r == i] <-mean(R2c)
+  rsqrd$mode_r2_cond[rsqrd$r == i] <-posterior.mode(R2c)
+  rsqrd$lower_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[1]
+  rsqrd$upper_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[2]
+}
+
+r2_hf <- rsqrd
+r2_hf$model <- "hf"
+
+## climate and human footprint models
+rsqrd <- as.data.frame(r)
+for(i in r){
+  mmF <- m_metric_clim_hf[[i]][["hf"]][[1]]
+  
+  # MCMCglmm - marginal with crebile intervals
+  vmVarF<-numeric(1000)
+  for(j in 1:1000){
+    Var<-var(as.vector(mmF$Sol[j,] %*% t(mmF$X)))
+    vmVarF[j]<-Var}
+  
+  R2m<-vmVarF/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_mar[rsqrd$r == i] <- mean(R2m)
+  rsqrd$mode_r2_mar[rsqrd$r == i] <-  posterior.mode(R2m)
+  rsqrd$lower_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[1]
+  rsqrd$upper_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[2]
+  
+  # MCMCglmm - conditional with crebile intervals
+  R2c<-(vmVarF+mmF$VCV[,1])/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_cond[rsqrd$r == i] <-mean(R2c)
+  rsqrd$mode_r2_cond[rsqrd$r == i] <-posterior.mode(R2c)
+  rsqrd$lower_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[1]
+  rsqrd$upper_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[2]
+  }
+
+r2_clim_hf <- rsqrd
+r2_clim_hf$model <- "clim_hf"
+
+## null
+rsqrd <- as.data.frame(r)
+for(i in r){
+  mmF <- m_metric_null[[i]][["hf"]][[1]]
+  
+  # MCMCglmm - marginal with crebile intervals
+  vmVarF<-numeric(1000)
+  for(j in 1:1000){
+    Var<-var(as.vector(mmF$Sol[j,] %*% t(mmF$X)))
+    vmVarF[j]<-Var}
+  
+  R2m<-vmVarF/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_mar[rsqrd$r == i] <- mean(R2m)
+  rsqrd$mode_r2_mar[rsqrd$r == i] <-  posterior.mode(R2m)
+  rsqrd$lower_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[1]
+  rsqrd$upper_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[2]
+  
+  # MCMCglmm - conditional with crebile intervals
+  R2c<-(vmVarF+mmF$VCV[,1])/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_cond[rsqrd$r == i] <-mean(R2c)
+  rsqrd$mode_r2_cond[rsqrd$r == i] <-posterior.mode(R2c)
+  rsqrd$lower_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[1]
+  rsqrd$upper_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[2]
+}
+
+r2_null <- rsqrd
+r2_null$model <- "null"
+
+r2 <- rbind(r2_null, r2_clim, r2_hf, r2_clim_hf)
+#saveRDS(r2, "Data_r2_all_models.rds")
 
 

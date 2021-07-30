@@ -36,6 +36,8 @@ library(wec)
 library(DHARMa)
 library(raster)
 library(gclus)
+library("loo")
+library("broom.mixed")
 
 '%nin%' = Negate('%in%')
 
