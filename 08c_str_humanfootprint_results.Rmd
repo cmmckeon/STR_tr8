@@ -3,9 +3,9 @@ title: "08c_str_humanfootprint_results"
 author: "Caroline McKeon"
 date: "7/15/2021"
 output:
-  html_document: default
-  pdf_document: default
   word_document: default
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -112,7 +112,7 @@ l[,4] <- as.numeric(l[,4])
 l[,5] <- as.numeric(l[,5])
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 #https://haozhu233.github.io/kableExtra/awesome_table_in_html.html for colour by cell value
 library(knitr)
 library(kableExtra)
@@ -382,12 +382,12 @@ short <- r2[r2$r == "total.area",]
 
 ```
 
-```{r fig.width=8, fig.height=6}
+```{r fig.width=16, fig.height=10}
 r2$r <- factor(r2$r, levels = c("total.area", "range.size", "effective.mesh.size", "prop.landscape", 
 "mean.shape.index", "perimeter.area.frac.dim"))
  ggplot(r2,  aes(r, mode_r2_mar, colour = model)) + 
   geom_pointrange(data = r2,
-                    aes(r, mode_r2_mar, colour = model, ymin= `lower_r2_mar`, ymax= `upper_r2_mar`), 
+                    aes(r, mean_r2_mar, colour = model, ymin= `lower_r2_mar`, ymax= `upper_r2_mar`), 
                     position = position_dodge(width = 0.5), size = 2) +
      geom_pointrange(data = r2,
                     aes(r, mean_r2_cond, colour = model, ymin= `lower_r2_cond`, ymax= `upper_r2_cond`),
@@ -399,7 +399,7 @@ r2$r <- factor(r2$r, levels = c("total.area", "range.size", "effective.mesh.size
            plot.title = element_text(hjust = 0.5, size = 20)) +
   labs(colour = "Model", title = paste(i), y = "R2") +
   scale_color_viridis(discrete = TRUE) +
-    ylim(-0.01, 1) 
+    ylim(-0.01, 0.75) 
 ```
 
 
