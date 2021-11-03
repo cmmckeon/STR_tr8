@@ -149,6 +149,7 @@ c("range size", "range division", "patch shape")
 
 dic_table 
 ```
+
 ```{r}
 #   bayes_R2 <- function(fit) {
 #        #y_pred <- rstanarm::posterior_linpred(fit)
@@ -406,7 +407,25 @@ r2$r <- factor(r2$r, levels = c("total.area", "range.size", "effective.mesh.size
 
 
 
-
+```{r fig.width=16, fig.height=10}
+r2$r <- factor(r2$r, levels = c("total.area", "range.size", "effective.mesh.size", "prop.landscape", 
+"mean.shape.index", "perimeter.area.frac.dim"))
+ ggplot(r2,  aes(model, mode_r2_mar, colour = r)) + 
+  geom_pointrange(data = r2,
+                    aes(model, mean_r2_mar, colour = r, ymin= `lower_r2_mar`, ymax= `upper_r2_mar`), 
+                    position = position_dodge(width = 0.5), size = 2) +
+     geom_pointrange(data = r2,
+                    aes(model, mean_r2_cond, colour = r, ymin= `lower_r2_cond`, ymax= `upper_r2_cond`),
+                    position = position_dodge(width = 0.5), size = 2, shape = 1) +
+  
+    theme(axis.line = element_line(colour = 'black', size = 1.5), 
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+           plot.title = element_text(hjust = 0.5, size = 20)) +
+  labs(colour = "Model", title = paste(i), y = "R2") +
+  scale_color_viridis(discrete = TRUE) +
+    ylim(-0.01, 0.75) 
+```
 
 
 

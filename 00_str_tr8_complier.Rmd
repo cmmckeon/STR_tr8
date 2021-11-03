@@ -112,7 +112,7 @@ lifeform$lifeform <- factor(lifeform$lifeform, levels = c("phanerophyte", "chama
 
 
 Look at overlap in species between trait datasets
-```{r}
+```{r eval=FALSE, include=FALSE}
 # for maybe if you wanted this list all together in a data frame
 b <- data.frame(unique(mydata$species))
 names(b) <- "species"

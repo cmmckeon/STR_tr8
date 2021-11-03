@@ -180,7 +180,7 @@ for(i in names(comp_data$data[which(names(comp_data$data) %in% c("total.area", "
 
 
 
-## no phyeny prior
+## no phylogeny prior
 # prior <- list(R = list(V=1, nu=0.002))
 # 
 # m_metric_hf_no_phy <- list()
