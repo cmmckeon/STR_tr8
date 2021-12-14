@@ -37,7 +37,7 @@ source("02_clean_trait_data.R")
 ```
 ## get Climate values (niche breadth)
 ```{r}
-#source("03a_str_nichebreadth_pca.R")
+# source("03a_str_nichebreadth_pca.R")
 nb <- readRDS("Data_nichebreadth.rds")
 ```
 
@@ -53,7 +53,6 @@ metrics <- metrics[c("Species", "total.area", "range.size", "effective.mesh.size
 names(metrics) <- c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
 
 metrics$species[grep("oslo", metrics$species, useBytes = TRUE)] <- "Saxifraga osloensis"
-
 metrics <- unique(merge(metrics, nb[,which(names(nb) %in% c('sp.list', "nb"))], by.x = "species", by.y = "sp.list"))
 metrics <- metrics[metrics$species != "Helleborus lividus",] ## had infinity value
 
@@ -150,7 +149,6 @@ plot(factor(woodiness$woodiness))
 
 Merge trait and metric dataframes
 
-STILL TO DO - clean life form species names!!!!
 ```{r}
 b <- data.frame(unique(mydata$species))
 names(b) <- "species"
@@ -208,7 +206,7 @@ sla <- unique(drop_na(droplevels(mydata[, which(names(mydata) %in% c("species", 
                                                       "prop.landscape", "perimeter.area.frac.dim", "nb", "sla_max"))])))
 woodiness <- unique(drop_na(droplevels(mydata[, which(names(mydata) %in% c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", 
                                                       "prop.landscape", "perimeter.area.frac.dim", "nb", "woodiness"))])))
-## log transform and standardise raw trait data
+## log transform and standardize raw trait data
 height$height_max <- c(scale(log(height$height_max)))
 leaf_area$leaf_area_max <- c(scale(log(leaf_area$leaf_area_max)))
 seed_mass$seed_mass_max <- c(scale(log(seed_mass$seed_mass_max)))

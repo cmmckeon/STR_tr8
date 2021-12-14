@@ -1,4 +1,4 @@
-## this script is adpated from work by Anna Csergo and Olivier Brönnimann
+## this script is adapted from work by Anna Csergo and Olivier Brönnimann
 
 #################################################################################################
 ############################## load functions and packages ######################################
@@ -68,7 +68,7 @@ sp.list<-unique(occ.sp$species)
 #################################### PCA-ENVIRONMENT ############################################
 #################################################################################################
 
-## i don't have study areas, i just have occurrences. So I', not sure whether i have adapted this approach correctly. 
+## i don't have study areas, i just have occurrences. 
 
 #dataset for the analysis,includes all the sites of the study area + the occurences for all the species
 data<-rbind(occ.sp[,4:7],env[,1:4]) 
@@ -99,5 +99,5 @@ for(i in 1:length(sp.list)) {
 ## tidy up to make sure this dataset is maximally compatible with traits and range metrics
 levels(nb$sp.list) <- gsub("_", " ", levels(nb$sp.list))
 
-#saveRDS(nb, "Data_nichebreadth.rds")
+saveRDS(nb, "Data_nichebreadth.rds")
 

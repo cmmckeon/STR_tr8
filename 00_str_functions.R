@@ -3,6 +3,7 @@
 
 #library(BIEN)
 print("mannually library BIEN package")
+library("Hmisc")
 library(glmmTMB)
 library(tidyverse)
 library(MCMCglmm)

@@ -52,12 +52,17 @@ upper.panel<-function(x, y){
         text(0.8, 0.9, txt, cex =0.7)
 }
 
+r <- c("total.area", "range.size", "effective.mesh.size", "prop.landscape", "mean.shape.index","perimeter.area.frac.dim")
+
 rat_ <- drop_na(metrics)
 pairs(rat_[, which(names(rat_) %nin% c("species"))], 
       lower.panel = NULL, upper.panel = upper.panel)
 
 pairs(rat_[, which(names(rat_) %in% c(r, "mean", "mat_mean", "mat_var_mean", "map_mean", "map_var_mean"))], 
-      lower.panel = NULL, upper.panel = upper.panel)
+      lower.panel = NULL, upper.panel = upper.panel, stars = TRUE)
+
+res2 <- rcorr(as.matrix(rat_[, which(names(rat_) %in% c(r, "mean", "mat_mean", "mat_var_mean", "map_mean", "map_var_mean"))]))
+res2 <- rcorr(as.matrix(rat_[, which(names(rat_) %in% c("mean", "mat_mean", "mat_var_mean", "map_mean", "map_var_mean"))]))
 
 # list <- c()
 # for (i in names(metrics)){
@@ -129,7 +134,7 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
 #saveRDS(m_metric_hf, "m_metric_map_var_mean.rds")
 #saveRDS(m_metric_hf, "m_metric_clim_hf.rds")
 
-#m_metric_hf <- readRDS("m_metric_hf.rds")
+#m_metric_clim_hf <- readRDS("m_metric_clim_hf.rds")
 ## diagnostics -------------
 z <- "total.area"
 z <- "range.size"
@@ -349,6 +354,6 @@ r2_null <- rsqrd
 r2_null$model <- "null"
 
 r2 <- rbind(r2_null, r2_clim, r2_hf, r2_clim_hf)
-#saveRDS(r2, "Data_r2_all_models.rds")
+# saveRDS(r2, "Data_r2_all_models.rds")
 
 

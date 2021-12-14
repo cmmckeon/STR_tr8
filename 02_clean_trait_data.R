@@ -57,7 +57,7 @@ mydata$unit[mydata$unit == "dimensionless"] <- ""
 sub <- c("yr", "years")
 mydata$unit <- gsub(paste(sub, collapse="|"), "year", mydata$unit) 
 
-## look at what these values for "plant vegatative height" came in as originally
+## look at what these values for "plant vegetative height" came in as originally
 #mydata$OriglName %>% factor(.) %>% table(.) %>% .[order(.)]
 
 #dput(levels(mydata$OriglName))
@@ -67,7 +67,7 @@ mydata <- mydata[mydata$OriglName %nin% c("Height (seedling)", "HEIGHT min",  "P
 
 #dput(levels(factor(mydata$Dataset)))
 
-## drop databases which Ruth excluded on the basis of juvenile trees or experimental treament
+## drop databases which Ruth excluded on the basis of juvenile trees or experimental treatment
 mydata <- mydata %>% subset(., .$Dataset %nin% c("Growth and Herbivory of Juvenil Trees", "The Functional Ecology of Trees (FET) Database  - Jena", 
                                                  "Biomass allocation in beech and spruce seedlings",
                                                  "BIOTREE Trait Shade Experiment", "Canopy Traits for Temperate Tree Species Under High N-Deposition",
@@ -342,6 +342,8 @@ lifeform <- as.data.frame(cbind(lifeform$AccSpeciesName, c(1:length(lifeform$rau
 names(lifeform) <- c("species", "trait_name", "StdValue")
 lifeform$trait_name <- as.character(lifeform$trait_name)
 lifeform$trait_name <- "lifeform"
+lifeform$species <- gsub(" subsp.*", "", lifeform$species ) ## 701 unique species
+lifeform$species <- str_to_sentence(lifeform$species, locale = "en")
 
 lifeform$StdValue <- factor(lifeform$StdValue, levels = c("phanerophyte", "chamaephyte", "hemicryptophyte", "cryptophyte", "therophyte"))
 

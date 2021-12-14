@@ -225,8 +225,6 @@ traits_try <- readRDS("Data_traits_try.rds")
 #sp.list_TRY_BIEN <- Reduce(intersect, list(unique(traits_bien$scrubbed_species_binomial),unique(traits_try$AccSpeciesName))) ## 168 species 
 sp.list_full_TRY_BIEN <- unique(c(sp.list_TRY, sp.list_BIEN)) ## 473 species
 
-##  records to exclude based on how they were collected, expertimental data ect. 
-
 ## take the columns with species name, trait names and trait value and comment. 
 traits_try <- unique(traits_try[which(names(traits_try) %in% c("AccSpeciesName", "Dataset", "ValueKindName", 
                                                                "TraitName","OriglName", "OrigValueStr", "OrigUnitStr", "Comment", "StdValue"))])
@@ -235,9 +233,6 @@ traits_try <- unique(traits_try[traits_try$TraitName != "",])
 #plot(droplevels(traits_try$Comment[traits_try$Comment != ""]))
 #dput(droplevels(traits_try$Comment))
 #traits_try$Comment %>% factor(.) %>% table(.) %>% .[order(.)]
-
-
-
 
 ## create trait dataframes ------------------
 names(traits_bien) <- c("species", "trait_name", "trait_value", "unit", "comment")
