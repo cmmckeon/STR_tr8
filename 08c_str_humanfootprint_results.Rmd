@@ -77,7 +77,7 @@ z <- "total.area"
 mod_mcmc <- m_metric_clim_hf[[z]][["hf"]][[1]]
 mod_mcmc_2 <- m_metric_clim_hf[[z]][["hf"]][[2]]
 
-#bay_phylo_dia(mod_mcmc)
+bay_phylo_dia(mod_mcmc)
 
 for(i in r){
         print(summary(m_metric_clim_hf[[i]][["hf"]][[1]]))

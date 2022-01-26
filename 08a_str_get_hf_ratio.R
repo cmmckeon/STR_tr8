@@ -8,8 +8,31 @@ mat_var <-raster('bio4.bil') ## mean annual temp SD*100
 ## make climate variables into one object (raster brick)
 clim_map <- brick(map, mat, map_var, mat_var) 
 mat <- crop(mat, extent(-33,67,30, 82))
+#x <- crop(mat_var, extent(-164,-55,12,71))
+#xx <- crop(mat_var, extent(-33,67,30, 82))
 clim_map <- projectRaster(clim_map, mat)
 plot(clim_map)
+
+vel <- raster("Velocity.tif")
+vel <- projectRaster(vel, mat)
+vel <- crop(vel, extent(-33,67,30, 82))
+mat_var <- crop(mat_var, extent(-33,67,30, 82))
+plot(vel)
+plot(mat_var)
+
+v <- raster::extract(vel)
+mat_var <- raster::extract(mat_var)
+current_historic <- brick(vel,mat_var)
+current_historic <- drop_na(data.frame(raster::extract(current_historic,sp_co))) 
+cor(scale(current_historic$Velocity), scale(current_historic$bio4))
+plot(scale(current_historic$bio4), scale(current_historic$Velocity))
+
+x <- lm(scale(log(current_historic$Velocity)) ~ scale(log(current_historic$bio4)))
+summary(x)
+
+par(mfrow = c(1,2))
+hist(log(current_historic$Velocity))
+hist(log(current_historic$bio4))
 
 plot(mat)
 #mat <- projectRaster(mat, crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
@@ -49,7 +72,7 @@ par(mfrow = c(1,1))
 plot(mat)
 # sp_co$y <- sp_co$y*100000
 # sp_co$x <- sp_co$x*100000
-points(sp_co$x, sp_co$y, type = "p", col = "black")
+points(sp_co$x, sp_co$y, type = "p", col = "black", lwd = 0.1)
 
 ## read in the humanfootprint raster
 hf <- raster("Data_wildareas-v3-2009-human-footprint.tif")
@@ -91,22 +114,39 @@ for (i in unique(sp$species)){
 all <- brick(rast_list)        
 all <- brick(r, temp, all, clim_map)
 #plot(all)
-# all2 <- aggregate(all, fact= 3)
-# all <- aggregate(all, fact= 6)
-
-#sp4 <- projectRaster(all, crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-#plot(sp4)
 
 
 ## #extract hf and climate values for coordinates in dataset
 ratio_data <- as.data.frame(all, xy = T)
 colnames(ratio_data)[which(names(ratio_data) %in% c("bio1", "bio4", "bio12", "bio15"))] <- c("mat", "mat_var", "map", "map_var")
 
-f <- ratio_data
-
 for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))]){
   ratio_data[,i][which(is.na(ratio_data[,i]))] <- 0
 }
+
+f <- ratio_data
+
+rat <- as.data.frame(names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))])
+names(rat) <- "species"
+
+for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))]){
+  rat$hf_range[rat$species == i] <- max(ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1],na.rm=TRUE) -min(
+    ratio_data$layer.1[f$layer.2 == 0 & ratio_data[,i] == 1],na.rm=TRUE)
+  rat$mat_range[rat$species == i] <- max(ratio_data$mat[f$layer.2 == 0 & ratio_data[,i] == 1],na.rm=TRUE) -min(
+    ratio_data$mat[f$layer.2 == 0 & ratio_data[,i] == 1],na.rm=TRUE)
+  rat$mat_var_range[rat$species == i] <- max(ratio_data$mat_var[f$layer.2 == 0 & ratio_data[,i] == 1],na.rm=TRUE) -min(
+    ratio_data$mat_var[f$layer.2 == 0 & ratio_data[,i] == 1],na.rm=TRUE)
+  rat$map_range[rat$species == i] <- max(ratio_data$map[f$layer.2 == 0 & ratio_data[,i] == 1],na.rm=TRUE) -min(
+    ratio_data$map[f$layer.2 == 0 & ratio_data[,i] == 1],na.rm=TRUE)
+  rat$map_var_range[rat$species == i] <- max(ratio_data$map_var[f$layer.2 == 0 & ratio_data[,i] == 1],na.rm=TRUE) -min(
+    ratio_data$map_var[f$layer.2 == 0 & ratio_data[,i] == 1],na.rm=TRUE)
+  }
+
+for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))]){
+  rat$max_mat_var[rat$species == i] <- max(ratio_data$mat_var[f$layer.2 == 0 & ratio_data[,i] == 1],na.rm=TRUE) 
+  }
+
+ranges <- rat
 
 
 rat <- as.data.frame(names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))])
@@ -125,6 +165,8 @@ for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1",
   rat$map_var_mean[rat$species == i] <- mean(ratio_data$map_var[f$layer.2 == 0 & ratio_data[,i] == 1], na.rm = TRUE)
 }
 
+
+
 par(mfrow = c(4,2), mar = c(4,4,4,4))
 hist(rat$gm_mean, breaks = 100)
 hist(rat$hf_mean, breaks = 100)
@@ -137,5 +179,7 @@ hist(rat$map_var_mean, breaks = 100)
 
 
 #saveRDS(rat, "Data_occ_humanfootprint_ratio.rds")
+#saveRDS(ranges, "Data_occ_clim_hf_value_ranges.rds")
+
 
 

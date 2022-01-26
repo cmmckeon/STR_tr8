@@ -20,6 +20,10 @@ rat$species <- gsub("Lychnis_flos.jovis", "Lychnis_flos-jovis", rat$species)
 rat$species <- gsub("Saxifraga_federici.augusti", "Saxifraga_federici-augusti", rat$species)
 
 
+x <- lm(scale(metrics$total.area) ~ scale(metrics$hf_range) + scale(metrics$map_var_range) + 
+           scale(metrics$map_range) + scale(metrics$mat_var_range) + scale(metrics$mat_range))
+
+
 metrics <- merge(metrics, rat, by = "species")
 
 #m <- drop_na(metrics)

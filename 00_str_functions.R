@@ -82,8 +82,8 @@ bay_phylo_dia <- function(mod_list){
   plot(mod_mcmc$VCV)
   
   #acf plot for the fixed estimate in our model 
-  acf(mod_mcmc$Sol, lag.max =100)
-  acf(mod_mcmc$VCV, lag.max =100)
+  # acf(mod_mcmc$Sol, lag.max =100)
+  # acf(mod_mcmc$VCV, lag.max =100)
   # low autocorrelation means good mixing
   # To check convergence run a second model and see if it converges on the same estimates as first. 
   # if result is below 1.1 you ca be happy they've converged
