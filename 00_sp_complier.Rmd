@@ -1,0 +1,104 @@
+---
+title: "00_sp_complier"
+author: "Caroline McKeon"
+date: "03/17/2020"
+output: word_document
+---
+
+This markdown is for the extraction, wrangling and analysis of data relating to species spatial pattern (range metrics) and climate and humanfootprint.
+
+# Set up
+```{r setup, include=FALSE}
+#install.packages(c("tidyverse", "glmmTMB"))
+#install.packages("RPostgreSQL", type="source")
+#install.packages("BIEN")
+source("00_sp_functions.R")
+knitr::opts_chunk$set(include=FALSE) 
+knitr::opts_chunk$set(fig.width=16, fig.height=10) 
+
+## Quick look at model dataframe
+## Factors
+# for (i in names(Filter(is.factor, ModelDF))) {
+#   plot(ModelDF[,i], 
+#        main = paste(i))
+# }
+# 
+# ## Numeric variables
+# for (i in names(Filter(is.numeric, ModelDF))) {
+#   hist(ModelDF[,i], 
+#        breaks = 3000, 
+#        main = paste(i), 
+#        xlab = paste(i))
+# }
+```
+
+## get range metrics
+Read in and clean species range metric data
+```{r}
+metrics <- read.csv("GRSmetrics_AFE_pol_50km_pol_line_mcp.csv") ## metrics provided by Anna Csergo in Spring 2022. 4260 obs of 42 vars
+metrics <- metrics[metrics$Model == "Occurrence",]
+metrics$Species <- gsub(" ssp.*", "", metrics$Species) ## remove subspecies (for now). 701 unique species
+metrics$Species <- gsub("[[:space:]]*$", "", metrics$Species) ## remove subspecies (for now). 701 unique species
+metrics <- unique(metrics) # 810 obs of 42 vars
+metrics <- unique(metrics[, which(names(metrics) %in% c("Species", "total.area", "range.size", "effective.mesh.size", 
+                                                        "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim"))])
+metrics <- metrics[c("Species", "total.area", "range.size", "effective.mesh.size", "prop.landscape","mean.shape.index", "perimeter.area.frac.dim")]
+metrics <- unique(metrics) # 810 obs of 7 vars
+names(metrics) <- c("species","Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling", "Patch shape complexity", "Geographic range fractality") 
+
+## tidy names
+metrics$species[grep("oslo", metrics$species, useBytes = TRUE)] <- "Saxifraga osloensis"
+
+## log and scale raw data
+metrics$'Geographic range fractality' <- (metrics$'Geographic range fractality' + sqrt(min(metrics$'Geographic range fractality', na.rm = T)^2)) + 1
+for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("Geographic range filling"))]))) {
+        metrics[, i] <- c(log(metrics[,i]))
+        }
+for (i in names(Filter(is.numeric, metrics))) {
+        metrics[, i] <- c(scale(metrics[,i]))
+        }
+length(unique(metrics$species)) ## 693 unique species
+```
+
+```{r}
+## Numeric variables
+for (i in names(Filter(is.numeric, metrics))) {
+  hist(metrics[,i],
+       breaks = 100,
+       main = paste(i),
+       xlab = paste(i))
+}
+```
+## get phylogeny
+Set up phylogeny
+```{r}
+if(!exists("clean_tree")) {
+  try(clean_tree <- read.tree("Data_str_clean_tree.tre"))
+  } else source("01_clean_phylogeny.R")
+
+## 655 species with metrics and phylogeny March 2022
+```
+
+
+## 4. metric ~ humanfootprint
+```{r}
+#source("08a_str_get_hf_ratio.R")
+#source("08b_str_humanfootprint_analysis.R")
+```
+
+
+
+## 5. plots
+```{r}
+# m_indiv_height <- readRDS("m_indiv/m_height_phy_parexp.rds")
+# m_indiv_seed_mass <- readRDS("m_indiv/m_seed_mass_phylo_parexp.rds")
+# m_indiv_sla <- readRDS("m_indiv/m_sla_phylo_parexp.rds")
+# m_indiv_leaf_area <- readRDS("m_indiv/m_leaf_area.rds")
+# m_indiv_woodiness <- readRDS("m_indiv/m_woodiness_phlyo_parexp.rds")
+# m_indiv_lifeform <- readRDS("m_indiv/m_lifeform_phlyo_parexp.rds")
+source("09_str_plots.R")
+```
+
+
+
+

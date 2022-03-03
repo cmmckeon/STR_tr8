@@ -3,12 +3,6 @@
 
 
 ################ set up
-#install.packages(c("ape", "phytools", "ggtree", "caper"))
-library(caper)
-library(phytools)
-library(phangorn)
-library(ape)
-
 
 ## look at phylogenetic tree options and species list overlap with my usable data
 
@@ -41,7 +35,7 @@ tips<-clean_tree$tip.label
 cor(as.vector(cophenetic(clean_tree)[tips,tips]),
     as.vector(cophenetic(clean_tree)[tips,tips]))
 ### 1
-clean_tips <- as.character(clean_tree$tip.label)
+clean_tips <- as.character(clean_tree$tip.label) ## 568 species on the first go round
 
 ##
 ## add other species from our data set that have genus matches in the tree
@@ -66,6 +60,7 @@ clean_tree$node.label <- c(1:length(clean_tree$node.label))
 ## make tree ultrametric
 clean_tree <- nnls.tree(cophenetic(clean_tree),clean_tree,rooted=TRUE)
 
+clean_tips <- as.character(clean_tree$tip.label) ## 655 species after matching species by genera
 
 ## save
 write.tree(clean_tree, file = "Data_str_clean_tree.tre")
@@ -77,8 +72,7 @@ if(exists("clean_tree")) {
 } else warning("failed to create clean_tree")
 #str(clean_tree)
 
-plotTree(clean_tree,fsize=0.1,lwd=0.5, ftype="i", part = 0.93)
-
+#plotTree(clean_tree,fsize=0.1,lwd=0.5, ftype="i", part = 0.93)
 
 
 #write.tree(clean_tree, file = "Data_str_clean_tree.tre")

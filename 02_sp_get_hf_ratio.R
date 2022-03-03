@@ -1,25 +1,34 @@
-## 08a_str_get_human_footprint_ratio
+## 02_sp_get_human_footprint_ratio
 
 #load environmental data
 mat <-raster('bio1.bil') ## mean annual temperature (C*10)
 map <-raster('bio12.bil') ## mean annual precipatation (mm)
 map_var <-raster('bio15.bil') ## mean annual precip coeff variation
 mat_var <-raster('bio4.bil') ## mean annual temp SD*100
+
+# From Sandle et al 2011 - availble from datadryad
+# This raster describes the local average displacement rate of mean annual temperature since the Last Glacial Maximum. It is in units of m/yr. 
+# It is derived from the WorldClim (http://www.worldclim.org/, Hijmans et al. 2005) modern climate data, 
+# and the PMIPII (http://pmip2.lsce.ipsl.fr/) paleoclimate data for the CCSM3 and MIROC3.2 climate models.
+# References
+# Hijmans, R.J., Cameron, S.E., Parra, J.L., Jones, P.G., and Jarvis, A. 2005. 
+# Very high resolution interpolated climate surfaces for global land areas. International Journal of Climatology 25: 1965-1978
+
+vel <- raster("Velocity.tif") ## 1km resolution
+## read in the humanfootprint raster
+hf <- raster("Data_wildareas-v3-2009-human-footprint.tif") ## 1km resolution
+
+## get data into same crs at approx 1km spatial resolution
+vel2 <- projectRaster(vel, crs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") ## bioclim crs
+vel3 <- crop(vel2, extent(-33,67,30, 82))
+hf3 <- projectRaster(hf, vel3)
+
 ## make climate variables into one object (raster brick)
 clim_map <- brick(map, mat, map_var, mat_var) 
-mat <- crop(mat, extent(-33,67,30, 82))
-#x <- crop(mat_var, extent(-164,-55,12,71))
-#xx <- crop(mat_var, extent(-33,67,30, 82))
-clim_map <- projectRaster(clim_map, mat)
-plot(clim_map)
+clim_map <- projectRaster(clim_map, vel3)
+plot(clim_map) ## 1km res
 
-vel <- raster("Velocity.tif")
-vel <- projectRaster(vel, mat)
-vel <- crop(vel, extent(-33,67,30, 82))
-mat_var <- crop(mat_var, extent(-33,67,30, 82))
-plot(vel)
-plot(mat_var)
-
+## current vs historic calc.
 v <- raster::extract(vel)
 mat_var <- raster::extract(mat_var)
 current_historic <- brick(vel,mat_var)
@@ -38,15 +47,16 @@ plot(mat)
 #mat <- projectRaster(mat, crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
 
 
-# grid <- shapefile("AFEcells/cgrs_grid.shp")
-# ## Set up a raster "template" for a 0.5 degree grid
-# # ext <- extent(-33,67,30, 82)
-# # gridsize <- 0.5
-# # rr <- raster(ext, res=gridsize)
-# ## Rasterize the shapefile
-# rr <- rasterize(grid, rr)
-# ## Plot raster
-# plot(rr)
+
+grid <- shapefile("AFEcells/cgrs_grid.shp")
+## Set up a raster "template" for a 0.5 degree grid
+# ext <- extent(-33,67,30, 82)
+# gridsize <- 0.5
+# rr <- raster(ext, res=gridsize)
+## Rasterize the shapefile
+rr <- rasterize(grid, rr)
+## Plot raster
+plot(rr)
 
 ## get occurrence data
 env <- readRDS("Data_occurences_cliamte_values.rds")
@@ -74,8 +84,6 @@ plot(mat)
 # sp_co$x <- sp_co$x*100000
 points(sp_co$x, sp_co$y, type = "p", col = "black", lwd = 0.1)
 
-## read in the humanfootprint raster
-hf <- raster("Data_wildareas-v3-2009-human-footprint.tif")
 
 # fidy <- raster(xmn = -30, xmx = 66, 
 #                ymn = 35, ymx = 75, 

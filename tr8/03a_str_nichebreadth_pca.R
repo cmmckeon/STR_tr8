@@ -1,13 +1,4 @@
-## this script is adapted from work by Anna Csergo and Olivier Brönnimann
-
-#################################################################################################
-############################## load functions and packages ######################################
-#################################################################################################
-library(raster)
-library(ecospat)
-library(ade4)
-library(adehabitatHR)
-library(sp)
+## this script is adapted by CM from work by Anna Csergo and Olivier Brönnimann
 
 #################################################################################################
 ############################## preparation of datasets ##########################################
@@ -41,10 +32,10 @@ sp <- endem
 
 sp <- sp[, c("species", "x", "y")] ## 735 unique species
 
-## make dataframe with just the lat and long co-ordinates of PREDICTS data that is relevant to my analysis
+## make dataframe with just the lat and long co-ordinates of data that is relevant to my analysis
 sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
 
-## #extract climate values for coordinates in (full) PREDICTS dataset
+## #extract climate values for coordinates in (full) dataset
 full_clim <- data.frame(raster::extract(clim_map,sp_co)) 
 ## create dataset with both climate values and co-ordinates of the values
 full_clim <- cbind(full_clim,sp)

@@ -1,4 +1,4 @@
-## 00_str_functions.R
+## 00_sp_functions.R
 ## Caroline McKeon 22/03/21
 
 #library(BIEN)
@@ -39,6 +39,16 @@ library(raster)
 library(gclus)
 library("loo")
 library("broom.mixed")
+library(raster)
+library(ecospat)
+library(ade4)
+library(adehabitatHR)
+library(sp)
+library(sf)
+library(caper)
+library(phytools)
+library(phangorn)
+library(ape)
 
 '%nin%' = Negate('%in%')
 

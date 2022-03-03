@@ -1,26 +1,16 @@
 ---
-title: "00_str_tr8_complier"
+title: "00_tr8_complier"
 author: "Caroline McKeon"
-date: "03/17/2020"
+date: "3/3/2022"
 output: word_document
 ---
-
-This markdown is for the extraction, wrangling and analysis of data relating to species range metrics and functional traits.
-
-# Notes: 
-- Anna Csergo is already looking at the relationship between spatial scales in these metrics across species. 
-- How rare and how recorded a species is will also matter.
-- which traits to use?
-- species mean or location specific traits?
-- Measures of intraspecific trait variability?
-- could re-extract and clean up massively (amalgamate trait data), might improve sample size
 
 # Set up
 ```{r setup, include=FALSE}
 #install.packages(c("tidyverse", "glmmTMB"))
 #install.packages("RPostgreSQL", type="source")
 #install.packages("BIEN")
-source("00_str_functions.R")
+source("00_sp_functions.R")
 knitr::opts_chunk$set(include=FALSE) 
 knitr::opts_chunk$set(fig.width=16, fig.height=10) 
 ```
@@ -35,37 +25,7 @@ Clean and collate trait data
 ```{r}
 source("02_clean_trait_data.R")
 ```
-## get Climate values (niche breadth)
-```{r}
-# source("03a_str_nichebreadth_pca.R")
-nb <- readRDS("Data_nichebreadth.rds")
-```
 
-## get range metrics
-Read in and clean species range metric data
-```{r}
-metrics <- read.csv("Data_range_metrics.csv") ## metrics provided by Anna Csergo in spring 2019
-metrics$Species <- gsub(" ssp.*", "", metrics$Species) ## 701 unique species
-metrics <- metrics[metrics$Model == "Occurrence",]
-metrics <- unique(metrics[, which(names(metrics) %in% c("Species", "total.area", "range.size", "effective.mesh.size", 
-                                                        "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim"))])
-metrics <- metrics[c("Species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")]
-names(metrics) <- c("species", "total.area", "range.size", "effective.mesh.size", "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim")
-
-metrics$species[grep("oslo", metrics$species, useBytes = TRUE)] <- "Saxifraga osloensis"
-metrics <- unique(merge(metrics, nb[,which(names(nb) %in% c('sp.list', "nb"))], by.x = "species", by.y = "sp.list"))
-metrics <- metrics[metrics$species != "Helleborus lividus",] ## had infinity value
-
-## log and scale raw data
-metrics$perimeter.area.frac.dim <- (metrics$perimeter.area.frac.dim + sqrt(min(metrics$perimeter.area.frac.dim, na.rm = T)^2)) + 1
-for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("mean.shape.index", "prop.landscape", "nb"))]))) {
-        metrics[, i] <- c(log(metrics[,i]))
-        }
-for (i in names(Filter(is.numeric, metrics))) {
-        metrics[, i] <- c(scale(metrics[,i]))
-        }
-length(unique(metrics$species)) ## 700 unique species
-```
 
 ## get phylogeny
 Set up phylogeny
@@ -74,8 +34,6 @@ if(!exists("clean_tree")) {
   try(clean_tree <- read.tree("Data_str_clean_tree.tre"))
   } else source("03b_clean_phylogeny.R")
 ```
-
-
 
 ## get trait sumamry statistics
 Calculate summary stats for continuous traits
@@ -173,6 +131,7 @@ rm(b)
 ```
 
 
+
 ```{r}
 ## Quick look at model dataframe
 ## Factors
@@ -258,27 +217,4 @@ This might suggest that traits can't be examined in isolation, either from eacho
 ```{r}
 #source("07_str_multitrait_analysis.R")
 ```
-
-
-## 4. metric ~ humanfootprint
-```{r}
-#source("08a_str_get_hf_ratio.R")
-#source("08b_str_humanfootprint_analysis.R")
-```
-
-
-
-## 5. plots
-```{r}
-# m_indiv_height <- readRDS("m_indiv/m_height_phy_parexp.rds")
-# m_indiv_seed_mass <- readRDS("m_indiv/m_seed_mass_phylo_parexp.rds")
-# m_indiv_sla <- readRDS("m_indiv/m_sla_phylo_parexp.rds")
-# m_indiv_leaf_area <- readRDS("m_indiv/m_leaf_area.rds")
-# m_indiv_woodiness <- readRDS("m_indiv/m_woodiness_phlyo_parexp.rds")
-# m_indiv_lifeform <- readRDS("m_indiv/m_lifeform_phlyo_parexp.rds")
-source("09_str_plots.R")
-```
-
-
-
 
