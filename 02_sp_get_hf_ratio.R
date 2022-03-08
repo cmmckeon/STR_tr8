@@ -1,5 +1,39 @@
 ## 02_sp_get_human_footprint_ratio
 
+## temperary ----------
+metrics <- read.csv("GRSmetrics_AFE_pol_50km_pol_line_mcp.csv") ## metrics provided by Anna Csergo in Spring 2022. 4260 obs of 42 vars
+metrics <- metrics[metrics$Model == "Occurrence",]
+metrics$Species <- gsub(" ssp.*", "", metrics$Species) ## remove subspecies (for now). 701 unique species
+metrics$Species <- gsub("[[:space:]]*$", "", metrics$Species) ## remove subspecies (for now). 701 unique species
+small <- c(" s.lat.", " s.str.")
+metrics$Species <- gsub(paste(small, collapse="|"), "", metrics$Species) 
+metrics$Species <- gsub("//.", "", metrics$Species) 
+
+# Quercus petraea.
+# Ranunculus montanus.
+# Pinus uncinata.
+
+metrics <- unique(metrics) # 810 obs of 42 vars
+metrics <- unique(metrics[, which(names(metrics) %in% c("Species", "total.area", "range.size", "effective.mesh.size", 
+                                                        "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim"))])
+metrics <- metrics[c("Species", "total.area", "range.size", "effective.mesh.size", "prop.landscape","mean.shape.index", "perimeter.area.frac.dim")]
+metrics <- unique(metrics) # 810 obs of 7 vars
+names(metrics) <- c("species","Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling", "Patch shape complexity", "Geographic range fractality") 
+
+## tidy names
+metrics$species[grep("oslo", metrics$species, useBytes = TRUE)] <- "Saxifraga osloensis"
+
+## log and scale raw data
+metrics$'Geographic range fractality' <- (metrics$'Geographic range fractality' + sqrt(min(metrics$'Geographic range fractality', na.rm = T)^2)) + 1
+for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("Geographic range filling"))]))) {
+  metrics[, i] <- c(log(metrics[,i]))
+}
+for (i in names(Filter(is.numeric, metrics))) {
+  metrics[, i] <- c(scale(metrics[,i]))
+}
+length(unique(metrics$species)) ## 691 unique species
+## temperary ----------
+
 ## load environmental data ----------------
 # mat <-raster('bio1.bil') ## mean annual temperature (C*10)
 # map <-raster('bio12.bil') ## mean annual precipatation (mm)
@@ -17,6 +51,7 @@ mat <- crop(mat, extent(-33,67,30, 82))
 mat_var <- crop(mat_var, extent(-33,67,30, 82))
 map_var <- crop(map_var, extent(-33,67,30, 82))
 
+print("climate data loaded")
 
 # From Sandle et al 2011 - availble from datadryad
 # This raster describes the local average displacement rate of mean annual temperature since the Last Glacial Maximum. It is in units of m/yr. 
@@ -29,17 +64,27 @@ map_var <- crop(map_var, extent(-33,67,30, 82))
 vel <- raster("Velocity.tif") ## approx 1km resolution
 ## read in the humanfootprint raster
 hf <- raster("Data_wildareas-v3-2009-human-footprint.tif") ## approx 1km resolution
+hf <- calc(hf, fun=function(x){ x[x > 100] <- NA; return(x)} )
+gc()
+
+print("vel and hf loaded")
 
 ## harmonise projections ---------------
 ## get data into same crs at approx 1km spatial resolution
 # vel2 <- projectRaster(vel, crs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") ## bioclim crs
 # vel3 <- crop(vel2, extent(-33,67,30, 82))
-hf2 <- projectRaster(hf, mat)
-vel2 <- projectRaster(vel, mat)
+hf <- projectRaster(hf, mat)
+vel <- projectRaster(vel, mat)
+
+print("vel and hf reprojected")
 
 ## make climate variables into one object (raster brick)
 clim_map <- brick(map, mat, map_var, mat_var) 
+gc()
 
+saveRDS(vel, "Data_1km_EU_vel.rds")
+saveRDS(hf, "Data_1km_EU_hf.rds")
+saveRDS(clim_map, "Data_1km_EU_clim.rds")
 # par(mfrow=c(1,2))
 # plot(vel2)
 # plot(hf2)
@@ -76,12 +121,24 @@ sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
 full_clim <- data.frame(raster::extract(clim_map,sp_co)) 
 ## create dataset with both climate values and co-ordinates of the values
 full_clim <- cbind(full_clim,sp)
+gc()
 env <- unique(full_clim)
 names(env) <- c("map", "mat", "map_var", "mat_var", "species", "Longitude", "Latitude") 
 env <- drop_na(env)
 env$species <- gsub(" ", "_", env$species)
-#saveRDS(env, "Data_occurences_climate_values.rds")
-env <- env[, which(names(env) %in% c("map", "mat", "map_var", "mat_var", "Longitude", "Latitude") )]
+saveRDS(env, "Data_occurences_climate_values.rds")
+
+print("end")
+## end of source --------
+
+vel <- readRDS("Data_1km_EU_vel.rds")
+hf <- readRDS("Data_1km_EU_hf.rds")
+clim_map <- readRDS("Data_1km_EU_clim.rds")
+
+
+#env <- env[, which(names(env) %in% c("map", "mat", "map_var", "mat_var", "Longitude", "Latitude") )]
+
+
 
 
 ## current vs historic calc.
@@ -104,10 +161,13 @@ grid <- shapefile("AFEcells/cgrs_grid.shp")
 # gridsize <- 0.5
 # rr <- raster(ext, res=gridsize)
 ## Rasterize the shapefile
-rr <- rasterize(grid, rr)
-## Plot raster
-plot(rr)
+# rr <- rasterize(grid, rr)
+# ## Plot raster
+# plot(rr)
 
+#rr <- rasterize(grid, mat)
+
+env <-readRDS("Data_occurences_climate_values.rds")
 
 ## make dataframe with just the lat and long co-ordinates of data that is relevant to my analysis
 sp <- unique(env[, c("species", "Longitude", "Latitude")]) ## 735 unique species
@@ -123,32 +183,25 @@ points(sp_co$x, sp_co$y, type = "p", col = "black", lwd = 0.1)
 
 ## Map human footprint data
 pal <- colorRampPalette(c('#0C276C', '#3B9088', '#EEFF00', '#ffffff'))
-hf_map <- calc(hf, fun=function(x){ x[x > 100] <- NA; return(x)} )
-#par(bty = "n", mar=c(0.02,0.02,2,0.2))
-#plot(hf_map, col = pal(50), main = "Human footprint 2009", yaxt="n", xaxt="n")
-hf_repro <- projectRaster(hf_map, mat)
-plot(hf_repro)
+plot(hf)
 
-#r <- calc(hf_repro, fun=function(x){ x[x > 50] <- NA; return(x)} )
-r <- hf_repro
-#plot(r, col = pal(50))
-temp <- calc(r, fun=function(x){ x[x >= 0] <- 0; return(x)} )
-#plot(temp)
+temp <- calc(mat, fun=function(x){ x[x >= 0] <- 0; return(x)} )
 #plot(temp, col = pal(50))
 
 sp <- sp[, c("x", "y", "species")]
 plot(sp)
 
+## create occurrence rasters for each species, based on AFE irregular 50km2 occurrence grid, rasterised onto approx 1km2 regular raster
 rast_list <- list()
 for (i in unique(sp$species)){
   s <- sp[sp$species == i,]
-  sp2 <- SpatialPointsDataFrame(s[,c("x", "y")], 
+  sp2 <- SpatialPointsDataFrame(s[,c("x", "y")],
                                 as.data.frame(s[,3]),
                                 proj4string =  temp@crs)
   rast_list[i] <- rasterize(sp2, temp, field = 1)
 }
 
-all <- brick(rast_list)        
+all <- brick(rast_list)
 all <- brick(r, temp, all, clim_map)
 #plot(all)
 
@@ -180,7 +233,7 @@ for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1",
   }
 
 for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))]){
-  rat$max_mat_var[rat$species == i] <- max(ratio_data$mat_var[f$layer.2 == 0 & ratio_data[,i] == 1],na.rm=TRUE) 
+  rat$max_mat_var[rat$species == i] <- max(ratio_data$mat_var[f$layer.2 == 0 & ratio_data[,i] == 1],na.rm=TRUE)
   }
 
 ranges <- rat
