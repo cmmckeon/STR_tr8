@@ -60,12 +60,14 @@ clean_tree$node.label <- c(1:length(clean_tree$node.label))
 ## make tree ultrametric
 clean_tree <- nnls.tree(cophenetic(clean_tree),clean_tree,rooted=TRUE)
 
-clean_tips <- as.character(clean_tree$tip.label) ## 655 species after matching species by genera
+clean_tips <- as.character(clean_tree$tip.label) ## 651 species after matching species by genera
 
 ## save
-write.tree(clean_tree, file = "Data_str_clean_tree.tre")
+write.tree(clean_tree, file = "Data_sp_clean_tree.tre")
 
 #plotTree(clean_tree,type="fan",fsize=0.1,lwd=0.5, ftype="i", part = 0.93)
+
+rm(treefile, genera, new_genera, new_clean_tips, small, species, tip_labels, tips, omit_spe)
 
 if(exists("clean_tree")) {
   print("clean_tree created")
@@ -75,7 +77,7 @@ if(exists("clean_tree")) {
 #plotTree(clean_tree,fsize=0.1,lwd=0.5, ftype="i", part = 0.93)
 
 
-#write.tree(clean_tree, file = "Data_str_clean_tree.tre")
+#write.tree(clean_tree, file = "Data_sp_clean_tree.tre")
 
 
 ## Liam Revell's phytool blog code. How incredibly helpful

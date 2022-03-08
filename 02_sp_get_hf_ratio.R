@@ -1,10 +1,22 @@
 ## 02_sp_get_human_footprint_ratio
 
-#load environmental data
-mat <-raster('bio1.bil') ## mean annual temperature (C*10)
-map <-raster('bio12.bil') ## mean annual precipatation (mm)
-map_var <-raster('bio15.bil') ## mean annual precip coeff variation
-mat_var <-raster('bio4.bil') ## mean annual temp SD*100
+## load environmental data ----------------
+# mat <-raster('bio1.bil') ## mean annual temperature (C*10)
+# map <-raster('bio12.bil') ## mean annual precipatation (mm)
+# map_var <-raster('bio15.bil') ## mean annual precip coeff variation
+# mat_var <-raster('bio4.bil') ## mean annual temp SD*100
+
+mat <- raster("wc2/wc2.1_30s_bio_1.tif") ## mean annual temperature (C*10)
+map <- raster("wc2/wc2.1_30s_bio_12.tif") ## mean annual precipatation (mm)
+map_var <- raster("wc2/wc2.1_30s_bio_15.tif")  ## mean annual precip coeff variation
+mat_var <- raster("wc2/wc2.1_30s_bio_4.tif") ## mean annual temp SD*100
+
+## crop to europe
+map <- crop(map, extent(-33,67,30, 82))
+mat <- crop(mat, extent(-33,67,30, 82))
+mat_var <- crop(mat_var, extent(-33,67,30, 82))
+map_var <- crop(map_var, extent(-33,67,30, 82))
+
 
 # From Sandle et al 2011 - availble from datadryad
 # This raster describes the local average displacement rate of mean annual temperature since the Last Glacial Maximum. It is in units of m/yr. 
@@ -14,38 +26,76 @@ mat_var <-raster('bio4.bil') ## mean annual temp SD*100
 # Hijmans, R.J., Cameron, S.E., Parra, J.L., Jones, P.G., and Jarvis, A. 2005. 
 # Very high resolution interpolated climate surfaces for global land areas. International Journal of Climatology 25: 1965-1978
 
-vel <- raster("Velocity.tif") ## 1km resolution
+vel <- raster("Velocity.tif") ## approx 1km resolution
 ## read in the humanfootprint raster
-hf <- raster("Data_wildareas-v3-2009-human-footprint.tif") ## 1km resolution
+hf <- raster("Data_wildareas-v3-2009-human-footprint.tif") ## approx 1km resolution
 
+## harmonise projections ---------------
 ## get data into same crs at approx 1km spatial resolution
-vel2 <- projectRaster(vel, crs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") ## bioclim crs
-vel3 <- crop(vel2, extent(-33,67,30, 82))
-hf3 <- projectRaster(hf, vel3)
+# vel2 <- projectRaster(vel, crs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") ## bioclim crs
+# vel3 <- crop(vel2, extent(-33,67,30, 82))
+hf2 <- projectRaster(hf, mat)
+vel2 <- projectRaster(vel, mat)
 
 ## make climate variables into one object (raster brick)
 clim_map <- brick(map, mat, map_var, mat_var) 
-clim_map <- projectRaster(clim_map, vel3)
-plot(clim_map) ## 1km res
+
+# par(mfrow=c(1,2))
+# plot(vel2)
+# plot(hf2)
+# plot(clim_map)
+
+
+## get occurrence data --------------
+endem <- read.delim2("AFE_endemics.txt")
+endem <- endem[, which(names(endem) %in% c("afe", "lon", "lat"))]
+endem$lon <- as.numeric(as.character(endem$lon))
+endem$lat <- as.numeric(as.character(endem$lat))
+endem$afe <- gsub(" ssp.*", "", endem$afe)
+endem$afe <- gsub(" ssp.*", "", endem$afe)
+endem$afe <- gsub(" s.lat.", "", endem$afe)
+endem$afe <- gsub(" s.str.", "", endem$afe)
+endem$afe <- gsub("coll.", "coll", endem$afe)
+endem$afe[endem$afe == "Saxifraga osloënsis"] <- "Saxifraga osloensis"
+endem$afe <- as.character(endem$afe)
+endem$afe[endem$afe == "Arabis collna"] <- "Arabis collina"
+endem$afe[endem$afe == "Dianthus collnus"] <- "Dianthus collinus"
+names(endem) <- c("species", "y", "x") 
+sp <- endem ## 735 unique species
+
+# sp$species <- factor(sp$species)
+# levels(sp$species) <- gsub(" ", "_", levels(sp$species))
+# setdiff(sp$species, metrics$species)
+
+sp <- sp[, c("species", "x", "y")] ## 735 unique species
+
+## make dataframe with just the lat and long co-ordinates of data that is relevant to my analysis
+sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
+
+## #extract climate values for coordinates in (full) dataset --------------
+full_clim <- data.frame(raster::extract(clim_map,sp_co)) 
+## create dataset with both climate values and co-ordinates of the values
+full_clim <- cbind(full_clim,sp)
+env <- unique(full_clim)
+names(env) <- c("map", "mat", "map_var", "mat_var", "species", "Longitude", "Latitude") 
+env <- drop_na(env)
+env$species <- gsub(" ", "_", env$species)
+#saveRDS(env, "Data_occurences_climate_values.rds")
+env <- env[, which(names(env) %in% c("map", "mat", "map_var", "mat_var", "Longitude", "Latitude") )]
+
 
 ## current vs historic calc.
-v <- raster::extract(vel)
-mat_var <- raster::extract(mat_var)
-current_historic <- brick(vel,mat_var)
-current_historic <- drop_na(data.frame(raster::extract(current_historic,sp_co))) 
-cor(scale(current_historic$Velocity), scale(current_historic$bio4))
-plot(scale(current_historic$bio4), scale(current_historic$Velocity))
-
-x <- lm(scale(log(current_historic$Velocity)) ~ scale(log(current_historic$bio4)))
-summary(x)
-
-par(mfrow = c(1,2))
-hist(log(current_historic$Velocity))
-hist(log(current_historic$bio4))
-
-plot(mat)
-#mat <- projectRaster(mat, crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-
+# current_historic <- brick(vel2,mat_var)
+# current_historic <- drop_na(data.frame(raster::extract(current_historic,sp_co))) 
+# cor(scale(current_historic$Velocity), scale(current_historic$bio4))
+# plot(scale(current_historic$wc2.1_30s_bio_4), scale(current_historic$Velocity))
+# 
+# x <- lm(scale(log(current_historic$Velocity)) ~ scale(log(current_historic$wc2.1_30s_bio_4)))
+# summary(x)
+# 
+# par(mfrow = c(1,2))
+# hist(log(current_historic$Velocity))
+# hist(log(current_historic$wc2.1_30s_bio_4))
 
 
 grid <- shapefile("AFEcells/cgrs_grid.shp")
@@ -58,19 +108,6 @@ rr <- rasterize(grid, rr)
 ## Plot raster
 plot(rr)
 
-## get occurrence data
-env <- readRDS("Data_occurences_cliamte_values.rds")
-env$species <- gsub(" ", "_", env$species)
-
-# patch <- shapefile("AFEcells/cgrs_grid.shp")
-# o <- shapefile("AFEcells/crgs_AFEocc.shp")
-# plot(patch)
-# plot(o)
-# 
-# or <- rasterize(o, mat)
-# plot(or)
-# eu_10k <- shapefile("grid_eu25_etrs_laea_10k/grid_eu25_etrs_laea_10k.shp")
-# plot(eu_10k)
 
 ## make dataframe with just the lat and long co-ordinates of data that is relevant to my analysis
 sp <- unique(env[, c("species", "Longitude", "Latitude")]) ## 735 unique species
@@ -80,17 +117,9 @@ names(sp_co) <- c("x", "y")
 
 par(mfrow = c(1,1))
 plot(mat)
-# sp_co$y <- sp_co$y*100000
-# sp_co$x <- sp_co$x*100000
 points(sp_co$x, sp_co$y, type = "p", col = "black", lwd = 0.1)
 
-
-# fidy <- raster(xmn = -30, xmx = 66, 
-#                ymn = 35, ymx = 75, 
-#                vals = 1, 
-#                resolution = 0.083333333, 
-#                crs = "+proj=longlat +datum=WGS84 +no_defs +towgs84=0,0,0 +units=m")
-
+## pause ------------
 
 ## Map human footprint data
 pal <- colorRampPalette(c('#0C276C', '#3B9088', '#EEFF00', '#ffffff'))

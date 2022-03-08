@@ -39,6 +39,14 @@ metrics <- read.csv("GRSmetrics_AFE_pol_50km_pol_line_mcp.csv") ## metrics provi
 metrics <- metrics[metrics$Model == "Occurrence",]
 metrics$Species <- gsub(" ssp.*", "", metrics$Species) ## remove subspecies (for now). 701 unique species
 metrics$Species <- gsub("[[:space:]]*$", "", metrics$Species) ## remove subspecies (for now). 701 unique species
+small <- c(" s.lat.", " s.str.")
+metrics$Species <- gsub(paste(small, collapse="|"), "", metrics$Species) 
+metrics$Species <- gsub("//.", "", metrics$Species) 
+
+# Quercus petraea.
+# Ranunculus montanus.
+# Pinus uncinata.
+
 metrics <- unique(metrics) # 810 obs of 42 vars
 metrics <- unique(metrics[, which(names(metrics) %in% c("Species", "total.area", "range.size", "effective.mesh.size", 
                                                         "mean.shape.index", "prop.landscape", "perimeter.area.frac.dim"))])
@@ -57,7 +65,7 @@ for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("Geogr
 for (i in names(Filter(is.numeric, metrics))) {
         metrics[, i] <- c(scale(metrics[,i]))
         }
-length(unique(metrics$species)) ## 693 unique species
+length(unique(metrics$species)) ## 691 unique species
 ```
 
 ```{r}
@@ -76,11 +84,11 @@ if(!exists("clean_tree")) {
   try(clean_tree <- read.tree("Data_str_clean_tree.tre"))
   } else source("01_clean_phylogeny.R")
 
-## 655 species with metrics and phylogeny March 2022
+## 651 species with metrics and phylogeny March 2022
 ```
 
 
-## 4. metric ~ humanfootprint
+## get current climate, humanfootprint and climate change velocity
 ```{r}
 #source("08a_str_get_hf_ratio.R")
 #source("08b_str_humanfootprint_analysis.R")
