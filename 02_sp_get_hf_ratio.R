@@ -58,11 +58,11 @@
 # print("climate data loaded")
 # 
 # # From Sandle et al 2011 - availble from datadryad
-# # This raster describes the local average displacement rate of mean annual temperature since the Last Glacial Maximum. It is in units of m/yr. 
-# # It is derived from the WorldClim (http://www.worldclim.org/, Hijmans et al. 2005) modern climate data, 
+# # This raster describes the local average displacement rate of mean annual temperature since the Last Glacial Maximum. It is in units of m/yr.
+# # It is derived from the WorldClim (http://www.worldclim.org/, Hijmans et al. 2005) modern climate data,
 # # and the PMIPII (http://pmip2.lsce.ipsl.fr/) paleoclimate data for the CCSM3 and MIROC3.2 climate models.
 # # References
-# # Hijmans, R.J., Cameron, S.E., Parra, J.L., Jones, P.G., and Jarvis, A. 2005. 
+# # Hijmans, R.J., Cameron, S.E., Parra, J.L., Jones, P.G., and Jarvis, A. 2005.
 # # Very high resolution interpolated climate surfaces for global land areas. International Journal of Climatology 25: 1965-1978
 # 
 # vel <- raster("Velocity.tif") ## approx 1km resolution
@@ -83,7 +83,7 @@
 # print("vel and hf reprojected")
 # 
 # ## make climate variables into one object (raster brick)
-# clim_map <- brick(map, mat, map_var, mat_var) 
+# clim_map <- brick(map, mat, map_var, mat_var)
 # gc()
 # 
 # saveRDS(vel, "Data_1km_EU_vel.rds")
@@ -99,33 +99,33 @@ clim_map <- readRDS("Data_1km_EU_clim.rds")
 # plot(hf)
 # plot(clim_map)
 
-# 
+#
 # ## get occurrence data --------------
 # endem <- read.delim2("AFE_endemics.txt")
 # endem <- endem[, which(names(endem) %in% c("afe", "lon", "lat"))]
 # endem$lon <- as.numeric(as.character(endem$lon))
 # endem$lat <- as.numeric(as.character(endem$lat)) ## 864 unique species
 # endem$afe <- gsub(" ssp.*", "", endem$afe) ## 736
-# endem$afe <- gsub(" s.lat.", "", endem$afe) 
+# endem$afe <- gsub(" s.lat.", "", endem$afe)
 # endem$afe <- gsub(" s.str.", "", endem$afe) ## 735
 # endem$afe[endem$afe == "Saxifraga osloënsis"] <- "Saxifraga osloensis"
 # endem$afe <- as.character(endem$afe)
 # endem$afe[endem$afe == "Arabis collna"] <- "Arabis collina"
 # endem$afe[endem$afe == "Dianthus collnus"] <- "Dianthus collinus"
 # endem$afe[endem$afe == "Salix repens coll."] <- "Salix repens"
-# 
+#
 # names(endem) <- c("species", "y", "x")
 # sp <- unique(endem) ## 734 unique species
-# 
+#
 # # sp$species <- factor(sp$species)
 # # levels(sp$species) <- gsub(" ", "_", levels(sp$species))
 # # x <-  as.data.frame(setdiff(sp$species, metrics$species)) ## 44 species for which we have not metrics data
-# 
+#
 # sp <- sp[, c("species", "x", "y")] ## 734 unique species
-# 
+#
 # ## make dataframe with just the lat and long co-ordinates of data that is relevant to my analysis
 # sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
-# 
+#
 # ## #extract climate values for coordinates in (full) dataset --------------
 # full_clim <- data.frame(raster::extract(clim_map,sp_co))
 # ## create dataset with both climate values and co-ordinates of the values
@@ -137,7 +137,7 @@ clim_map <- readRDS("Data_1km_EU_clim.rds")
 # env$species <- gsub(" ", "_", env$species)
 # saveRDS(env, "Data_occurences_climate_values.rds")
 
-## 0r read back in 
+## 0r read back in
 env <-readRDS("Data_occurences_climate_values.rds")
 
 
@@ -151,73 +151,101 @@ names(sp_co) <- c("x", "y")
 # plot(mat)
 # points(sp_co$x, sp_co$y, type = "p", col = "black", lwd = 0.1)
 
-grid <- shapefile("AFEcells/cgrs_grid.shp")
-
-
-rgrid_10km <- rasterize(grid, temp)
-rgrid_1km <- rasterize(grid, temp)
-plot(rgrid)
-
-## create empty template raster
-temp <- raster("bio1.bil") ## mean annual temperature (C*10)
-temp <- crop(temp, extent(-33,67,30, 82))
-temp <- calc(temp, fun=function(x){ x[x >= 0] <- 0; return(x)} )
-temp <- calc(hf, fun=function(x){ x[x >= 0] <- 0; return(x)} )
-#plot(temp, col = pal(50))
-
 sp <- sp[, c("x", "y", "species")]
 #plot(sp)
 
-save <- sp
-sp <- save
 
-sp <- sp[sp$species %in% c("Trollius_europaeus", "Salix_repens"),] ## quick check to test the timing of my loop
-length(unique(sp$species))
+## create empty template raster
+# temp <- raster("bio1.bil") ## mean annual temperature (C*10)
+# temp <- crop(temp, extent(-33,67,30, 82))
+# temp <- calc(temp, fun=function(x){ x[x >= 0] <- 0; return(x)} )
+temp <- calc(hf, fun=function(x){ x[x >= 0] <- 0; return(x)} )
+#plot(temp, col = pal(50))
+
+## read in AFE grid
+grid <- shapefile("AFEcells/cgrs_grid.shp")
 
 
-poly_list <- over(SpatialPolygons(grid@polygons), SpatialPoints(sp2))
+if(exists("Data_ratios_dataframe.rds")) {
+    rat <- readRDS("Data_ratios_dataframe.rds")
+    } else rat <- as.data.frame(unique(sp$species))
 
-poly_occ <- grid[which(!is.na(poly_list)),]
-#plot(poly_occ)
+names(rat) <- "species"
+saveRDS(rat, "Data_ratios_dataframe.rds")
 
-x <- rasterize(poly_occ, temp, field = 1)
-plot(x)
+# sp <- sp[sp$species %in% c("Salix_repens"),] ## quick check to test the timing of my loop
+# length(unique(sp$species))
+
+
 
 ## create occurrence rasters for each species, based on AFE irregular 50km2 occurrence grid, rasterised onto approx 1km2 regular raster
 rast_list <- list()
-Sys.time()
+print(Sys.time())
 for (i in unique(sp$species)){
   s <- sp[sp$species == i,]
   print(i)
   sp2 <- SpatialPointsDataFrame(s[,c("x", "y")],
                                 as.data.frame(s[,3]),
-                                proj4string =  temp@crs) 
+                                proj4string =  temp@crs)
+  print("get polygons")
   poly_list <- over(SpatialPolygons(grid@polygons), SpatialPoints(sp2))
-  poly_occ <- grid[which(!is.na(poly_list)),]
-  rast <- rasterize(poly_occ, temp, field = 1)
-  
   gc()
-  
+  print("subset grid")
+  poly_occ <- grid[which(!is.na(poly_list)),]
+  gc()
+  print("rasterise occurrence")
+  rast <- rasterize(poly_occ, temp, field = 1)
+
+  gc()
+
   writeRaster(rast, paste("occ_rasters/occ", i, ".tif", sep = ""))
-  Sys.sleep(60)
-}
-Sys.time()
-gc()
+  print("occurrence raster saved")
+  gc()
 
-## #extract hf and climate values for coordinates in dataset
+# }
+# Sys.time() length(list.files("occ_rasters/"))
+# gc()
 
-## obtain values for each 
-for (i in unique(sp$species)){
-  rast <- raster(paste("occ_rasters/occ", i, ".tif", sep = ""))
-  all <- brick(hf, vel, temp, rast, clim_map)
+## extract hf and climate values for coordinates in dataset
+
+## obtain values for each
+# for (i in unique(sp$species)){
+#   rast <- raster(paste("occ_rasters/occ", i, ".tif", sep = ""))
+  # all <- brick(hf, vel, temp, rast, clim_map)
+  # print("raster bricked")
+  # gc()
+  # rast_data <- as.data.frame(all, xy = T)
+  # print("values extracted")
+  # colnames(rast_data)[which(names(rast_data) %in% 
+  #                             c("x", "y", "layer.1", "Velocity", "layer.2", "layer.3",
+  #                               "wc2.1_30s_bio_12", "wc2.1_30s_bio_1", "wc2.1_30s_bio_15", "wc2.1_30s_bio_4"))] <- 
+  #   c("x", "y", "hf", "Velocity", "template", paste(i), 
+  #     "map", "mat","map_var","mat_var")
   
-  rast_data <- as.data.frame(all, xy = T)
-  
-  ratio_data <- readRDS("ratio_data.rds")
-  ratio_data <- merge(ratio_data, rast_data, by.x = "Best_guess_binomial", by.y = "AccSpeciesName", all.x = TRUE)
+  ## check is this right....
+ # # for (i in names(rast_data)[which(names(rast_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))]){
+  ##   rast_data[,i][which(is.na(rast_data[,i]))] <- 0
+  ## }
+  # rast_data[,i][which(is.na(rast_data[i]))] <- 0
+  # 
+  # print("getting ratios")
+  # rat$hf_mean[rat$species == i] <- mean(rast_data$hf[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
+  # rat$vel_mean[rat$species == i] <- mean(rast_data$Velocity[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
+  # rat$mat_mean[rat$species == i] <- mean(rast_data$mat[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
+  # rat$mat_var_mean[rat$species == i] <- mean(rast_data$mat_var[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
+  # rat$map_mean[rat$species == i] <- mean(rast_data$map[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
+  # rat$map_var_mean[rat$species == i] <- mean(rast_data$map_var[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
+  # 
+  # print("got ratios")
+  # 
+  # saveRDS(rat, "Data_ratios_dataframe.rds")
+
 }
 
-rast <- x
+
+
+
+
 
 ## used to use this lovely piece of code to brick the rasters (then stored in a list) back when they
 ## were only at a 10km2 resolution. That list would be MASSIVE now, so saving then reading them in now
@@ -229,15 +257,18 @@ rast <- x
 
 print(end)
 
-## #extract hf and climate values for coordinates in dataset
-ratio_data <- as.data.frame(all, xy = T)
-colnames(ratio_data)[which(names(ratio_data) %in% c("bio1", "bio4", "bio12", "bio15"))] <- c("mat", "mat_var", "map", "map_var")
 
-for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))]){
-  ratio_data[,i][which(is.na(ratio_data[,i]))] <- 0
-}
 
-f <- ratio_data
+
+# ## #extract hf and climate values for coordinates in dataset
+# ratio_data <- as.data.frame(all, xy = T)
+# colnames(ratio_data)[which(names(ratio_data) %in% c("bio1", "bio4", "bio12", "bio15"))] <- c("mat", "mat_var", "map", "map_var")
+# 
+# for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))]){
+#   ratio_data[,i][which(is.na(ratio_data[,i]))] <- 0
+# }
+# 
+# f <- ratio_data
 # 
 # rat <- as.data.frame(names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))])
 # names(rat) <- "species"
@@ -289,10 +320,10 @@ f <- ratio_data
 # hist(rat$mat_var_mean, breaks = 100)
 # hist(rat$map_mean, breaks = 100)
 # hist(rat$map_var_mean, breaks = 100)
-# 
-# 
-# #saveRDS(rat, "Data_occ_humanfootprint_ratio.rds")
-# #saveRDS(ranges, "Data_occ_clim_hf_value_ranges.rds")
-# 
-# 
-# 
+
+
+#saveRDS(rat, "Data_occ_humanfootprint_ratio.rds")
+#saveRDS(ranges, "Data_occ_clim_hf_value_ranges.rds")
+
+
+
