@@ -151,43 +151,93 @@ names(sp_co) <- c("x", "y")
 # plot(mat)
 # points(sp_co$x, sp_co$y, type = "p", col = "black", lwd = 0.1)
 
+grid <- shapefile("AFEcells/cgrs_grid.shp")
+
+
+rgrid_10km <- rasterize(grid, temp)
+rgrid_1km <- rasterize(grid, temp)
+plot(rgrid)
+
 ## create empty template raster
+temp <- raster("bio1.bil") ## mean annual temperature (C*10)
+temp <- crop(temp, extent(-33,67,30, 82))
+temp <- calc(temp, fun=function(x){ x[x >= 0] <- 0; return(x)} )
 temp <- calc(hf, fun=function(x){ x[x >= 0] <- 0; return(x)} )
 #plot(temp, col = pal(50))
 
 sp <- sp[, c("x", "y", "species")]
 #plot(sp)
 
+save <- sp
+sp <- save
+
+sp <- sp[sp$species %in% c("Trollius_europaeus", "Salix_repens"),] ## quick check to test the timing of my loop
+length(unique(sp$species))
+
+
+poly_list <- over(SpatialPolygons(grid@polygons), SpatialPoints(sp2))
+
+poly_occ <- grid[which(!is.na(poly_list)),]
+#plot(poly_occ)
+
+x <- rasterize(poly_occ, temp, field = 1)
+plot(x)
+
 ## create occurrence rasters for each species, based on AFE irregular 50km2 occurrence grid, rasterised onto approx 1km2 regular raster
 rast_list <- list()
+Sys.time()
 for (i in unique(sp$species)){
   s <- sp[sp$species == i,]
+  print(i)
   sp2 <- SpatialPointsDataFrame(s[,c("x", "y")],
                                 as.data.frame(s[,3]),
                                 proj4string =  temp@crs) 
+  poly_list <- over(SpatialPolygons(grid@polygons), SpatialPoints(sp2))
+  poly_occ <- grid[which(!is.na(poly_list)),]
+  rast <- rasterize(poly_occ, temp, field = 1)
+  
   gc()
+  
+  writeRaster(rast, paste("occ_rasters/occ", i, ".tif", sep = ""))
   Sys.sleep(60)
-  rast_list[i] <- rasterize(sp2, temp, field = 1)
 }
+Sys.time()
 gc()
 
-ocs <- brick(rast_list)
-gc()
-all <- brick(hf, vel, temp, ocs, clim_map)
-#plot(all)
-saveRDS(all, "all_occurrence_rasters.rds")
+## #extract hf and climate values for coordinates in dataset
+
+## obtain values for each 
+for (i in unique(sp$species)){
+  rast <- raster(paste("occ_rasters/occ", i, ".tif", sep = ""))
+  all <- brick(hf, vel, temp, rast, clim_map)
+  
+  rast_data <- as.data.frame(all, xy = T)
+  
+  ratio_data <- readRDS("ratio_data.rds")
+  ratio_data <- merge(ratio_data, rast_data, by.x = "Best_guess_binomial", by.y = "AccSpeciesName", all.x = TRUE)
+}
+
+rast <- x
+
+## used to use this lovely piece of code to brick the rasters (then stored in a list) back when they
+## were only at a 10km2 resolution. That list would be MASSIVE now, so saving then reading them in now
+# ocs <- brick(rast_list)
+# gc()
+# all <- brick(hf, vel, temp, ocs, clim_map)
+# #plot(all)
+# saveRDS(all, "all_occurrence_rasters.rds")
 
 print(end)
 
-# ## #extract hf and climate values for coordinates in dataset
-# ratio_data <- as.data.frame(all, xy = T)
-# colnames(ratio_data)[which(names(ratio_data) %in% c("bio1", "bio4", "bio12", "bio15"))] <- c("mat", "mat_var", "map", "map_var")
-# 
-# for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))]){
-#   ratio_data[,i][which(is.na(ratio_data[,i]))] <- 0
-# }
-# 
-# f <- ratio_data
+## #extract hf and climate values for coordinates in dataset
+ratio_data <- as.data.frame(all, xy = T)
+colnames(ratio_data)[which(names(ratio_data) %in% c("bio1", "bio4", "bio12", "bio15"))] <- c("mat", "mat_var", "map", "map_var")
+
+for (i in names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))]){
+  ratio_data[,i][which(is.na(ratio_data[,i]))] <- 0
+}
+
+f <- ratio_data
 # 
 # rat <- as.data.frame(names(ratio_data)[which(names(ratio_data) %nin% c("x", "y", "layer.1", "layer.2", "mat", "mat_var", "map", "map_var"))])
 # names(rat) <- "species"
