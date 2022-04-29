@@ -31,11 +31,11 @@ clean_tree <- nnls.tree(cophenetic(clean_tree),clean_tree,rooted=TRUE)
 ## "RSS: 0.574181455739743"
 
 #### check trees similarity this should equal 1
-tips<-clean_tree$tip.label
+tips <- clean_tree$tip.label
 cor(as.vector(cophenetic(clean_tree)[tips,tips]),
     as.vector(cophenetic(clean_tree)[tips,tips]))
 ### 1
-clean_tips <- as.character(clean_tree$tip.label) ## 568 species on the first go round
+clean_tips <- as.character(clean_tree$tip.label) ## 570 species on the first go round
 
 ##
 ## add other species from our data set that have genus matches in the tree
@@ -60,7 +60,7 @@ clean_tree$node.label <- c(1:length(clean_tree$node.label))
 ## make tree ultrametric
 clean_tree <- nnls.tree(cophenetic(clean_tree),clean_tree,rooted=TRUE)
 
-clean_tips <- as.character(clean_tree$tip.label) ## 651 species after matching species by genera
+clean_tips <- as.character(clean_tree$tip.label) ## 653 species after matching species by genera
 
 ## save
 write.tree(clean_tree, file = "Data_sp_clean_tree.tre")
