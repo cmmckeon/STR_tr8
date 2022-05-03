@@ -1,7 +1,6 @@
-# setwd("/Users/macbookpro/Library/CloudStorage/OneDrive-Personal/PhD/spatialpattern_climate_humanfootprint")
-# source("00_sp_functions.R")
-# source("03_ratios_script.R")
+## 02_remote_a_load_data.R
 
+print("loading metrics")
 
 # temporary --------------- for sourcing script
 metrics <- read.csv("GRSmetrics_AFE_pol_50km_pol_line_mcp.csv") ## metrics provided by Anna Csergo in Spring 2022. 4260 obs of 42 vars
@@ -12,6 +11,10 @@ metrics$Species <- gsub("[[:space:]]*$", "", metrics$Species) ##  692 unique spe
 small <- c(" s.lat.", " s.str.")
 metrics$Species <- gsub(paste(small, collapse="|"), "", metrics$Species) ## 691
 metrics$Species <- gsub("//.", "", metrics$Species) 
+
+# Quercus petraea.
+# Ranunculus montanus.
+# Pinus uncinata.
 
 metrics <- unique(metrics) # 805 obs of 42 vars
 metrics <- unique(metrics[, which(names(metrics) %in% c("Species", "total.area", "range.size", "effective.mesh.size", 
@@ -38,13 +41,19 @@ length(unique(metrics$species)) ## 690 unique species
 metrics$species <- factor(metrics$species)
 levels(metrics$species) <- gsub(" ", "_", levels(metrics$species))
 
+print("metrics loaded")
+
+## load environmental data ----------------
+print("load hf, vel and clim_map 1km rasters")
 vel <- readRDS("Data_1km_EU_vel.rds")
 hf <- readRDS("Data_1km_EU_hf.rds")
 clim_map <- readRDS("Data_1km_EU_clim.rds")
 
-## 0r read back in
-env <-readRDS("Data_occurences_climate_values.rds")
+## create empty template raster
+temp <- calc(hf, fun=function(x){ x[x >= 0] <- 0; return(x)} )
 
+print("load AFE occurrences")
+env <-readRDS("Data_occurences_climate_values.rds")
 
 ## make dataframe with just the lat and long co-ordinates of data that is relevant to my analysis
 sp <- unique(env[, c("species", "Longitude", "Latitude")]) ## 735 unique species
@@ -52,64 +61,17 @@ names(sp) <- c("species", "x", "y")
 sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
 names(sp_co) <- c("x", "y")
 
+clean_tips <- readRDS("clean_tips_653.rds")
+sp <- sp[sp$species %in% clean_tips,]
+
 sp <- sp[, c("x", "y", "species")]
-sp <- sp[order(sp$species, decreasing = FALSE),]
-#plot(sp)
 
-
-## create empty template raster
-temp <- calc(hf, fun=function(x){ x[x >= 0] <- 0; return(x)} )
-
+sp <- sp[order(sp$species, decreasing = TRUE),]
 
 ## read in AFE grid
 grid <- shapefile("AFEcells/cgrs_grid.shp")
 
-## extract hf and climate values for coordinates in dataset
-
+## read in existing dataframe
 rat <- readRDS("Data_ratios_dataframe.rds")
 
-## obtain values for each
-# for (i in unique(sp$species[sp$species %in% rat$species[which(is.na(rat$hf_mean))]])){
-
-print(Sys.time())
-for (i in unique(sp$species)){
-  
-  if(file.exists(paste("occ_rasters/occ", i, ".tif", sep = ""))) {
-    if(i %in% rat$species[which(is.na(rat$hf_mean))]){
-      print(i)
-    
-    rast <- raster(paste("occ_rasters/occ", i, ".tif", sep = ""))
-    print("bricking raster")
-    all <- brick(hf, vel, temp, rast, clim_map)
-    print("raster bricked")
-    gc()
-    rast_data <- as.data.frame(all, xy = T)
-    print("values extracted")
-    names(rast_data) <- c("x", "y", "hf", "Velocity", "template", paste(i),
-                          "map", "mat","map_var","mat_var")
-    rast_data[,i][which(is.na(rast_data[i]))] <- 0
-    
-    print("getting ratios")
-    rat$hf_mean[rat$species == i] <- mean(rast_data$hf[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
-    rat$vel_mean[rat$species == i] <- mean(rast_data$Velocity[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
-    rat$mat_mean[rat$species == i] <- mean(rast_data$mat[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
-    rat$mat_var_mean[rat$species == i] <- mean(rast_data$mat_var[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
-    rat$map_mean[rat$species == i] <- mean(rast_data$map[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
-    rat$map_var_mean[rat$species == i] <- mean(rast_data$map_var[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
-    
-    print("got ratios")
-    
-    saveRDS(rat, "Data_ratios_dataframe.rds") 
-    rat <- readRDS("Data_ratios_dataframe.rds")}
-  
-}}
-
-
-print(end)
-
-
-
-
-
-
-
+print("end 02_remote_a_load_hf_vel_clim.R")

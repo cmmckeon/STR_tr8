@@ -38,9 +38,8 @@ length(unique(metrics$species)) ## 690 unique species
 metrics$species <- factor(metrics$species)
 levels(metrics$species) <- gsub(" ", "_", levels(metrics$species))
 
-vel <- readRDS("Data_1km_EU_vel.rds")
 hf <- readRDS("Data_1km_EU_hf.rds")
-clim_map <- readRDS("Data_1km_EU_clim.rds")
+
 
 ## 0r read back in
 env <-readRDS("Data_occurences_climate_values.rds")
@@ -52,6 +51,10 @@ names(sp) <- c("species", "x", "y")
 sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
 names(sp_co) <- c("x", "y")
 
+clean_tips <- readRDS("clean_tips_653.rds")
+
+sp <- sp[sp$species %in% clean_tips,]
+
 sp <- sp[, c("x", "y", "species")]
 sp <- sp[order(sp$species, decreasing = FALSE),]
 #plot(sp)
@@ -61,53 +64,56 @@ sp <- sp[order(sp$species, decreasing = FALSE),]
 temp <- calc(hf, fun=function(x){ x[x >= 0] <- 0; return(x)} )
 
 
-## read in AFE grid
-grid <- shapefile("AFEcells/cgrs_grid.shp")
+# if(file.exists("Data_ratios_dataframe.rds")) {
+rat <- readRDS("Data_ratios_hf.rds")
+
+# rat <- rat[rat$species %in% clean_tips,]
+# #setdiff(clean_tips, rat$species)
+# } else rat <- as.data.frame(unique(sp$species))
+# 
+# rat$hf_mean <- rep(NA, length(rat$species))
+# rat$vel_mean <- NA
+# rat$mat_mean <- NA
+# rat$mat_var_mean <- NA
+# rat$map_mean <- NA
+# rat$map_var_mean <- NA
+
+# rat <- as.data.frame(t(c("species", "hf_mean", "vel_mean", "mat_mean", "mat_var_mean", "map_mean", "map_var_mean")))
+# names(rat) <- c("species", "hf_mean", "vel_mean", "mat_mean", "mat_var_mean", "map_mean", "map_var_mean")
+# rat <- rat[0,1:7]
+
+print("as far as loop")
 
 ## extract hf and climate values for coordinates in dataset
 
-rat <- readRDS("Data_ratios_dataframe.rds")
-
 ## obtain values for each
-# for (i in unique(sp$species[sp$species %in% rat$species[which(is.na(rat$hf_mean))]])){
-
 print(Sys.time())
 for (i in unique(sp$species)){
   
   if(file.exists(paste("occ_rasters/occ", i, ".tif", sep = ""))) {
     if(i %in% rat$species[which(is.na(rat$hf_mean))]){
       print(i)
-    
-    rast <- raster(paste("occ_rasters/occ", i, ".tif", sep = ""))
-    print("bricking raster")
-    all <- brick(hf, vel, temp, rast, clim_map)
-    print("raster bricked")
-    gc()
-    rast_data <- as.data.frame(all, xy = T)
-    print("values extracted")
-    names(rast_data) <- c("x", "y", "hf", "Velocity", "template", paste(i),
-                          "map", "mat","map_var","mat_var")
-    rast_data[,i][which(is.na(rast_data[i]))] <- 0
-    
-    print("getting ratios")
-    rat$hf_mean[rat$species == i] <- mean(rast_data$hf[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
-    rat$vel_mean[rat$species == i] <- mean(rast_data$Velocity[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
-    rat$mat_mean[rat$species == i] <- mean(rast_data$mat[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
-    rat$mat_var_mean[rat$species == i] <- mean(rast_data$mat_var[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
-    rat$map_mean[rat$species == i] <- mean(rast_data$map[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
-    rat$map_var_mean[rat$species == i] <- mean(rast_data$map_var[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
-    
-    print("got ratios")
-    
-    saveRDS(rat, "Data_ratios_dataframe.rds") 
-    rat <- readRDS("Data_ratios_dataframe.rds")}
-  
-}}
+      
+      rast <- raster(paste("occ_rasters/occ", i, ".tif", sep = ""))
+      print("bricking raster")
+      all <- brick(hf, temp, rast)
+      print("raster bricked")
+      gc()
+      rast_data <- as.data.frame(all, xy = T)
+      print("values extracted")
+      names(rast_data) <- c("x", "y", "hf", "template", paste(i))
+      rast_data[,i][which(is.na(rast_data[i]))] <- 0
+      
+      print("getting ratios")
+      rat$hf_mean[rat$species == i] <- mean(rast_data$hf[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
+      
+      print("got ratios")
+      
+      saveRDS(rat, "Data_ratios_hfb.rds") 
+      rat <- readRDS("Data_ratios_hfb.rds")} } }
 
 
 print(end)
-
-
 
 
 

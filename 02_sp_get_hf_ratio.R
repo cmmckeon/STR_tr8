@@ -43,48 +43,48 @@
 
 # ## load environmental data ----------------
 # 
-# ## 1km2 resolution climate data
-# mat <- raster("wc2/wc2.1_30s_bio_1.tif") ## mean annual temperature (C*10)
-# map <- raster("wc2/wc2.1_30s_bio_12.tif") ## mean annual precipatation (mm)
-# map_var <- raster("wc2/wc2.1_30s_bio_15.tif")  ## mean annual precip coeff variation
-# mat_var <- raster("wc2/wc2.1_30s_bio_4.tif") ## mean annual temp SD*100
-# 
-# ## crop to europe
-# map <- crop(map, extent(-33,67,30, 82))
-# mat <- crop(mat, extent(-33,67,30, 82))
-# mat_var <- crop(mat_var, extent(-33,67,30, 82))
-# map_var <- crop(map_var, extent(-33,67,30, 82))
-# 
-# print("climate data loaded")
-# 
-# # From Sandle et al 2011 - availble from datadryad
-# # This raster describes the local average displacement rate of mean annual temperature since the Last Glacial Maximum. It is in units of m/yr.
-# # It is derived from the WorldClim (http://www.worldclim.org/, Hijmans et al. 2005) modern climate data,
-# # and the PMIPII (http://pmip2.lsce.ipsl.fr/) paleoclimate data for the CCSM3 and MIROC3.2 climate models.
-# # References
-# # Hijmans, R.J., Cameron, S.E., Parra, J.L., Jones, P.G., and Jarvis, A. 2005.
-# # Very high resolution interpolated climate surfaces for global land areas. International Journal of Climatology 25: 1965-1978
-# 
-# vel <- raster("Velocity.tif") ## approx 1km resolution
-# ## read in the humanfootprint raster
-# hf <- raster("Data_wildareas-v3-2009-human-footprint.tif") ## approx 1km resolution
-# hf <- calc(hf, fun=function(x){ x[x > 100] <- NA; return(x)} )
-# gc()
-# 
-# print("vel and hf loaded")
-# 
-# ## harmonise projections ---------------
-# ## get data into same crs at approx 1km spatial resolution
-# # vel2 <- projectRaster(vel, crs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") ## bioclim crs
-# # vel3 <- crop(vel2, extent(-33,67,30, 82))
-# hf <- projectRaster(hf, mat)
-# vel <- projectRaster(vel, mat)
-# 
-# print("vel and hf reprojected")
-# 
-# ## make climate variables into one object (raster brick)
-# clim_map <- brick(map, mat, map_var, mat_var)
-# gc()
+## 1km2 resolution climate data
+mat <- raster("wc2/wc2.1_30s_bio_1.tif") ## mean annual temperature (C*10)
+map <- raster("wc2/wc2.1_30s_bio_12.tif") ## mean annual precipatation (mm)
+map_var <- raster("wc2/wc2.1_30s_bio_15.tif")  ## mean annual precip coeff variation
+mat_var <- raster("wc2/wc2.1_30s_bio_4.tif") ## mean annual temp SD*100
+
+## crop to europe
+map <- crop(map, extent(-33,67,30, 82))
+mat <- crop(mat, extent(-33,67,30, 82))
+mat_var <- crop(mat_var, extent(-33,67,30, 82))
+map_var <- crop(map_var, extent(-33,67,30, 82))
+
+print("climate data loaded")
+
+# From Sandle et al 2011 - availble from datadryad
+# This raster describes the local average displacement rate of mean annual temperature since the Last Glacial Maximum. It is in units of m/yr.
+# It is derived from the WorldClim (http://www.worldclim.org/, Hijmans et al. 2005) modern climate data,
+# and the PMIPII (http://pmip2.lsce.ipsl.fr/) paleoclimate data for the CCSM3 and MIROC3.2 climate models.
+# References
+# Hijmans, R.J., Cameron, S.E., Parra, J.L., Jones, P.G., and Jarvis, A. 2005.
+# Very high resolution interpolated climate surfaces for global land areas. International Journal of Climatology 25: 1965-1978
+
+vel <- raster("Velocity.tif") ## approx 1km resolution
+## read in the humanfootprint raster
+hf <- raster("Data_wildareas-v3-2009-human-footprint.tif") ## approx 1km resolution
+hf <- calc(hf, fun=function(x){ x[x > 100] <- NA; return(x)} )
+gc()
+
+print("vel and hf loaded")
+
+## harmonise projections ---------------
+## get data into same crs at approx 1km spatial resolution
+# vel2 <- projectRaster(vel, crs = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0") ## bioclim crs
+# vel3 <- crop(vel2, extent(-33,67,30, 82))
+hf <- projectRaster(hf, mat)
+vel <- projectRaster(vel, mat)
+
+print("vel and hf reprojected")
+
+## make climate variables into one object (raster brick)
+clim_map <- brick(map, mat, map_var, mat_var)
+gc()
 # 
 # saveRDS(vel, "Data_1km_EU_vel.rds")
 # saveRDS(hf, "Data_1km_EU_hf.rds")
@@ -182,6 +182,7 @@ saveRDS(rat, "Data_ratios_dataframe.rds")
 rast_list <- list()
 print(Sys.time())
 for (i in unique(sp$species)){
+  if(!file.exists(paste("occ_rasters/occ", i, ".tif", sep = ""))) {
   s <- sp[sp$species == i,]
   print(i)
   sp2 <- SpatialPointsDataFrame(s[,c("x", "y")],
@@ -197,10 +198,11 @@ for (i in unique(sp$species)){
   rast <- rasterize(poly_occ, temp, field = 1)
 
   gc()
-
-  writeRaster(rast, paste("occ_rasters/occ", i, ".tif", sep = ""))
+  
+  if(!file.exists(paste("occ_rasters/occ", i, ".tif", sep = ""))) {
+  writeRaster(rast, paste("occ_rasters/occ", i, ".tif", sep = ""))}
   print("occurrence raster saved")
-  gc()
+  gc() }
 
 # }
 # Sys.time() length(list.files("occ_rasters/"))
