@@ -13,3 +13,13 @@ to run remotely on Mannon (<3)'s machine, the files I need are:
 - "AFEcells/cgrs_grid.shp"
 - "Data_ratios_dataframe.rds"
 
+the commands are:
+- setwd("/Users/macbookpro/Library/CloudStorage/OneDrive-Personal/PhD/spatialpattern_climate_humanfootprint")
+-  source("00_sp_functions.R")
+-  
+
+cd ~
+touch .Renviron
+open .Renviron
+
+R_MAX_VSIZE=100Gb 
