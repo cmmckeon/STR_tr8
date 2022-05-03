@@ -9,7 +9,6 @@ to run remotely on Mannon (<3)'s machine, the files I need are:
 - "Data_1km_EU_vel.rds"
 - "Data_1km_EU_hf.rds"
 - "Data_1km_EU_clim.rds"
-- "Data_occurences_climate_values.rds"
 - "clean_tips_653.rds"
 - "AFEcells/cgrs_grid.shp"
 - "Data_ratios_dataframe.rds"
