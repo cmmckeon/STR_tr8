@@ -88,6 +88,9 @@ names(sp) <- c("species", "x", "y")
 sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
 names(sp_co) <- c("x", "y")
 
+sp$species <- factor(sp$species)
+levels(sp$species) <- gsub(" ", "_", levels(sp$species))
+
 clean_tips <- readRDS("clean_tips_653.rds")
 sp <- sp[sp$species %in% clean_tips,]
 

@@ -1,6 +1,18 @@
 ## 02_remote_d_get_ratios.R
 
+# source("02_remote_d_get_ratios.R")
+
+# get these values once
+# all <- brick(hf, vel, clim_map)
+# gc()
+# val <- as.data.frame(all, xy = T)
+# names(val) <- c("x", "y", "hf", "Velocity", "map", "mat","map_var","mat_var")
+# val <- drop_na(val)
+# saveRDS(val, "Data_hf_vel_clim_map_values.rds")
+
 vals <- readRDS("Data_hf_vel_clim_map_values.rds")
+
+land_co <- vals[,1:2]
 
 print(Sys.time())
 for (i in unique(sp$species)){
@@ -14,11 +26,12 @@ for (i in unique(sp$species)){
       all <- brick(temp, rast)
       print("raster bricked")
       gc()
-      rast_data <- as.data.frame(all, xy = T)
+      rast_data  <- extract(all, land_co)
       print("values extracted")
-      names(rast_data) <- c("x", "y", "template", paste(i))
+      rast_data <- cbind(vals, rast_data)
+      names(rast_data) <- c("x", "y", "hf", "Velocity", "map", "mat", "map_var", "mat_var", "template", paste(i)) 
       rast_data[,i][which(is.na(rast_data[i]))] <- 0
-      rast_data <- merge(vals, rast_data, by = c("x", "y"))
+      
       
       print("getting ratios")
       rat$hf_mean[rat$species == i] <- mean(rast_data$hf[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
@@ -31,6 +44,8 @@ for (i in unique(sp$species)){
       print("got ratios")
       
       saveRDS(rat, "Data_ratios_dataframe.rds") 
+      rm(rat, rast, all, rast_data)
+      gc()
       rat <- readRDS("Data_ratios_dataframe.rds")} } }
 
 
