@@ -50,6 +50,19 @@ library(phytools)
 library(phangorn)
 library(ape)
 
+library(arm)
+# install.packages("lme4")
+# the verson 1.0-5
+library(lme4)
+# install.packages("MCMCglmm")
+library(MCMCglmm)
+# adding this for vectorisation
+library(tidyverse)
+library(purrr)
+# using this so everybody can read and write files easily
+library(here)
+
+
 '%nin%' = Negate('%in%')
 
 gm_mean = function(x, na.rm=TRUE, zero.propagate = FALSE){

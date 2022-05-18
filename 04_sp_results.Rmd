@@ -1,11 +1,8 @@
 ---
-title: "08c_str_humanfootprint_results"
+title: "04_sp_results"
 author: "Caroline McKeon"
-date: "7/15/2021"
-output:
-  word_document: default
-  pdf_document: default
-  html_document: default
+date: "5/18/2022"
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -57,12 +54,13 @@ mcmc_data$animal <- mcmc_data$species
 comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
 
 f <- list()
-f[["total.area"]]  <- total.area ~ mat_mean*mat_var_mean*map_mean*map_var_mean*mean
-f[["range.size"]] <- range.size ~ mat_mean*mat_var_mean*map_mean*map_var_mean*mean
-f[["effective.mesh.size"]] <-  effective.mesh.size ~mat_mean*mat_var_mean*map_mean*map_var_mean*mean
-f[["prop.landscape"]] <- prop.landscape ~ mat_mean*mat_var_mean*map_mean*map_var_mean*mean
-f[["mean.shape.index"]] <- mean.shape.index ~ mat_mean*mat_var_mean*map_mean*map_var_mean*mean  
-f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ mat_mean*mat_var_mean*map_mean*map_var_mean*mean
+f[["total.area"]]  <- total.area ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["range.size"]] <- range.size ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["effective.mesh.size"]] <-  effective.mesh.size ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["prop.landscape"]] <- prop.landscape ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["mean.shape.index"]] <- mean.shape.index ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+
 ```
 
 
@@ -93,6 +91,8 @@ for(i in r){
 ```
 
 DIC table
+
+## note that Geographic range fractality has a smaller sample size than the other models, hense the lower DIC
 ```{r}
 l <- data.frame(cbind(r, c(1:6), c(1:6), c(1:6), c(1:6)))
 l[,2] <- as.character(l[,2])
@@ -123,14 +123,14 @@ dic_table <- l
 dic_table$Delta_DIC <- 0
 
 dic_table$Delta_DIC[1:4] <- dic_table[1:4,4] - dic_table[1:4,5]
-dic_table$Delta_DIC[5] <- dic_table[5,2] - dic_table[5,5]
+dic_table$Delta_DIC[5] <- dic_table[5,5] - dic_table[5,5]
 dic_table$Delta_DIC[6] <- dic_table[6,5] - dic_table[6,5]
 
 for(i in 1:4){
 dic_table[i,4] <- paste("**", dic_table[i,4], "**", sep = "")
 }
 
-dic_table[5,2] <- paste("**", dic_table[5,2], "**", sep = "")
+dic_table[5,5] <- paste("**", dic_table[5,5], "**", sep = "")
 dic_table[6,5] <- paste("**", dic_table[6,5], "**", sep = "")
 
 for(i in 1:4){
@@ -234,10 +234,12 @@ for(i in r) {
 sum[[i]] <- as.data.frame(summary(m_metric_clim_hf[[i]][["hf"]][[1]])$solutions);
 sum[[i]] <- setDT(sum[[i]], keep.rownames = TRUE)[]
 sum[[i]] <- sum[[i]][2:6,]
-sum[[i]]$rn <- c("MAT", "MAT_var", "MAP", "MAP_var", "HF")
+sum[[i]]$rn <- c( "HF", "MAP", "MAT", "MAP_var","MAT_var")
 sum[[i]]$rn <- factor(sum[[i]]$rn,
-                      levels = c("MAP", "MAP_var", "MAT", "MAT_var", "HF"))
+                      levels = c( "MAP_var","MAT_var","MAP", "MAT",  "HF"))
 }
+
+
 
 ## woaw....
 check <- broom.mixed::tidy(m_metric_clim_hf[["total.area"]][["hf"]][[1]], effects = "fixed", conf.int = TRUE, conf.level = 0.95)
