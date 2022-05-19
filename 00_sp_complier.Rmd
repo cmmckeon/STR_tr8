@@ -108,21 +108,13 @@ for(i in names(Filter(is.numeric, rat))) {
        main = paste(i),
        xlab = paste(i))
 }
-## is these look different from previous histograms that is fine. I have check the values against the rasters and i trust that the naming is correct.
-
-
+## is these look different from previous histograms that is fine. I have check the values against the rasters and i trust that the 1km2 naming is correct.
 
 ```
 
 run analyses
 ```{r}
-for(i in names(comp_data$data[which(names(comp_data$data) %in% c("total.area", "range.size", "effective.mesh.size", "prop.landscape", 
-                                                                "mean.shape.index", "perimeter.area.frac.dim"))])) {
-  print(i)
-  # plot(f[[i]], data = comp_data$data, col = "grey", cex = 0.7, cex.lab = 1.5, cex.main = 1.8,
-  #      ylab = paste(k[[i]]), main = paste(k[[i]]), xlab = paste("nb"), bty = "n")
-  # abline(c[,1][c$rr ==i], c[,2][c$rr ==i], col = paste(colz$V2[colz$V1 ==i ]), lwd = 6)
-}
+#source("03_sp_analysis.R")
 ```
 
 
@@ -146,16 +138,6 @@ grid <- shapefile("AFEcells/cgrs_grid.shp")
 ```
 
 
-## 5. plots
-```{r}
-# m_indiv_height <- readRDS("m_indiv/m_height_phy_parexp.rds")
-# m_indiv_seed_mass <- readRDS("m_indiv/m_seed_mass_phylo_parexp.rds")
-# m_indiv_sla <- readRDS("m_indiv/m_sla_phylo_parexp.rds")
-# m_indiv_leaf_area <- readRDS("m_indiv/m_leaf_area.rds")
-# m_indiv_woodiness <- readRDS("m_indiv/m_woodiness_phlyo_parexp.rds")
-# m_indiv_lifeform <- readRDS("m_indiv/m_lifeform_phlyo_parexp.rds")
-source("09_str_plots.R")
-```
 
 
 
