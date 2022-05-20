@@ -165,7 +165,7 @@ rr <- c()
 r <- c("total.area", "range.size", "effective.mesh.size", "prop.landscape", "mean.shape.index","perimeter.area.frac.dim")
 c <- tibble("a", "b")
 for(i in r) {
-        sum <- as.data.frame(summary(m_metric_hf[[i]][["hf"]][[1]][["Sol"]])[["statistics"]]); 
+        sum <- as.data.frame(summary(m_metric[[i]][["hf"]][[1]][["Sol"]])[["statistics"]]); 
         c <- rbind(c, c(sum$Mean[1], sum$Mean[2])); 
         rr <- append(rr, paste(i))}
 c <- cbind(c[-1,], rr)

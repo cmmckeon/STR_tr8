@@ -14,7 +14,7 @@ This markdown is for the extraction, wrangling and analysis of data relating to 
 #install.packages("BIEN")
 source("00_sp_functions.R")
 knitr::opts_chunk$set(include=FALSE) 
-knitr::opts_chunk$set(fig.width=16, fig.height=10) 
+knitr::opts_chunk$set(fig.width=10, fig.height=7) 
 
 ## Quick look at model dataframe
 ## Factors
@@ -59,17 +59,6 @@ names(metrics) <- c("species","Occupied area", "Geographic range size", "Patch s
 metrics$species[grep("oslo", metrics$species, useBytes = TRUE)] <- "Saxifraga osloensis"
 metrics$species[metrics$species == "Salix repens coll."] <- "Salix repens"
 
-
-## log and scale raw data
-metrics$'Geographic range fractality' <- (metrics$'Geographic range fractality' + sqrt(min(metrics$'Geographic range fractality', na.rm = T)^2)) + 1
-for (i in names(Filter(is.numeric, metrics[, which(names(metrics) %nin% c("Geographic range filling"))]))) {
-        metrics[, i] <- c(log(metrics[,i]))
-        }
-for (i in names(Filter(is.numeric, metrics))) {
-        metrics[, i] <- c(scale(metrics[,i]))
-        }
-length(unique(metrics$species)) ## 690 unique species
-
 metrics$species <- factor(metrics$species)
 levels(metrics$species) <- gsub(" ", "_", levels(metrics$species))
 ```
@@ -87,19 +76,47 @@ for (i in names(Filter(is.numeric, metrics))) {
 Set up phylogeny
 ```{r}
 if(!exists("clean_tree")) {
-  try(clean_tree <- read.tree("Data_str_clean_tree.tre"))
+  try(clean_tree <- read.tree("Data_sp_clean_tree.tre"))
   } else source("01_clean_phylogeny.R")
 
 ## 653 species with metrics and phylogeny April 2022
 ```
 
 
-## get current climate, humanfootprint and climate change velocity
+## get current climate, humanfootprint and climate change velocity means across all species total areas
 ```{r}
-#source("02_sp_get_hf_ratio.R")
+## load base rasters and occurrence data
+#source("02_remote_a_load_hf_vel_clim.R")
 
-#source("08b_str_humanfootprint_analysis.R")
+## for all species make 1km2 resolution occurrence rasters based on the AFE irregular grids cells 
+#source("02_remote_b_make_rasters.R")
+#source("02_remote_c_make_rasters.R")
+
+## get mean values for hf, vel and climate across each species' occurrence
+#source("02_remote_d_get_ratios.R")
+
 ```
+
+have a quick look at everything
+
+```{r}
+#rat <- readRDS("Data_ratios_dataframe.rds")
+
+for(i in names(Filter(is.numeric, rat))) {
+  hist(rat[,i],
+       breaks = 50,
+       main = paste(i),
+       xlab = paste(i))
+}
+## is these look different from previous histograms that is fine. I have check the values against the rasters and i trust that the 1km2 naming is correct.
+
+```
+
+run analyses
+```{r}
+#source("03_sp_analysis.R")
+```
+
 
 ```{r}
 # current vs historic calc.
@@ -121,16 +138,6 @@ grid <- shapefile("AFEcells/cgrs_grid.shp")
 ```
 
 
-## 5. plots
-```{r}
-# m_indiv_height <- readRDS("m_indiv/m_height_phy_parexp.rds")
-# m_indiv_seed_mass <- readRDS("m_indiv/m_seed_mass_phylo_parexp.rds")
-# m_indiv_sla <- readRDS("m_indiv/m_sla_phylo_parexp.rds")
-# m_indiv_leaf_area <- readRDS("m_indiv/m_leaf_area.rds")
-# m_indiv_woodiness <- readRDS("m_indiv/m_woodiness_phlyo_parexp.rds")
-# m_indiv_lifeform <- readRDS("m_indiv/m_lifeform_phlyo_parexp.rds")
-source("09_str_plots.R")
-```
 
 
 

@@ -8,7 +8,7 @@
 
 print("loading metrics")
 
-# temporary --------------- for sourcing script
+# if sourcing script --------------- 
 metrics <- read.csv("GRSmetrics_AFE_pol_50km_pol_line_mcp.csv") ## metrics provided by Anna Csergo in Spring 2022. 4260 obs of 42 vars
 metrics <- metrics[metrics$Model == "Occurrence",] ## 810 species
 metrics <- metrics[which(!is.na(metrics$Species)),]  ## 809 species
@@ -54,13 +54,13 @@ print("metrics loaded")
 # map <- raster("wc2/wc2.1_30s_bio_12.tif") ## mean annual precipatation (mm)
 # map_var <- raster("wc2/wc2.1_30s_bio_15.tif")  ## mean annual precip coeff variation
 # mat_var <- raster("wc2/wc2.1_30s_bio_4.tif") ## mean annual temp SD*100
-# 
-# ## crop to europe
+
+## crop to europe
 # map <- crop(map, extent(-33,67,30, 82))
 # mat <- crop(mat, extent(-33,67,30, 82))
 # mat_var <- crop(mat_var, extent(-33,67,30, 82))
 # map_var <- crop(map_var, extent(-33,67,30, 82))
-# 
+
 # print("climate data loaded")
 # 
 # vel <- raster("Velocity.tif") ## approx 1km resolution
