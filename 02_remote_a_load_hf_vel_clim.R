@@ -50,16 +50,16 @@ levels(metrics$species) <- gsub(" ", "_", levels(metrics$species))
 print("metrics loaded")
 
 ## load environmental data ----------------
-# mat <- raster("wc2/wc2.1_30s_bio_1.tif") ## mean annual temperature (C*10)
-# map <- raster("wc2/wc2.1_30s_bio_12.tif") ## mean annual precipatation (mm)
-# map_var <- raster("wc2/wc2.1_30s_bio_15.tif")  ## mean annual precip coeff variation
-# mat_var <- raster("wc2/wc2.1_30s_bio_4.tif") ## mean annual temp SD*100
+mat <- raster("wc2/wc2.1_30s_bio_1.tif") ## mean annual temperature (C*10)
+map <- raster("wc2/wc2.1_30s_bio_12.tif") ## mean annual precipatation (mm)
+map_var <- raster("wc2/wc2.1_30s_bio_15.tif")  ## mean annual precip coeff variation
+mat_var <- raster("wc2/wc2.1_30s_bio_4.tif") ## mean annual temp SD*100
 
-## crop to europe
-# map <- crop(map, extent(-33,67,30, 82))
-# mat <- crop(mat, extent(-33,67,30, 82))
-# mat_var <- crop(mat_var, extent(-33,67,30, 82))
-# map_var <- crop(map_var, extent(-33,67,30, 82))
+# crop to europe
+map <- crop(map, extent(-33,67,30, 82))
+mat <- crop(mat, extent(-33,67,30, 82))
+mat_var <- crop(mat_var, extent(-33,67,30, 82))
+map_var <- crop(map_var, extent(-33,67,30, 82))
 
 # print("climate data loaded")
 # 
@@ -79,13 +79,13 @@ print("metrics loaded")
 # print("vel and hf reprojected")
 # 
 # ## make climate variables into one object (raster brick)
-# clim_map <- brick(map, mat, map_var, mat_var)
+ clim_map <- brick(map, mat, map_var, mat_var)
 # gc()
 
 # or read back in
 vel <- readRDS("Data_1km_EU_vel.rds")
 hf <- readRDS("Data_1km_EU_hf.rds")
-clim_map <- readRDS("Data_1km_EU_clim.rds")
+#clim_map <- readRDS("Data_1km_EU_clim.rds")
 
 ## create empty template raster
 temp <- calc(hf, fun=function(x){ x[x >= 0] <- 0; return(x)} )

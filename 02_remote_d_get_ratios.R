@@ -43,10 +43,11 @@ for (i in unique(sp$species)){
       
       print("got ratios")
       
-      saveRDS(rat, "Data_ratios_dataframe.rds") 
+      saveRDS(rat, "Data_ratios_dataframe.rds")
       rm(rat, rast, all, rast_data)
       gc()
-      rat <- readRDS("Data_ratios_dataframe.rds")} } }
+      rat <- readRDS("Data_ratios_dataframe.rds")
+      } } }
 
 
 print("end")
