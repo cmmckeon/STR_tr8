@@ -1,7 +1,7 @@
 ## 03d_sp_sourceable_map_analysis
 
 # setwd("/Users/macbookpro/Library/CloudStorage/OneDrive-Personal/PhD/spatialpattern_climate_humanfootprint")
-# source("03d_sourceable_map_analysis.R")
+# source("03e_sourceable_map_analysis.R")
 
 print("sourcing map models script")
 
@@ -40,12 +40,12 @@ print(c("effect size will be:", eff_ss))
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- total.area ~ map
-f[["range.size"]] <- range.size ~ map
-f[["effective.mesh.size"]] <-  effective.mesh.size ~ map
-f[["prop.landscape"]] <- prop.landscape ~ map
-f[["mean.shape.index"]] <- mean.shape.index ~ map
-f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ map
+f[["total.area"]]  <- total.area ~ map_mean
+f[["range.size"]] <- range.size ~ map_mean
+f[["effective.mesh.size"]] <-  effective.mesh.size ~ map_mean
+f[["prop.landscape"]] <- prop.landscape ~ map_mean
+f[["mean.shape.index"]] <- mean.shape.index ~ map_mean
+f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ map_mean
 
 
 

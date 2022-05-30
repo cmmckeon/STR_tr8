@@ -55,6 +55,8 @@ map <- raster("wc2/wc2.1_30s_bio_12.tif") ## mean annual precipatation (mm)
 map_var <- raster("wc2/wc2.1_30s_bio_15.tif")  ## mean annual precip coeff variation
 mat_var <- raster("wc2/wc2.1_30s_bio_4.tif") ## mean annual temp SD*100
 
+gc()
+
 # crop to europe
 map <- crop(map, extent(-33,67,30, 82))
 mat <- crop(mat, extent(-33,67,30, 82))
@@ -79,8 +81,11 @@ map_var <- crop(map_var, extent(-33,67,30, 82))
 # print("vel and hf reprojected")
 # 
 # ## make climate variables into one object (raster brick)
- clim_map <- brick(map, mat, map_var, mat_var)
-# gc()
+ clim_map <- brick(map, mat, map_var, mat_var) 
+gc()
+clim_map <- readAll(clim_map)
+saveRDS(clim_map, "Data_1km_EU_clim_map.rds")
+gc()
 
 # or read back in
 vel <- readRDS("Data_1km_EU_vel.rds")
@@ -109,10 +114,13 @@ sp <- sp[, c("x", "y", "species")]
 
 sp <- sp[order(sp$species, decreasing = TRUE),]
 
+gc()
+
 ## read in AFE grid
 grid <- shapefile("AFEcells/cgrs_grid.shp")
 
 ## read in existing dataframe
 rat <- readRDS("Data_ratios_dataframe.rds")
+gc()
 
 print("end 02_remote_a_load_hf_vel_clim.R")

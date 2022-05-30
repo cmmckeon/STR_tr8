@@ -10,8 +10,8 @@ This markdown is for the extraction, wrangling and analysis of data relating to 
 # Set up
 ```{r setup, include=FALSE}
 #install.packages(c("tidyverse", "glmmTMB"))
-#install.packages("RPostgreSQL", type="source")
-#install.packages("BIEN")
+#install.packages("RPostgreSQL", type="source") 
+#install.packages("BIEN") 
 source("00_sp_functions.R")
 knitr::opts_chunk$set(include=FALSE) 
 knitr::opts_chunk$set(fig.width=10, fig.height=7) 
@@ -100,7 +100,7 @@ if(!exists("clean_tree")) {
 have a quick look at everything
 
 ```{r}
-#rat <- readRDS("Data_ratios_dataframe.rds")
+rat <- readRDS("Data_ratios_dataframe.rds")
 
 for(i in names(Filter(is.numeric, rat))) {
   hist(rat[,i],
@@ -114,15 +114,17 @@ for(i in names(Filter(is.numeric, rat))) {
 
 run analyses
 ```{r}
-#source("03_sp_analysis.R")
+#source("03_sp_mean_analysis.R")
+#source("03_sp_range_analysis.R")
 ```
 
 
 ```{r}
 # current vs historic calc.
 mat_var <- raster("wc2/wc2.1_30s_bio_4.tif") ## mean annual temp SD*100
-current_historic <- brick(vel,clim_map)
-current_historic <- drop_na(data.frame(raster::extract(current_historic,sp_co)))
+current_historic <- brick(vel,mat_var)
+#current_historic <- drop_na(data.frame(raster::extract(current_historic,sp_co)))
+current_historic <- drop_na(data.frame(current_historic))
 cor(scale(current_historic$Velocity), scale(current_historic$wc2.1_30s_bio_4)) ## correlation = 0.382153
 plot(scale(current_historic$wc2.1_30s_bio_4), scale(current_historic$Velocity))
 
@@ -135,6 +137,8 @@ hist(log(current_historic$wc2.1_30s_bio_4))
 
 
 grid <- shapefile("AFEcells/cgrs_grid.shp")
+
+
 ```
 
 

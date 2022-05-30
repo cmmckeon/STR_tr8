@@ -65,7 +65,7 @@ clean_tips <- as.character(clean_tree$tip.label) ## 653 species after matching s
 ## save
 write.tree(clean_tree, file = "Data_sp_clean_tree.tre")
 
-#plotTree(clean_tree,type="fan",fsize=0.1,lwd=0.5, ftype="i", part = 0.93)
+plotTree(clean_tree,type="fan",fsize=0.1,lwd=0.5, ftype="i", part = 0.93)
 
 rm(treefile, genera, new_genera, new_clean_tips, small, species, tip_labels, tips, omit_spe)
 

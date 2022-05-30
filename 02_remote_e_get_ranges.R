@@ -11,8 +11,10 @@
 # saveRDS(val, "Data_hf_vel_clim_map_values.rds")
 
 vals <- readRDS("Data_hf_vel_clim_map_values.rds")
+gc()
 
 land_co <- vals[,1:2]
+gc()
 
 print(Sys.time())
 for (i in unique(sp$species)){
@@ -22,14 +24,17 @@ for (i in unique(sp$species)){
        ){
       print(i)
       
-      all <- raster(paste("occ_rasters/occ", i, ".tif", sep = ""))
+      rast <- raster(paste("occ_rasters/occ", i, ".tif", sep = ""))
+      gc()
       print("bricking raster")
       all <- brick(temp, rast)
+      gc()
       print("raster bricked")
       gc()
       rast_data  <- extract(all, land_co)
       print("values extracted")
       rast_data <- cbind(vals, rast_data)
+      gc()
       names(rast_data) <- c("x", "y", "hf", "Velocity", "map", "mat", "map_var", "mat_var", "template", paste(i)) 
       rast_data[,i][which(is.na(rast_data[i]))] <- 0
       
@@ -43,6 +48,7 @@ for (i in unique(sp$species)){
       rat$mat_var_range[rat$species == i] <- max(rast_data$mat_var[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE) - min(rast_data$mat_var[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
       rat$map_range[rat$species == i] <- max(rast_data$map[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE) - min(rast_data$map[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
       rat$map_var_range[rat$species == i] <- max(rast_data$map_var[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE) - min(rast_data$map_var[rast_data$template == 0 & rast_data[,i] == 1], na.rm = TRUE)
+      gc()
       
       print("got ranges")
       
