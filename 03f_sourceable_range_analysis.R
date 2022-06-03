@@ -40,52 +40,52 @@ print(c("effect size will be:", eff_ss))
 
 
 ## hf model --------------
-print("prep hf model")
-
-## formula ------------------
-## set the formula for each spatial pattern metric
-f <- list()
-f[["total.area"]]  <- total.area ~ hf_range
-f[["range.size"]] <- range.size ~ hf_range
-f[["effective.mesh.size"]] <-  effective.mesh.size ~ hf_range
-f[["prop.landscape"]] <- prop.landscape ~ hf_range
-f[["mean.shape.index"]] <- mean.shape.index ~ hf_range
-f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ hf_range
-
-print("hf forumal set")
-
-print("start running hf models")
-
-
+# print("prep hf model")
+# 
+# ## formula ------------------
+# ## set the formula for each spatial pattern metric
+# f <- list()
+# f[["total.area"]]  <- total.area ~ hf_range
+# f[["range.size"]] <- range.size ~ hf_range
+# f[["effective.mesh.size"]] <-  effective.mesh.size ~ hf_range
+# f[["prop.landscape"]] <- prop.landscape ~ hf_range
+# f[["mean.shape.index"]] <- mean.shape.index ~ hf_range
+# f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ hf_range
+# 
+# print("hf forumal set")
+# 
+# print("start running hf models")
+# 
+#
 ## model ---------------
-m_metric <- list()
-
- for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "prop.landscape", "mean.shape.index", 
-                                                                            "perimeter.area.frac.dim"))])){
-
-                                                                             
-    formula <- f[[j]]
-  
-  print(j)
-  m_metric[[j]][["hf"]]  <- mod_list <- mclapply(1:2, function(i) {
-    MCMCglmm(fixed = formula,
-             random = ~ animal,
-             rcov = ~ units,
-             family= "gaussian",
-             pedigree = comp_data$tree,
-             data = comp_data$data,
-             nitt = nitt,
-             burnin = burnin,
-             thin = thin,
-             prior = prior)
-  }, mc.cores=2)
-  gc()
-  Sys.sleep(20)}
-
-print("saving models")
-saveRDS(m_metric, "m_metric_range_hf.rds")
-rm(m_metric)
-gc()
+# m_metric <- list()
+# 
+#  for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "prop.landscape", "mean.shape.index", 
+#                                                                             "perimeter.area.frac.dim"))])){
+# 
+#                                                                              
+#     formula <- f[[j]]
+#   
+#   print(j)
+#   m_metric[[j]][["hf"]]  <- mod_list <- mclapply(1:2, function(i) {
+#     MCMCglmm(fixed = formula,
+#              random = ~ animal,
+#              rcov = ~ units,
+#              family= "gaussian",
+#              pedigree = comp_data$tree,
+#              data = comp_data$data,
+#              nitt = nitt,
+#              burnin = burnin,
+#              thin = thin,
+#              prior = prior)
+#   }, mc.cores=2)
+#   gc()
+#   Sys.sleep(20)}
+# 
+# print("saving models")
+# saveRDS(m_metric, "m_metric_range_hf.rds")
+# rm(m_metric)
+# gc()
 
 # ## climate model --------------
 # print("prep climate model")
@@ -222,5 +222,99 @@ gc()
 # rm(m_metric)
 # gc()
 # 
- print("end")
+
+
+## vel and climate model --------------
+print("prep vel abd climate model")
+
+## formula ------------------
+## set the formula for each spatial pattern metric
+f <- list()
+f[["total.area"]]  <- total.area ~ vel_range*map_range*mat_range*map_var_range*mat_var_range
+f[["range.size"]] <- range.size ~ vel_range*map_range*mat_range*map_var_range*mat_var_range
+f[["effective.mesh.size"]] <-  effective.mesh.size ~ vel_range*map_range*mat_range*map_var_range*mat_var_range
+f[["prop.landscape"]] <- prop.landscape ~ vel_range*map_range*mat_range*map_var_range*mat_var_range
+f[["mean.shape.index"]] <- mean.shape.index ~ vel_range*map_range*mat_range*map_var_range*mat_var_range
+f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ vel_range*map_range*mat_range*map_var_range*mat_var_range
+
+print("vel and climate forumal set")
+
+print("start running vel and climate models")
+
+## model ---------------
+m_metric <- list()
+
+for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "prop.landscape", "mean.shape.index",
+                                                                           "perimeter.area.frac.dim"))])){
+  formula <- f[[j]]
+
+  print(j)
+  m_metric[[j]][["hf"]]  <- mod_list <- mclapply(1:2, function(i) {
+    MCMCglmm(fixed = formula,
+             random = ~ animal,
+             rcov = ~ units,
+             family= "gaussian",
+             pedigree = comp_data$tree,
+             data = comp_data$data,
+             nitt = nitt,
+             burnin = burnin,
+             thin = thin,
+             prior = prior)
+  }, mc.cores=2)
+  gc()
+  Sys.sleep(20)}
+
+print("saving models")
+saveRDS(m_metric, "m_metric_range_vel_clim.rds")
+rm(m_metric)
+gc()
+
+
+
+# ## vel only --------------
+# print("prep vel model")
+# 
+# ## formula ------------------
+# ## set the formula for each spatial pattern metric
+# f <- list()
+# f[["total.area"]]  <- total.area ~ vel_range
+# f[["range.size"]] <- range.size ~ vel_range
+# f[["effective.mesh.size"]] <-  effective.mesh.size ~ vel_range
+# f[["prop.landscape"]] <- prop.landscape ~ vel_range
+# f[["mean.shape.index"]] <- mean.shape.index ~ vel_range
+# f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ vel_range
+# 
+# print("vel set")
+# 
+# print("start running vel models")
+# 
+# ## model ---------------
+# m_metric <- list()
+# 
+# for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "prop.landscape", "mean.shape.index",
+#                                                                            "perimeter.area.frac.dim"))])){
+#   formula <- f[[j]]
+# 
+#   print(j)
+#   m_metric[[j]][["hf"]]  <- mod_list <- mclapply(1:2, function(i) {
+#     MCMCglmm(fixed = formula,
+#              random = ~ animal,
+#              rcov = ~ units,
+#              family= "gaussian",
+#              pedigree = comp_data$tree,
+#              data = comp_data$data,
+#              nitt = nitt,
+#              burnin = burnin,
+#              thin = thin,
+#              prior = prior)
+#   }, mc.cores=2)
+#   gc()
+#   Sys.sleep(20)}
+# 
+# print("saving models")
+# saveRDS(m_metric, "m_metric_range_vel.rds")
+# rm(m_metric)
+# gc()
+
+print("end")
  

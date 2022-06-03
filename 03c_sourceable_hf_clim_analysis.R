@@ -37,20 +37,67 @@ thin <- c(20) #amount of thinning
 eff_ss <- (nitt-burnin)/thin
 print(c("effect size will be:", eff_ss))
 
+## hf and climate model --------------
+# print("prep hf and climate model")
+
+# ## formula ------------------
+# ## set the formula for each spatial pattern metric
+# f <- list()
+# f[["total.area"]]  <- total.area ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+# f[["range.size"]] <- range.size ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+# f[["effective.mesh.size"]] <-  effective.mesh.size ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+# f[["prop.landscape"]] <- prop.landscape ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+# f[["mean.shape.index"]] <- mean.shape.index ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+# f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+# 
+# 
+# print("hf and climate forumal set")
+# 
+# print("start running hf and climate models")
+# 
+# ## model ---------------
+# m_metric <- list()
+# 
+# for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "prop.landscape", "mean.shape.index", 
+#                                                                            "perimeter.area.frac.dim"))])){
+#   formula <- f[[j]]
+#   
+#   print(j)
+#   m_metric[[j]][["hf"]]  <- mod_list <- mclapply(1:2, function(i) {
+#     MCMCglmm(fixed = formula,
+#              random = ~ animal,
+#              rcov = ~ units,
+#              family= "gaussian",
+#              pedigree = comp_data$tree,
+#              data = comp_data$data,
+#              nitt = nitt,
+#              burnin = burnin,
+#              thin = thin,
+#              prior = prior)
+#   }, mc.cores=2)
+#   Sys.sleep(20)}
+# 
+# print("saving models")
+# saveRDS(m_metric, "m_metric_hf_clim.rds")
+
+## vel and climate model --------------
+print("prep vel and climate model")
+
+
 ## formula ------------------
 ## set the formula for each spatial pattern metric
 f <- list()
-f[["total.area"]]  <- total.area ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
-f[["range.size"]] <- range.size ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
-f[["effective.mesh.size"]] <-  effective.mesh.size ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
-f[["prop.landscape"]] <- prop.landscape ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
-f[["mean.shape.index"]] <- mean.shape.index ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
-f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["total.area"]]  <- total.area ~ vel_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["range.size"]] <- range.size ~ vel_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["effective.mesh.size"]] <-  effective.mesh.size ~ vel_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["prop.landscape"]] <- prop.landscape ~ vel_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["mean.shape.index"]] <- mean.shape.index ~ vel_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ vel_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
 
 
-print("hf and climate forumal set")
+print("vel and climate forumal set")
 
-print("start running hf and climate models")
+print("start running vel and climate models")
 
 ## model ---------------
 m_metric <- list()
@@ -75,7 +122,51 @@ for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("tota
   Sys.sleep(20)}
 
 print("saving models")
-saveRDS(m_metric, "m_metric_hf_clim.rds")
+saveRDS(m_metric, "m_metric_vel_clim.rds")
+
+## vel, hf and climate model --------------
+print("prep vel, hf and climate model")
+
+
+## formula ------------------
+## set the formula for each spatial pattern metric
+f <- list()
+f[["total.area"]]  <- total.area ~ vel_mean*hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["range.size"]] <- range.size ~ vel_mean*hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["effective.mesh.size"]] <-  effective.mesh.size ~ vel_mean*hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["prop.landscape"]] <- prop.landscape ~ vel_mean*hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["mean.shape.index"]] <- mean.shape.index ~ vel_mean*hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ vel_mean*hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
+
+
+print("vel, hf and climate forumal set")
+
+print("start running vel, hf and climate models")
+
+## model ---------------
+m_metric <- list()
+
+for(j in names(comp_data[["data"]][which(names(comp_data[["data"]]) %in% c("total.area", "range.size", "effective.mesh.size", "prop.landscape", "mean.shape.index", 
+                                                                           "perimeter.area.frac.dim"))])){
+  formula <- f[[j]]
+  
+  print(j)
+  m_metric[[j]][["hf"]]  <- mod_list <- mclapply(1:2, function(i) {
+    MCMCglmm(fixed = formula,
+             random = ~ animal,
+             rcov = ~ units,
+             family= "gaussian",
+             pedigree = comp_data$tree,
+             data = comp_data$data,
+             nitt = nitt,
+             burnin = burnin,
+             thin = thin,
+             prior = prior)
+  }, mc.cores=2)
+  Sys.sleep(20)}
+
+print("saving models")
+saveRDS(m_metric, "m_metric_vel_hf_clim.rds")
 
 print("end")
 

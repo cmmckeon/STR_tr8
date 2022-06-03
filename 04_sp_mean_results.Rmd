@@ -1,5 +1,5 @@
 ---
-title: "04_sp_results"
+title: "04_sp_mean_results"
 author: "Caroline McKeon"
 date: "5/18/2022"
 output:
@@ -42,7 +42,9 @@ clean_tree <- read.tree("Data_sp_clean_tree.tre")
 
 m_metric_hf <- readRDS("m_metric_hf.rds")
 m_metric_clim <- readRDS("m_metric_clim.rds")
-m_metric_clim_hf <- readRDS("m_metric_hf_clim.rds")
+m_metric_clim_hf <- readRDS("m_metric_clim_hf.rds")
+m_metric_clim_vel <- readRDS("m_metric_vel_clim.rds")
+
 m_metric_null <- readRDS("m_metric_null.rds")
 r2 <- readRDS("Data_r2_all_models.rds")
 ```
@@ -125,6 +127,32 @@ l[,3] <- as.numeric(l[,3])
 l[,4] <- as.numeric(l[,4])
 l[,5] <- as.numeric(l[,5])
 ```
+
+```{r}
+l <- data.frame(cbind(r, c(1:6), c(1:6), c(1:6), c(1:6), c(1:6), c(1:6)))
+l[,2] <- as.character(l[,2])
+l[,3] <- as.character(l[,3])
+l[,4] <- as.character(l[,4])
+l[,5] <- as.character(l[,5])
+l[,6] <- as.character(l[,6])
+l[,7] <- as.character(l[,7])
+for(i in r){
+  l[,2][l$r == i] <- round(m_metric_clim[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,3][l$r == i] <- round(m_metric_hf[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,4][l$r == i] <- round(m_metric_clim_hf[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,5][l$r == i] <- round(m_metric_vel[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,6][l$r == i] <- round(m_metric_clim_vel[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,7][l$r == i] <- round(m_metric_null[[i]][["hf"]][[1]][["DIC"]],2)
+}
+names(l) <- c("Metrics", "Climate", "Human_footprint", "Climate*Human_footprint", "Velocity","Climate*Velocity", "null")
+l[,2] <- as.numeric(l[,2])
+l[,3] <- as.numeric(l[,3])
+l[,4] <- as.numeric(l[,4])
+l[,5] <- as.numeric(l[,5])
+l[,6] <- as.numeric(l[,6])
+l[,7] <- as.numeric(l[,7])
+```
+
 
 ```{r eval=FALSE, include=FALSE}
 #https://haozhu233.github.io/kableExtra/awesome_table_in_html.html for colour by cell value
@@ -245,16 +273,26 @@ for(i in names(comp_data$data[which(names(comp_data$data) %in% c("total.area", "
 #                       levels = c("MAP", "MAP_var", "MAT", "MAT_var", "HF"))
 # }
 
+# sum <- list()
+# for(i in r) {
+# sum[[i]] <- as.data.frame(summary(m_metric_clim_hf[[i]][["hf"]][[1]])$solutions);
+# sum[[i]] <- setDT(sum[[i]], keep.rownames = TRUE)[]
+# sum[[i]] <- sum[[i]][2:6,]
+# sum[[i]]$rn <- c( "HF", "MAP", "MAT", "MAP_var","MAT_var")
+# sum[[i]]$rn <- factor(sum[[i]]$rn,
+#                       levels = c( "MAP_var","MAT_var","MAP", "MAT",  "HF"))
+# }
+
+
 sum <- list()
 for(i in r) {
-sum[[i]] <- as.data.frame(summary(m_metric_clim_hf[[i]][["hf"]][[1]])$solutions);
+sum[[i]] <- as.data.frame(summary(m_metric_clim_vel[[i]][["hf"]][[1]])$solutions);
 sum[[i]] <- setDT(sum[[i]], keep.rownames = TRUE)[]
 sum[[i]] <- sum[[i]][2:6,]
-sum[[i]]$rn <- c( "HF", "MAP", "MAT", "MAP_var","MAT_var")
+sum[[i]]$rn <- c( "Vel", "MAP", "MAT", "MAP_var","MAT_var")
 sum[[i]]$rn <- factor(sum[[i]]$rn,
-                      levels = c( "MAP_var","MAT_var","MAP", "MAT",  "HF"))
+                      levels = c( "MAP_var","MAT_var","MAP", "MAT",  "Vel"))
 }
-
 
 
 ## woaw....

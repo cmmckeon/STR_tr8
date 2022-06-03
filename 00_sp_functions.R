@@ -103,7 +103,7 @@ bay_phylo_dia <- function(mod_list){
   hist(mcmc(mod_mcmc$VCV)[,"units"]) 
   
   ## plot the fist fixed term, the intercpet.
-  plot(mod_mcmc$Sol)
+#  plot(mod_mcmc$Sol)
   #plot the fist variance term, the residual error term.
   plot(mod_mcmc$VCV)
   
