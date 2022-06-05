@@ -73,11 +73,13 @@ source("03a_sourceable_clim_analysis.R")
 source("03b_sourceable_hf_analysis.R")
 source("03c_sourceable_hf_clim_analysis.R")
 
-
-m_metric_clim <- readRDS("m_metric_clim.rds")
-m_metric_hf <- readRDS("m_metric_hf.rds")
-m_metric_clim_hf <- readRDS("m_metric_hf_clim.rds")
 m_metric_null <- readRDS("m_metric_null.rds")
+m_metric_hf <- readRDS("m_metric_hf.rds")
+m_metric_clim <- readRDS("m_metric_clim.rds")
+m_metric_clim_hf <- readRDS("m_metric_clim_hf.rds")
+m_metric_clim_vel <- readRDS("m_metric_vel_clim.rds")
+m_metric_clim_hf_vel <- readRDS("m_metric_vel_hf_clim.rds")
+
 
 #m_metric <- readRDS("m_metric_clim.rds")
 ## diagnostics -------------
@@ -134,6 +136,34 @@ for(i in names(comp_data$data[which(names(comp_data$data) %in%c("total.area", "r
 
 ## Nakagawa's R2 for MCMCGlmm ------------------
 ## THANK YOU NAKAGAWA
+
+## null
+rsqrd <- as.data.frame(r)
+for(i in r){
+  mmF <- m_metric_null[[i]][["hf"]][[1]]
+  
+  # MCMCglmm - marginal with crebile intervals
+  vmVarF<-numeric(1000)
+  for(j in 1:1000){
+    Var<-var(as.vector(mmF$Sol[j,] %*% t(mmF$X)))
+    vmVarF[j]<-Var}
+  
+  R2m<-vmVarF/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_mar[rsqrd$r == i] <- mean(R2m)
+  rsqrd$mode_r2_mar[rsqrd$r == i] <-  posterior.mode(R2m)
+  rsqrd$lower_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[1]
+  rsqrd$upper_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[2]
+  
+  # MCMCglmm - conditional with crebile intervals
+  R2c<-(vmVarF+mmF$VCV[,1])/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_cond[rsqrd$r == i] <-mean(R2c)
+  rsqrd$mode_r2_cond[rsqrd$r == i] <-posterior.mode(R2c)
+  rsqrd$lower_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[1]
+  rsqrd$upper_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[2]
+}
+
+r2_null <- rsqrd
+r2_null$model <- "null"
 
 ## climate  models
 rsqrd <- as.data.frame(r)
@@ -220,10 +250,11 @@ for(i in r){
 r2_clim_hf <- rsqrd
 r2_clim_hf$model <- "clim_hf"
 
-## null
+
+## vel
 rsqrd <- as.data.frame(r)
 for(i in r){
-  mmF <- m_metric_null[[i]][["hf"]][[1]]
+  mmF <- m_metric_vel[[i]][["hf"]][[1]]
   
   # MCMCglmm - marginal with crebile intervals
   vmVarF<-numeric(1000)
@@ -245,10 +276,70 @@ for(i in r){
   rsqrd$upper_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[2]
 }
 
-r2_null <- rsqrd
-r2_null$model <- "null"
+r2_vel <- rsqrd
+r2_vel$model <- "vel"
 
-r2 <- rbind(r2_null, r2_clim, r2_hf, r2_clim_hf)
-# saveRDS(r2, "Data_r2_all_models.rds")
+
+## vel_clim
+rsqrd <- as.data.frame(r)
+for(i in r){
+  mmF <- m_metric_clim_vel[[i]][["hf"]][[1]]
+  
+  # MCMCglmm - marginal with crebile intervals
+  vmVarF<-numeric(1000)
+  for(j in 1:1000){
+    Var<-var(as.vector(mmF$Sol[j,] %*% t(mmF$X)))
+    vmVarF[j]<-Var}
+  
+  R2m<-vmVarF/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_mar[rsqrd$r == i] <- mean(R2m)
+  rsqrd$mode_r2_mar[rsqrd$r == i] <-  posterior.mode(R2m)
+  rsqrd$lower_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[1]
+  rsqrd$upper_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[2]
+  
+  # MCMCglmm - conditional with crebile intervals
+  R2c<-(vmVarF+mmF$VCV[,1])/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_cond[rsqrd$r == i] <-mean(R2c)
+  rsqrd$mode_r2_cond[rsqrd$r == i] <-posterior.mode(R2c)
+  rsqrd$lower_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[1]
+  rsqrd$upper_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[2]
+}
+
+r2_vel_clim <- rsqrd
+r2_vel_clim$model <- "vel_clim"
+
+
+## vel hf clim
+rsqrd <- as.data.frame(r)
+for(i in r){
+  mmF <- m_metric_clim_hf_vel[[i]][["hf"]][[1]]
+  
+  # MCMCglmm - marginal with crebile intervals
+  vmVarF<-numeric(1000)
+  for(j in 1:1000){
+    Var<-var(as.vector(mmF$Sol[j,] %*% t(mmF$X)))
+    vmVarF[j]<-Var}
+  
+  R2m<-vmVarF/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_mar[rsqrd$r == i] <- mean(R2m)
+  rsqrd$mode_r2_mar[rsqrd$r == i] <-  posterior.mode(R2m)
+  rsqrd$lower_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[1]
+  rsqrd$upper_r2_mar[rsqrd$r == i] <- HPDinterval(R2m)[2]
+  
+  # MCMCglmm - conditional with crebile intervals
+  R2c<-(vmVarF+mmF$VCV[,1])/(vmVarF+mmF$VCV[,1]+mmF$VCV[,2])
+  rsqrd$mean_r2_cond[rsqrd$r == i] <-mean(R2c)
+  rsqrd$mode_r2_cond[rsqrd$r == i] <-posterior.mode(R2c)
+  rsqrd$lower_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[1]
+  rsqrd$upper_r2_cond[rsqrd$r == i] <-HPDinterval(R2c)[2]
+}
+
+r2_vel_hf_clim <- rsqrd
+r2_vel_hf_clim$model <- "vel_hf_clim"
+
+
+r2 <- rbind(r2_null, r2_clim, r2_hf, r2_clim_hf, #r2_vel, 
+            r2_vel_clim, r2_vel_hf_clim)
+ saveRDS(r2, "Data_r2_all_models.rds")
 
 
