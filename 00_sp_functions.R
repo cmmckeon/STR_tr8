@@ -53,6 +53,7 @@ library(knitr)
 library(kableExtra)
 library(tidyverse)
 library("ggnewscale")
+library("scales")
 
 library(arm)
 # install.packages("lme4")

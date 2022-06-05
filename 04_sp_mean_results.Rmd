@@ -264,33 +264,87 @@ for(i in r) {
 sum[[i]] <- as.data.frame(summary(m_metric_clim_hf_vel[[i]][["hf"]][[1]])$solutions);
 sum[[i]] <- setDT(sum[[i]], keep.rownames = TRUE)[]
 sum[[i]] <- sum[[i]][c(2:22),]
-sum[[i]]$main <- "main"
+sum[[i]]$main <- sum[[i]]$rn
 sum[[i]]$main[grep(":", sum[[i]]$rn)] <- "interaction"
+sum[[i]]$main[sum[[i]]$pMCMC <= 0.05 & sum[[i]]$main =="interaction"] <- "sig interaction"
+sum[[i]]$main <- factor(sum[[i]]$main,
+                     levels = c("map_mean", "map_var_mean", "mat_mean", "mat_var_mean","vel_mean", "hf_mean","sig interaction", "interaction"))
+
 }
 ```
 
-
-
-```{r}
+```{r fig.width=15, fig.height=19}
 par(mfrow = c(6,1), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
+
 p <- list()
+
 for(i in r){
   
-  s <- droplevels(sum[[i]][main == "main"])
-  int <- droplevels(sum[[i]][main == "interaction"])
+p[[i]] <-  ggplot(sum[[i]],  aes(rn, post.mean, colour = main)) + 
+      geom_hline(yintercept= 0, alpha = 0.8) +
+  geom_line() +
+  geom_pointrange(data = sum[[i]],
+                    aes(rn, post.mean, colour = main, ymin= `l-95% CI`, ymax= `u-95% CI`), 
+                    position = position_dodge(0.5), size = 1.5) +
+    scale_color_manual(values = c("map_mean" = "#440154FF",
+                                  "map_var_mean" = "#414487FF",
+                                  "mat_mean" = "#2A788EFF",
+                                  "mat_var_mean" = "#22A884FF",
+                                  "vel_mean" =  "#7AD151FF", 
+                                  "hf_mean" = "#FDE725FF", 
+                                  "sig interaction" = "#7E7E7E",
+                                  "interaction" = "#C1C1C1")) +
+
+
+    theme(axis.line = element_line(colour = 'black', size = 1.5), 
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+           plot.title = element_text(hjust = 0.5, size = 20)) +
+    
+  scale_x_discrete(labels = get_wraper(10)) +
+  labs(colour = "interaction", y = paste("Effect Size", n$V1[n$V2 ==i], sep = " ")) +
+    ylim(-1.2, 0.8) }
+
+for(i in r){
+  p[[i]] <- p[[i]] 
+}
+
+p[[1]] <- p[[1]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank()) 
+p[[2]] <- p[[2]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank()) 
+p[[3]] <- p[[3]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank()) 
+p[[4]] <- p[[4]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank())  
+
+resp <-ggarrange(p[[1]],p[[2]],p[[3]],p[[4]],p[[5]],p[[6]], labels = c("A", "B", "C", "D", "E", "F"), nrow = 3, ncol = 2, common.legend = TRUE, legend = "bottom")
+# annotate_figure(resp, top = text_grob("Effects of climate and human footprint on range metrics", #color = "black", 
+#                                       face = "bold", size = 20)
+resp
+
+```
+
+
+```{r fig.width=15, fig.height=19}
+par(mfrow = c(6,1), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
+
+p <- list()
+
+for(i in r){
   
-  p[[i]] <-  ggplot(s,  aes(rn, post.mean, colour = rn)) + 
+  s <- droplevels(sum[[i]][which(!is.na(main))])
+  s$main <- factor(s$main,levels = c( "MAP_var","MAT_var","MAP", "MAT","Vel", "HF"))
+  int <- droplevels(sum[[i]][which(is.na(main))])
+  
+  p[[i]] <-  ggplot(s,  aes(rn, post.mean, colour = main)) + 
       geom_hline(yintercept= 0, alpha = 0.8) +
   geom_line() +
   geom_pointrange(data = s,
-                    aes(rn, post.mean, colour = rn, ymin= `l-95% CI`, ymax= `u-95% CI`), 
+                    aes(rn, post.mean, colour = main, ymin= `l-95% CI`, ymax= `u-95% CI`), 
                     position = position_dodge(0.5), size = 1.5) +
     scale_color_viridis(discrete = TRUE) +
     
-    new_scale_color() +
-    
-    geom_pointrange(data = int,
-                    aes(rn, post.mean, colour = "interaction", ymin= `l-95% CI`, ymax= `u-95% CI`),
+    new_scale("colour") +
+
+    geom_pointrange(data = int, colour = "grey",
+                    aes(rn, post.mean, colour = "grey" , ymin= `l-95% CI`, ymax= `u-95% CI`),
                     position = position_dodge(0.5), size = 1.5) +
 
     theme(axis.line = element_line(colour = 'black', size = 1.5), 
@@ -299,7 +353,7 @@ for(i in r){
            plot.title = element_text(hjust = 0.5, size = 20)) +
     
   scale_x_discrete(labels = get_wraper(10)) +
-  labs(colour = "Climate and HF", y = paste("Effect Size", n$V1[n$V2 ==i], sep = " ")) +
+  labs(colour = "interaction", y = paste("Effect Size", n$V1[n$V2 ==i], sep = " ")) +
     ylim(-1.2, 0.8) }
 
 for(i in r){
@@ -420,8 +474,8 @@ short <- r2[r2$r == "total.area",]
 ```
 
 ```{r}
-#show_col(viridis_pal(option = "C", direction = -1)(10))
-# dput(viridis_pal(option = "C", direction = -1)(10))
+# show_col(viridis_pal(option = "D", direction = 1)(5))
+# dput(viridis_pal(option = "D", direction = 1)(5))
 
 full_pal <-c("#FA9E3BFF", "#ED7953FF","#D8576BFF", "#BD3786FF","#7301A8FF",  "#47039FFF")
 
