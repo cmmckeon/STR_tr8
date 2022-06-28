@@ -16,6 +16,7 @@ library(sp)
 library(sf)
 library(raster)
 library(viridis)
+library(fasterize)
 # blank theme
 set_theme(
   base = theme_classic(),
@@ -26,105 +27,56 @@ set_theme(
   geom.label.size = 3,
   plot.margin = margin(3, 5, 1, 5, "pt")
 )
+pal <- colorRampPalette(c('#0C276C', '#3B9088', '#EEFF00', '#ffffff'))
+
 knitr::opts_chunk$set(fig.width=30, fig.height=20) 
 ```
 
-
-
-```{r}
-world <- rnaturalearth::countries110
-europe <- world[world$region_un=="Europe"&world$name!='Russia',]
-```
-
-```{r eval=FALSE, include=FALSE}
-# PR <- readRDS("~/OneDrive/PhD/PREDICTS/PREDICTS_Data/Data_ModelDF.rds")
-# PR <- PR[PR$Region == "Europe",]
-# PR <- PR[, which(names(PR) %in% c("Longitude", "Latitude", "Region", "Diversity_metric"))]
-# #names(PR) <- c("x", "y","region", "occ")
-# 
-# # pr <- raster(PR)
-# # PR <- reproject_coordinates(PR, col_long = "Longitude", col_lat = "Latitude",
-# #  # crs_input = sp_crs1, 
-# #   crs_output = sp_crs)
-
-hf  <- raster("~/OneDrive/PhD/PREDICTS/PREDICTS_Data/Data_wildareas-v3-2009-human-footprint-geotiff/wildareas-v3-2009-human-footprint.tif")
-# proj4string(hf) <- "+init=epsg:3035"
-# j <- extract(hf)
-# sp_crs <- CRS("+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +no_defs ")
-# sp_crs <- crs("+init=epsg:3035")
-# hf  <- projectRaster(hf, crs = sp_crs)
-
-# crsInfo <- slot(hf, "crs")
-# slot(crsInfo, "projargs") <- paste0(slot(crsInfo, "projargs"), " +datum=GRS80")
-# slot(hf, "crs") <- crsInfo
-
-plot(hf)
-pal <- colorRampPalette(c('#0C276C', '#3B9088', '#EEFF00', '#ffffff'))
-hf_map <- calc(hf, fun=function(x){ x[x > 100] <- NA; return(x)} )
-par(bty = "n", mar=c(0.02,0.02,2,0.2))
-plot(hf_map, col = pal(50), main = "Human footprint 2009", yaxt="n", xaxt="n")
-
-```
-
-```{r eval=FALSE, include=FALSE}
-mat <-raster('~/OneDrive/PhD/PREDICTS/PREDICTS_Data/bio1.bil')
-hf_mat <- projectRaster(hf, mat)
-e <- extent(-3000000,5000000,3000000,9000000)
-
-hf_map <- crop(hf, e)
-plot(hf_map)
-hf_map <- calc(hf_map, fun=function(x){ x[x > 100] <- NA; return(x)} )
-hf_map <- calc(hf_map, fun=function(x){ x[x > 50] <- 304; return(x)} )
-hf_map <- calc(hf_map, fun=function(x){ x[x <= 50 & x > 35] <- 303; return(x)} )
-hf_map <- calc(hf_map, fun=function(x){ x[x <=35 & x > 10] <- 302; return(x)} )
-hf_map <- calc(hf_map, fun=function(x){ x[x <=10] <- 301; return(x)} )
-plot(hf_map, col = pal(50), main = "Human footprint 2009", yaxt="n", xaxt="n")
-
-```
-
-
-```{r eval=FALSE, include=FALSE}
-
-#aggregate from resolution to 120x120 (factor = 3)
-h <- aggregate(hf_map, fact=10)
-sp_crs <- crs("+init=epsg:3035")
-h  <- projectRaster(h, crs = sp_crs)
-
-plot(h)
-j <- as.data.frame(h, xy = T)
-j <- unique(j[which(!is.na(j$layer)),])
-j$layer[j$layer == 303] <- 3
-j$layer[j$layer == 302] <- 2
-j$layer[j$layer == 301] <- 1
-```
-
+## read in data
 ```{r}
 world <- ne_countries(scale = "medium", returnclass = "sf")
 Europe <- world[which(world$continent == "Europe"),]
-europe <- world[world$region_un=="Europe" & world$name!='Russia' & world$name!='French ',]
 
-#WorldData <- map_data('world')
-# ggplot(WorldData, aes(x=long, y=lat)) +
-#   geom_map(data=WorldData, map=WorldData,
-#            aes(x=long, y=lat, map_id=region),
-#            fill="lightgrey", colour="lightgrey")+
-#  # geom_polygon(fill="lightgray", colour = "white")#+ #, size=0.5)+
-#   geom_point(data=PR, aes(x=Longitude, y=Latitude), size=0.9, colour="red")
-# 
+e <- Europe$geometry
+e = st_as_sf(e)
+e <- st_transform(e,"+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs ")
 
+## current climate
+clim_map <- readRDS("Data_1km_EU_clim_map.rds")
+## past climate data
+vel <- readRDS("Data_1km_EU_vel.rds")
+## human footprint
+hf <- readRDS("Data_1km_EU_hf.rds")
+
+vals <- readRDS("Data_hf_vel_clim_map_values.rds")
+gc()
 
 ```
+
+## handle data
 ```{r}
-# WorldData <- map_data('world')
-# ggplot(WorldData, aes(x=long, y=lat)) +
-#   geom_map(data=WorldData, map=WorldData,
-#            aes(x=long, y=lat, map_id=region),
-#            fill="white", colour="#7f7f7f")+ #, size=0.5)+
-#   geom_point(data=PR, aes(x=Longitude, y=Latitude), size=0.9, colour="red")
-
+h <- projectRaster(hf, crs = crs(e))
+m <- mask(h, e)
 ```
 
 
+```{r}
+par(bg = "transparent")
+plot(e, col='light gray', border='gray')
+plot(m, add=TRUE, ext = extent(e), col = pal(50))
+```
+
+```{r}
+v <- projectRaster(vel, crs = crs(e))
+vm <- mask(v, e)
+```
+
+
+```{r}
+par(bg = "transparent")
+plot(e, col='light gray', border='gray')
+plot(vm, add=TRUE, ext = extent(e))
+```
 
 
 ```{r}
@@ -132,11 +84,18 @@ europe <- world[world$region_un=="Europe" & world$name!='Russia' & world$name!='
 #     geom_sf(fill="lightgrey", colour="lightgrey") +
 #     coord_sf(crs = "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80  +units=m +no_defs")
 
+
+
 ggplot(data = Europe, aes(fill="grey", colour="grey")) +
     geom_sf(fill="lightgrey", colour="grey") +
-    coord_sf(crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs ")+
-  theme_void()
- # geom_point(data=j[j$layer == 1,], aes(x=x, y=y), size=0.1, colour="red")+
+  geom_point(data=h, aes(x=x, y=y, color = layer)) + 
+    coord_sf(crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs") +
+  theme_void() 
+ # geom_raster(data = hf, aes(x = x, y = y)) 
+ # geom_tile(data = rast_df, mapping = aes(x = x, y = y)) 
+
+   
+
 # geom_point(data=j[j$layer==2,], aes(x=x, y=y), size=0.1, colour="blue")+
  #  geom_point(data=j[j$layer == 3,], aes(x=x, y=y), size=0.1, colour="yellow")
 
