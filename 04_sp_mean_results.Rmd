@@ -259,22 +259,49 @@ resp <-ggarrange(p[[1]],p[[2]],p[[3]],p[[4]],p[[5]],p[[6]], labels = c("A", "B",
 #                                       face = "bold", size = 20)
 resp
 ```
+
 ```{r}
+
+## interactions are grey
+# sum <- list()
+# for(i in r) {
+# sum[[i]] <- as.data.frame(summary(m_metric_clim_hf_vel[[i]][["hf"]][[1]])$solutions);
+# sum[[i]] <- setDT(sum[[i]], keep.rownames = TRUE)[]
+# sum[[i]] <- sum[[i]][c(2:22),]
+# sum[[i]]$main <- sum[[i]]$rn
+# sum[[i]]$main[grep(":", sum[[i]]$rn)] <- "interaction"
+# sum[[i]]$main[sum[[i]]$pMCMC <= 0.05 & sum[[i]]$main =="interaction"] <- "sig interaction"
+# sum[[i]]$main <- factor(sum[[i]]$main,
+#                      levels = c("map_mean", "map_var_mean", "mat_mean", "mat_var_mean","vel_mean", "hf_mean","sig interaction", "interaction"))
+# 
+# }
+
+## interactions are two coloured
 sum <- list()
 for(i in r) {
 sum[[i]] <- as.data.frame(summary(m_metric_clim_hf_vel[[i]][["hf"]][[1]])$solutions);
 sum[[i]] <- setDT(sum[[i]], keep.rownames = TRUE)[]
 sum[[i]] <- sum[[i]][c(2:22),]
 sum[[i]]$main <- sum[[i]]$rn
-sum[[i]]$main[grep(":", sum[[i]]$rn)] <- "interaction"
-sum[[i]]$main[sum[[i]]$pMCMC <= 0.05 & sum[[i]]$main =="interaction"] <- "sig interaction"
-sum[[i]]$main <- factor(sum[[i]]$main,
-                     levels = c("map_mean", "map_var_mean", "mat_mean", "mat_var_mean","vel_mean", "hf_mean","sig interaction", "interaction"))
-
+sum[[i]]$main <-  gsub("_mean", "", sum[[i]]$main, ignore.case = TRUE)
+sum[[i]]$rn <-  gsub("_mean", "", sum[[i]]$rn, ignore.case = TRUE)
+sum[[i]]$rn <- factor(sum[[i]]$rn,
+                       levels = c("vel", "map", "mat", "map_var", "mat_var", "hf", 
+                                   "hf:map","hf:mat","hf:map_var","hf:mat_var", "vel:hf",
+                                  "vel:map","vel:mat","vel:map_var", "vel:mat_var",
+                                  "map:mat", "map:map_var", "map:mat_var",
+                                  "mat:map_var", "mat:mat_var", "map_var:mat_var"))
+## hash out next 3 lines to keep non-significant terms in colour
+sum[[i]]$main <- as.character(sum[[i]]$main)
+sum[[i]]$main[sum[[i]]$pMCMC > 0.05] <- "ns"
+sum[[i]]$main <- factor(sum[[i]]$main)
+sum[[i]]$main1 <-  gsub(":.*", "", sum[[i]]$main, ignore.case = TRUE)
+sum[[i]]$main2 <-  gsub(".*:", "", sum[[i]]$main, ignore.case = TRUE)
 }
 ```
 
-```{r fig.width=15, fig.height=19}
+
+```{r fig.width=14, fig.height=18}
 par(mfrow = c(6,1), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
 
 p <- list()
@@ -284,18 +311,19 @@ for(i in r){
 p[[i]] <-  ggplot(sum[[i]],  aes(rn, post.mean, colour = main)) + 
       geom_hline(yintercept= 0, alpha = 0.8) +
   geom_line() +
-  geom_pointrange(data = sum[[i]],
-                    aes(rn, post.mean, colour = main, ymin= `l-95% CI`, ymax= `u-95% CI`), 
+  geom_pointrange(data = sum[[i]],shape = 1,
+                    aes(rn, post.mean, colour = main1, ymin= `l-95% CI`, ymax= `u-95% CI`), 
                     position = position_dodge(0.5), size = 1.5) +
-    scale_color_manual(values = c("map_mean" = "#440154FF",
-                                  "map_var_mean" = "#414487FF",
-                                  "mat_mean" = "#2A788EFF",
-                                  "mat_var_mean" = "#22A884FF",
-                                  "vel_mean" =  "#7AD151FF", 
-                                  "hf_mean" = "#FDE725FF", 
-                                  "sig interaction" = "#7E7E7E",
-                                  "interaction" = "#C1C1C1")) +
-
+    geom_point(data = sum[[i]], 
+                    aes(rn, post.mean, colour = main2),
+                    position = position_dodge(0.5), size = 6) +        
+    scale_color_manual(values = c("map" = "#440154FF",
+                                  "map_var" = "#3B528BFF",
+                                  "mat" = "#21908CFF",
+                                  "mat_var" = "#5DC863FF",
+                                  "vel" =  "orange", 
+                                  "hf" = "#FDE725FF", 
+                                  "ns" = "light grey")) +
 
     theme(axis.line = element_line(colour = 'black', size = 1.5), 
           axis.title.x = element_blank(),
@@ -303,7 +331,7 @@ p[[i]] <-  ggplot(sum[[i]],  aes(rn, post.mean, colour = main)) +
            plot.title = element_text(hjust = 0.5, size = 20)) +
     
   scale_x_discrete(labels = get_wraper(10)) +
-  labs(colour = "interaction", y = paste("Effect Size", n$V1[n$V2 ==i], sep = " ")) +
+  labs(colour = "Model terms", y = paste("Effect Size", n$V1[n$V2 ==i], sep = " ")) +
     ylim(-1.2, 0.8) }
 
 for(i in r){
@@ -318,57 +346,6 @@ p[[4]] <- p[[4]] + theme(axis.text.x = element_blank(), axis.title.x = element_b
 p[[5]] <- p[[5]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank())  
 p[[6]] <- p[[6]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank())  
 
-
-resp <-ggarrange(p[[1]],p[[2]],p[[3]],p[[4]],p[[5]],p[[6]], labels = c("A", "B", "C", "D", "E", "F"), nrow = 3, ncol = 2, common.legend = TRUE, legend = "bottom")
-# annotate_figure(resp, top = text_grob("Effects of climate and human footprint on range metrics", #color = "black", 
-#                                       face = "bold", size = 20)
-resp
-
-```
-
-
-```{r fig.width=15, fig.height=19}
-par(mfrow = c(6,1), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
-
-p <- list()
-
-for(i in r){
-  
-  s <- droplevels(sum[[i]][which(!is.na(main))])
-  s$main <- factor(s$main,levels = c( "MAP_var","MAT_var","MAP", "MAT","Vel", "HF"))
-  int <- droplevels(sum[[i]][which(is.na(main))])
-  
-  p[[i]] <-  ggplot(s,  aes(rn, post.mean, colour = main)) + 
-      geom_hline(yintercept= 0, alpha = 0.8) +
-  geom_line() +
-  geom_pointrange(data = s,
-                    aes(rn, post.mean, colour = main, ymin= `l-95% CI`, ymax= `u-95% CI`), 
-                    position = position_dodge(0.5), size = 1.5) +
-    scale_color_viridis(discrete = TRUE) +
-    
-    new_scale("colour") +
-
-    geom_pointrange(data = int, colour = "grey",
-                    aes(rn, post.mean, colour = "grey" , ymin= `l-95% CI`, ymax= `u-95% CI`),
-                    position = position_dodge(0.5), size = 1.5) +
-
-    theme(axis.line = element_line(colour = 'black', size = 1.5), 
-          axis.title.x = element_blank(),
-          axis.text.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
-           plot.title = element_text(hjust = 0.5, size = 20)) +
-    
-  scale_x_discrete(labels = get_wraper(10)) +
-  labs(colour = "interaction", y = paste("Effect Size", n$V1[n$V2 ==i], sep = " ")) +
-    ylim(-1.2, 0.8) }
-
-for(i in r){
-  p[[i]] <- p[[i]] 
-}
-
-p[[1]] <- p[[1]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank()) 
-p[[2]] <- p[[2]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank()) 
-p[[3]] <- p[[3]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank()) 
-p[[4]] <- p[[4]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank())  
 
 resp <-ggarrange(p[[1]],p[[2]],p[[3]],p[[4]],p[[5]],p[[6]], labels = c("A", "B", "C", "D", "E", "F"), nrow = 3, ncol = 2, common.legend = TRUE, legend = "bottom")
 # annotate_figure(resp, top = text_grob("Effects of climate and human footprint on range metrics", #color = "black", 
@@ -439,18 +416,18 @@ pairs(m[, which(names(m) %in% c("hf_mean", "vel_mean", "mat_mean", "mat_var_mean
 
 ## visualise collinearity
 ```{r}
-par(mfrow = c(1,3), pch = 20, cex = 1)
-
-rbPal <- colorRampPalette(c('red','blue'))
-rbPal <- colorRampPalette(v <- viridis(400, alpha = 1, begin = 0, end = 1, direction = 1, option = "D"))
-
-metrics$mean_col <- rbPal(820)[as.numeric(cut(metrics$hf_mean,breaks = 820))]
-metrics$mat_col <- rbPal(820)[as.numeric(cut(metrics$mat_mean,breaks = 820))]
-metrics$t.a_col <- rbPal(820)[as.numeric(cut(metrics$`Occupied area`, breaks = 820))]
-
-plot(metrics$`Occupied area` ~ metrics$mat_mean, col = metrics$mean_col)
-plot(metrics$`Occupied area` ~ metrics$hf_mean, col = metrics$mat_col)
-plot(metrics$mat_mean ~ metrics$hf_mean, col = metrics$t.a_col)
+# par(mfrow = c(1,3), pch = 20, cex = 1)
+# 
+# rbPal <- colorRampPalette(c('red','blue'))
+# rbPal <- colorRampPalette(v <- viridis(400, alpha = 1, begin = 0, end = 1, direction = 1, option = "D"))
+# 
+# metrics$mean_col <- rbPal(820)[as.numeric(cut(metrics$hf_mean,breaks = 820))]
+# metrics$mat_col <- rbPal(820)[as.numeric(cut(metrics$mat_mean,breaks = 820))]
+# metrics$t.a_col <- rbPal(820)[as.numeric(cut(metrics$`Occupied area`, breaks = 820))]
+# 
+# plot(metrics$`Occupied area` ~ metrics$mat_mean, col = metrics$mean_col)
+# plot(metrics$`Occupied area` ~ metrics$hf_mean, col = metrics$mat_col)
+# plot(metrics$mat_mean ~ metrics$hf_mean, col = metrics$t.a_col)
 ```
 
 
@@ -478,14 +455,39 @@ short <- r2[r2$r == "total.area",]
 
 ```
 
+
 ```{r}
-# show_col(viridis_pal(option = "D", direction = 1)(5))
-# dput(viridis_pal(option = "D", direction = 1)(5))
-
-full_pal <-c("#FA9E3BFF", "#ED7953FF","#D8576BFF", "#BD3786FF","#7301A8FF",  "#47039FFF")
-
-
+ # show_col(viridis_pal(option = "D", direction = 1)(5))
+ # show_col(viridis_pal(option = "D", direction = 1)(10))
+ dput(viridis_pal(option = "D", direction = 1)(5))
 ```
+
+```{r}
+full_pal <-c("#FA9E3BFF", "#ED7953FF","#D8576BFF", "#BD3786FF","#7301A8FF",  "#47039FFF")
+```
+
+##plot conditional only
+```{r eval=FALSE, include=FALSE}
+r2 <- merge(n, r2, by.x = "V2", by.y = "r")
+names(r2) <- c("r_old", "r", "mean_r2_mar", "mode_r2_mar", "lower_r2_mar", "upper_r2_mar", 
+              "mean_r2_cond", "mode_r2_cond", "lower_r2_cond", "upper_r2_cond", "model")
+r2$model <- factor(r2$model, levels = c("null","hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim"))
+r2$r <- factor(r2$r, levels = c("Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling", "Patch shape complexity", "Geographic range fractality"))
+r2 <- r2[r2$r %nin% c("Patch shape complexity", "Geographic range fractality"),]
+ ggplot(r2,  aes(r, mode_r2_mar, colour = model)) + 
+     geom_pointrange(data = r2,
+                    aes(r, mean_r2_cond, colour = model, ymin= `lower_r2_cond`, ymax= `upper_r2_cond`),
+                    position = position_dodge(width = 0.5), size = 2) +
+  
+    theme(axis.line = element_line(colour = 'black', size = 1.5), 
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +#, plot.title = element_text(hjust = 0.5, size = 20)) +
+  labs(colour = "Model", y = "R2") +
+  scale_color_manual(values=paste(full_pal)) +
+    ylim(-0.01, 0.75) 
+```
+
+
 
 
 #FDBA00 - yellow
@@ -493,33 +495,78 @@ full_pal <-c("#FA9E3BFF", "#ED7953FF","#D8576BFF", "#BD3786FF","#7301A8FF",  "#4
 #02AFA8 - turquoise
 
 ```{r fig.width=20, fig.height=10}
-r2 <- merge(n, r2, by.x = "V2", by.y = "r")
+#r2 <- merge(n, r2, by.x = "V2", by.y = "r")
 names(r2) <- c("r_old", "r", "mean_r2_mar", "mode_r2_mar", "lower_r2_mar", "upper_r2_mar", 
               "mean_r2_cond", "mode_r2_cond", "lower_r2_cond", "upper_r2_cond", "model")
 r2$model <- factor(r2$model, levels = c("null","hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim"))
 r2$r <- factor(r2$r, levels = c("Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling", "Patch shape complexity", "Geographic range fractality"))
  ggplot(r2,  aes(r, mode_r2_mar, colour = model)) + 
   geom_pointrange(data = r2,
-                    aes(r, mean_r2_mar, colour = model, ymin= `lower_r2_mar`, ymax= `upper_r2_mar`), 
+                    aes(r, mean_r2_mar, colour = model, ymin= `lower_r2_mar`, ymax= `upper_r2_mar`),
                     position = position_dodge(width = 0.5), size = 2) +
      geom_pointrange(data = r2,
                     aes(r, mean_r2_cond, colour = model, ymin= `lower_r2_cond`, ymax= `upper_r2_cond`),
                     position = position_dodge(width = 0.5), size = 2, shape = 1) +
-  
+
+   
     theme(axis.line = element_line(colour = 'black', size = 1.5), 
           axis.title.x = element_blank(),
-          axis.text.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +#, plot.title = element_text(hjust = 0.5, size = 20)) +
+          axis.text.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
   labs(colour = "Model", y = "R2") +
   scale_color_manual(values=paste(full_pal)) +
-  #scale_color_viridis(discrete = TRUE) +
+        scale_shape_manual(values = c(1, 24), 
+                         breaks = c("Conditional", "Marginal"),
+                         guide = guide_legend(override.aes = list(shape = c(NA, 1), color = "black"))) +
     ylim(-0.01, 0.75) 
+```
+
+## r2 table 
+```{r}
+rt <- r2[,c("r", "mean_r2_mar", "mean_r2_cond", "model")]
+rt <- rt[order(rt$r),] 
+
+a <- data.frame(cbind(levels(rt$r), "mar"))
+b <- data.frame(cbind(levels(rt$r), "cond"))
+
+for(i in levels(rt$model)){
+  a <- cbind(a,round(rt$mean_r2_mar[rt$model == i],3))
+  b <- cbind(b,round(rt$mean_r2_cond[rt$model == i],3))}
+
+names(a) <- c("Metrics","type", "null", "hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim")
+names(b) <- c("Metrics","type", "null", "hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim")
+rt <- rbind(a,b)
+
+rt$Metrics <- factor(rt$Metrics, levels = c("Occupied area", "Geographic range size", "Patch size distribution", 
+                          "Geographic range filling", "Patch shape complexity", "Geographic range fractality"))
+rt <- rt[order(rt$Metrics),]
 ```
 
 
 
+```{r}
+r2_table <- as_tibble(rt)
+r2_table  %>%
+  knitr::kable(booktabs = T, col.names = c("Metrics","type", "null", "hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim")) %>%
+  add_header_above(c()) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F) %>% 
+    collapse_rows(columns = 1:2, valign = "top") %>% 
+    pack_rows("range size", 1, 4) %>%
+  pack_rows("range division", 5, 8) %>%
+  pack_rows("patch shape", 9, 12) 
+
+```
 
 
-```{r fig.width=16, fig.height=10}
+```{r}
+# r2_table  %>%
+#   kbl(booktabs = T, col.names = c("Metrics","type", "null", "hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim")) %>%
+#   kable_styling(bootstrap_options = "striped", full_width = F) %>% 
+#     collapse_rows(columns = 1:2, valign = "top")
+```
+
+
+other option for r2 plot
+```{r eval=FALSE, fig.height=10, fig.width=16, include=FALSE}
 r2$r <- factor(r2$r, levels = c("Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling", "Patch shape complexity", "Geographic range fractality"))
 r2$model <- factor(r2$model, levels = c("null","hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim"))
 ggplot(r2,  aes(model, mode_r2_mar, colour = r)) + 
