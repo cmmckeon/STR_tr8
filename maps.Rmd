@@ -34,6 +34,7 @@ knitr::opts_chunk$set(fig.width=30, fig.height=20)
 
 ## read in data
 ```{r}
+metrics <- readRDS("Data_metrics_for_hf_analysis.rds")
 world <- ne_countries(scale = "medium", returnclass = "sf")
 Europe <- world[which(world$continent == "Europe"),]
 
@@ -41,41 +42,334 @@ e <- Europe$geometry
 e = st_as_sf(e)
 e <- st_transform(e,"+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs ")
 
-## current climate
-clim_map <- readRDS("Data_1km_EU_clim_map.rds")
-## past climate data
-vel <- readRDS("Data_1km_EU_vel.rds")
-## human footprint
-hf <- readRDS("Data_1km_EU_hf.rds")
 
-vals <- readRDS("Data_hf_vel_clim_map_values.rds")
-gc()
+## load environmental data ----------------
+# mat <- raster("wc2/wc2.1_30s_bio_1.tif") ## mean annual temperature (C*10)
+# # crop to europe
+# mat <- crop(mat, extent(-33,67,30, 82))
+# gc()
+# s <- projectRaster(mat, crs = crs(e))
+# s <- mask(s, e)
+# writeRaster(s, "repro_mat.tif")
+
+# ## current climate
+# clim_map <- readRDS("Data_1km_EU_clim_map.rds")
+# ## past climate data
+# vel <- readRDS("Data_1km_EU_vel.rds")
+# ## human footprint
+# hf <- readRDS("Data_1km_EU_hf.rds")
+# 
+# vals <- readRDS("Data_hf_vel_clim_map_values.rds")
+# gc()
+# 
+# h <- projectRaster(hf, crs = crs(e))
+# m <- mask(h, e)
+# writeRaster(m, "repro_hf.tif")
+# 
+# v <- projectRaster(vel, crs = crs(e))
+# vm <- mask(v, e)
+# writeRaster(vm, "repro_vel.tif")
+
+# sal <- raster("occ_rasters/occSalix_repens.tif")
+# 
+# s <- projectRaster(sal, crs = crs(e))
+# s <- mask(s, e)
+# writeRaster(s, "repro_salix.tif")
+
+ 
+ # sal <- raster("occ_rasters/occSalix_repens.tif")
+# 
+# s <- projectRaster(sal, crs = crs(e))
+# s <- mask(s, e)
+# writeRaster(s, "repro_salix.tif")
+
+ 
+# atriplex <- raster("occ_rasters/occAtriplex_calotheca.tif")
+# s <- projectRaster(atriplex, crs = crs(e))
+# s <- mask(s, e)
+# writeRaster(s, "repro_atriplex.tif")
+# 
+# pinus <- raster("occ_rasters/occPinus_nigra.tif")
+# s <- projectRaster(pinus, crs = crs(e))
+# s <- mask(s, e)
+# writeRaster(s, "repro_pinus.tif")
+ 
+a <- raster("occ_rasters/occSaxifraga_aspera.tif")
+a <- raster("occ_rasters/occPotentilla_frigida.tif")
+
+
+a <- raster("occ_rasters/occMinuartia_rubella.tif")
+a <- raster("occ_rasters/occBrassica_oleracea.tif")
+	
+
+#plot(a)
 
 ```
 
-## handle data
+## read in rasters
 ```{r}
-h <- projectRaster(hf, crs = crs(e))
-m <- mask(h, e)
+mat <- raster("repro_mat.tif")
+m <- raster("repro_hf.tif")
+vm <- raster("repro_vel.tif")
+s <- raster("repro_salix.tif")
+pinus <- raster("repro_pinus.tif")
+atriplex <- raster("repro_atriplex.tif") 
+
 ```
 
+## presentation maps
+```{r eval=FALSE, include=FALSE}
+par(bg = "transparent")
+plot(e, col='light gray', border='gray')
+```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 par(bg = "transparent")
 plot(e, col='light gray', border='gray')
 plot(m, add=TRUE, ext = extent(e), col = pal(50))
+
+plot(e, col='light gray', border='gray')
+plot(mat, add=TRUE, ext = extent(e))
 ```
 
-```{r}
-v <- projectRaster(vel, crs = crs(e))
-vm <- mask(v, e)
-```
-
-
-```{r}
+```{r eval=FALSE, include=FALSE}
 par(bg = "transparent")
 plot(e, col='light gray', border='gray')
 plot(vm, add=TRUE, ext = extent(e))
+```
+
+```{r eval=FALSE, include=FALSE}
+par(bg = "transparent")
+# plot(e, col='light gray', border='gray')
+# plot(s, add=TRUE, ext = extent(e), col = "magenta")
+
+plot(e, col='light gray', border='gray')
+plot(s, add=TRUE, ext = extent(e), col = "gold")
+
+plot(e, col='light gray', border='gray')
+plot(pinus, add=TRUE, ext = extent(e), col = "gold")
+
+plot(e, col='light gray', border='gray')
+plot(atriplex, add=TRUE, ext = extent(e), col = "gold")
+```
+
+
+```{r}
+s <- crop(s, extent(2500000,8000000,1200000,6700000))
+vm <- crop(vm, extent(2500000,8000000,1200000,6700000))
+mat <- crop(mat, extent(2500000,8000000,1200000,6700000))
+m <- crop(m, extent(2500000,8000000,1200000,6700000))
+plate <- calc(m, fun=function(x){ x[x >= 0] <- 0; return(x)} )
+```
+
+## make ireland crops
+```{r}
+irl_h <- crop(m, extent(3000000,3400000,3200000, 3600000))
+irl_v <- crop(vm, extent(irl_h))
+irl_s <- crop(s, extent(irl_h))
+irl_c <- crop(mat, extent(irl_h))
+
+irl_s50 <- aggregate(irl_s, 50)
+irl_v50 <- aggregate(irl_v, 50)
+irl_c50 <- aggregate(irl_c, 50)
+irl_h50 <- aggregate(irl_h, 50)
+
+irl_s50 <- projectRaster(irl_s50, irl_h)
+irl_v50 <- projectRaster(irl_v50, irl_h)
+irl_c50 <- projectRaster(irl_c50, irl_h)
+irl_h50 <- projectRaster(irl_h50, irl_h)
+
+irl_s50 <- mask(irl_s50, irl_h)
+irl_v50 <- mask(irl_v50, irl_h)
+irl_c50 <- mask(irl_c50, irl_h)
+irl_h50 <- mask(irl_h50, irl_h)
+
+# vm50 <- aggregate(vm, 50)
+# mat50 <- aggregate(mat, 50)
+# m50 <- aggregate(m, 50)
+```
+
+```{r fig.height= 5, fig.width=4}
+par(mfrow=c(4,3), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
+plot(plate, col = "light grey",legend=FALSE)
+plot(s, col = "gold", legend=FALSE, add =T)
+gc()
+win <- extent(irl_h)*1.05
+plot(win, col=NA)
+plot(irl_s, col = "gold", legend=FALSE, add =T)
+gc()
+plot.new()
+
+plot(vm,#col = pal(50), 
+     legend=FALSE)
+gc()
+plot(win, col=NA)
+plot(irl_v, #col = pal(50), 
+     legend=FALSE, add = T)
+gc()
+plot(win, col=NA)
+plot(irl_v50, #col = pal(50), 
+     legend=FALSE, add = T)
+
+plot(mat,#col = pal(50),
+     legend=FALSE)
+gc()
+plot(win, col=NA)
+plot(irl_c, #col = pal(50), 
+     legend=FALSE, add = T)
+gc()
+plot(win, col=NA)
+plot(irl_c50, #col = pal(50), 
+     legend=FALSE, add =T)
+
+plot(m, col = pal(50), legend=FALSE)
+gc()
+plot(win, col=NA)
+plot(irl_h, col = pal(50), legend=FALSE, add = T)
+gc()
+plot(win, col=NA)
+plot(irl_h50, col = pal(50), legend=FALSE, add =T)
+
+```
+
+
+## histograms of variable range
+```{r, fig.height= 7, fig.width=6}
+par(mfrow = c(3,1), bty = "n", bg = "transparent")
+hist(metrics$vel_mean, breaks = 20,# xlim = c(-4.5, 4), 
+     main = "Spread in climate change velocity", xlab = NULL)
+abline(v = metrics$vel_mean[metrics$species == "Pinus_nigra"], col = "red", lwd = 2)
+abline(v = metrics$vel_mean[metrics$species == "Atriplex_calotheca"], col = "red", lwd = 2)
+hist(metrics$mat_mean, breaks = 20, #xlim = c(-4.5, 4), 
+     main = "Spread in current climate (temperature)", xlab = NULL)
+abline(v = metrics$mat_mean[metrics$species == "Pinus_nigra"], col = "red", lwd = 2)
+abline(v = metrics$mat_mean[metrics$species == "Atriplex_calotheca"], col = "red", lwd = 2)
+hist(metrics$hf_mean, breaks = 20, #xlim = c(-4.5, 4),
+     main = "Spread in human footprint", xlab = NULL)
+abline(v = metrics$hf_mean[metrics$species == "Pinus_nigra"], col = "red", lwd = 2)
+abline(v = metrics$hf_mean[metrics$species == "Atriplex_calotheca"], col = "red", lwd = 2)
+```
+
+## example species
+```{r}
+
+#e2 <- crop(e, extent(-33,67,30, 82))
+
+h_occ_area <- raster("occ_rasters/occTrollius_europaeus.tif") ## high occupied area
+m_occ_area <- raster("occ_rasters/occSaxifraga_caesia.tif") ## mid occupied area
+l_occ_area <- raster("occ_rasters/occPotentilla_visianii.tif") ## low occupied area
+
+h_range <- raster("occ_rasters/occMinuartia_rubella.tif") ## high range size
+m_range <- raster("occ_rasters/occRanunculus_nodiflorus.tif") ## mid range size
+l_range <- raster("occ_rasters/occArabis_cretica.tif") ## low range size
+
+h_shape <- raster("occ_rasters/occSalix_repens.tif") ## high shape dist
+m_shape <- raster("occ_rasters/occCerastium_grandiflorum.tif") ## mid shape dist
+l_shape <- raster("occ_rasters/occSalix_bicolor.tif") ## low shape dist
+
+h_fill <- raster("occ_rasters/occArabis_cretica.tif") ## high filling
+m_fill <- raster("occ_rasters/occDianthus_glacialis.tif") ## mid filling
+l_fill <- raster("occ_rasters/occCorydalis_solida.tif") ## low filling
+
+h_comp <- raster("occ_rasters/occRosa_pendulina.tif") ## high complexity
+m_comp <- raster("occ_rasters/occAquilegia_pyrenaica.tif") ## mid complexity
+l_comp <- raster("occ_rasters/occErysimum_montosicola.tif") ## low complexity
+
+h_frac <- raster("occ_rasters/occSisymbrium_assoanum.tif") ## high frac
+m_frac <- raster("occ_rasters/occQuercus_mas.tif") ## mid frac
+l_frac <- raster("occ_rasters/occAconitum_napellus.tif") ## low frac
+plate <- projectRaster(plate, l_frac)
+```
+
+
+```{r, fig.height=4, fig.width=4, eval=FALSE, include=FALSE}
+par(mfrow=c(6,3), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(l_occ_area, col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(m_occ_area,  col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(h_occ_area, col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(l_range, col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(m_range, col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(h_range,  col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(l_shape, col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(m_shape, col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(h_shape,  col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(l_fill, col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(m_fill,col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(h_fill, col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(l_comp,  col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(m_comp, col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(h_comp, col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(l_frac,col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(m_frac,col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
+plot(h_frac,col = "gold", legend=FALSE, add = T)
+plot(plate, col = "light grey", ext = extent(e), legend=FALSE)
+
+```
+
+
+```{r}
+# save(list=ls(all=T), file = "./quick_load_sp_maps.rda")
+# rm(list=ls())
+```
+
+```{r fig.height=7, fig.width=4,}
+par(mfrow=c(6,3), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
+p <- c(l_occ_area, m_occ_area,  h_occ_area, l_range, m_range, h_range,  l_shape, 
+  m_shape, h_shape,  l_fill, m_fill,h_fill,l_comp,  m_comp, h_comp, l_frac,m_frac,h_frac)
+for(i in p){
+  plot(plate, col = "light grey", ext = extent(e),legend=FALSE);plot(i, col = "gold", legend=FALSE, add = T); gc()}
+
+```
+
+
+
+## range of temperature variability in europe vs tropics
+```{r}
+mat_var <- raster("wc2/wc2.1_30s_bio_4.tif") ## mean annual temp SD*100
+gc()
+
+# crop to europe
+mv_e <- crop(mat_var, extent(-33,67,30, 82))
+mv_t <- crop(mat_var, extent(-180,180,-30, 30))
+
+mv_e_v <- as.data.frame(mv_e)
+mv_t_v <- as.data.frame(mv_t)
+
+print("europe")
+mean(mv_e_v$wc2.1_30s_bio_4, na.rm = T)
+range(mv_e_v$wc2.1_30s_bio_4, na.rm = T)
+sd(mv_e_v$wc2.1_30s_bio_4, na.rm = T)
+print("tropics")
+mean(mv_t_v$wc2.1_30s_bio_4, na.rm = T)
+range(mv_t_v$wc2.1_30s_bio_4, na.rm = T)
+sd(mv_t_v$wc2.1_30s_bio_4, na.rm = T)
+```
+
+
+```{r}
+temp <- read.csv("osman_lgm_temp.csv")
+
+t <- as.data.frame(cbind(as.numeric(as.character(temp$X[-1])), c(125:1)))
+
+plot(t$V1 ~ t$V2)
 ```
 
 
@@ -86,11 +380,11 @@ plot(vm, add=TRUE, ext = extent(e))
 
 
 
-ggplot(data = Europe, aes(fill="grey", colour="grey")) +
-    geom_sf(fill="lightgrey", colour="grey") +
-  geom_point(data=h, aes(x=x, y=y, color = layer)) + 
-    coord_sf(crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs") +
-  theme_void() 
+# ggplot(data = Europe, aes(fill="grey", colour="grey")) +
+#     geom_sf(fill="lightgrey", colour="grey") +
+#   geom_point(data=h, aes(x=x, y=y, color = layer)) + 
+#     coord_sf(crs = "+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs") +
+#   theme_void() 
  # geom_raster(data = hf, aes(x = x, y = y)) 
  # geom_tile(data = rast_df, mapping = aes(x = x, y = y)) 
 

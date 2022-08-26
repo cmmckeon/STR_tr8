@@ -71,6 +71,16 @@ f[["perimeter.area.frac.dim"]] <- perimeter.area.frac.dim ~ hf_mean*map_mean*mat
 
 ```
 
+get some example species
+```{r}
+
+# dia <- raster("occ_rasters/occDianthus_arenarius.tif")
+# ros <- raster("occ_rasters/occRosa_sherardii.tif") ## high occupied area, average mat_var
+# del <- raster("occ_rasters/occDelphinium_elatum.tif")
+
+
+```
+
 
 ```{r eval=FALSE, include=FALSE}
 z <- "total.area"
@@ -297,6 +307,10 @@ sum[[i]]$main[sum[[i]]$pMCMC > 0.05] <- "ns"
 sum[[i]]$main <- factor(sum[[i]]$main)
 sum[[i]]$main1 <-  gsub(":.*", "", sum[[i]]$main, ignore.case = TRUE)
 sum[[i]]$main2 <-  gsub(".*:", "", sum[[i]]$main, ignore.case = TRUE)
+## create column for grey bars
+sum[[i]]$rep <- as.character("white")
+sum[[i]]$rep[grep("hf", sum[[i]]$rn)] <- "grey"
+sum[[i]]$cat <- as.numeric(sum[[i]]$rn)
 }
 ```
 
@@ -309,6 +323,10 @@ p <- list()
 for(i in r){
   
 p[[i]] <-  ggplot(sum[[i]],  aes(rn, post.mean, colour = main)) + 
+  
+        geom_rect(data = sum[[i]][sum[[i]]$rep != "white",],
+            aes(NULL, NULL, xmin = cat - 0.5, xmax = cat+0.5, ymin = -Inf, ymax = Inf), col = NA, alpha = 0.07) +
+  
       geom_hline(yintercept= 0, alpha = 0.8) +
   geom_line() +
   geom_pointrange(data = sum[[i]],shape = 1,
@@ -348,15 +366,14 @@ p[[6]] <- p[[6]] + theme(axis.text.x = element_blank(), axis.title.x = element_b
 
 
 resp <-ggarrange(p[[1]],p[[2]],p[[3]],p[[4]],p[[5]],p[[6]], labels = c("A", "B", "C", "D", "E", "F"), nrow = 3, ncol = 2, common.legend = TRUE, legend = "bottom")
-# annotate_figure(resp, top = text_grob("Effects of climate and human footprint on range metrics", #color = "black", 
-#                                       face = "bold", size = 20)
-resp
+ annotate_figure(resp, left = text_grob("patch irregularity                         range division                                range size",  face = "bold", size = 25, rot = 90))
+resp  
 
 ```
 
 
 ## pairs plots for collinearity
-```{r fig.width=10, fig.height=10}
+```{r eval=FALSE, fig.height=10, fig.width=10, include=FALSE}
 colfunc <- colorRampPalette(c("#A715AD","white", "#FFB000"))
 
 
@@ -494,13 +511,18 @@ r2 <- r2[r2$r %nin% c("Patch shape complexity", "Geographic range fractality"),]
 #A302B7 - purple
 #02AFA8 - turquoise
 
+
+```{r}
+r2 <- merge(n, r2, by.x = "V2", by.y = "r")
+```
+
 ```{r fig.width=20, fig.height=10}
-#r2 <- merge(n, r2, by.x = "V2", by.y = "r")
+
 names(r2) <- c("r_old", "r", "mean_r2_mar", "mode_r2_mar", "lower_r2_mar", "upper_r2_mar", 
               "mean_r2_cond", "mode_r2_cond", "lower_r2_cond", "upper_r2_cond", "model")
 r2$model <- factor(r2$model, levels = c("null","hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim"))
 r2$r <- factor(r2$r, levels = c("Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling", "Patch shape complexity", "Geographic range fractality"))
- ggplot(r2,  aes(r, mode_r2_mar, colour = model)) + 
+g <-  ggplot(r2,  aes(r, mode_r2_mar, colour = model)) + 
   geom_pointrange(data = r2,
                     aes(r, mean_r2_mar, colour = model, ymin= `lower_r2_mar`, ymax= `upper_r2_mar`),
                     position = position_dodge(width = 0.5), size = 2) +
@@ -518,6 +540,9 @@ r2$r <- factor(r2$r, levels = c("Occupied area", "Geographic range size", "Patch
                          breaks = c("Conditional", "Marginal"),
                          guide = guide_legend(override.aes = list(shape = c(NA, 1), color = "black"))) +
     ylim(-0.01, 0.75) 
+ 
+
+ annotate_figure(g, bottom = text_grob("range size                                    range division                               patch irregularity                  ",  face = "bold", size = 25))
 ```
 
 ## r2 table 
@@ -543,7 +568,7 @@ rt <- rt[order(rt$Metrics),]
 
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 r2_table <- as_tibble(rt)
 r2_table  %>%
   knitr::kable(booktabs = T, col.names = c("Metrics","type", "null", "hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim")) %>%
