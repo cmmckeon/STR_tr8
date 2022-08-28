@@ -17,6 +17,7 @@ library(sf)
 library(raster)
 library(viridis)
 library(fasterize)
+library(marmap)
 # blank theme
 set_theme(
   base = theme_classic(),
@@ -278,8 +279,67 @@ l_comp <- raster("occ_rasters/occErysimum_montosicola.tif") ## low complexity
 h_frac <- raster("occ_rasters/occSisymbrium_assoanum.tif") ## high frac
 m_frac <- raster("occ_rasters/occQuercus_mas.tif") ## mid frac
 l_frac <- raster("occ_rasters/occAconitum_napellus.tif") ## low frac
-plate <- projectRaster(plate, l_frac)
+
 ```
+
+
+
+```{r}
+p <- list(l_occ_area, m_occ_area,  h_occ_area, l_range, m_range, h_range,  l_shape, 
+  m_shape, h_shape,  l_fill, m_fill,h_fill,l_comp,  m_comp, h_comp, l_frac,m_frac,h_frac)
+for(i in 1:length(p)){
+  p[[i]] <- crop(p[[i]], extent(-25, 65, 36, 77)); gc()}
+plate <- projectRaster(plate, p[[i]])
+```
+
+
+```{r}
+# save(list=ls(all=T), file = "./quick_load_sp_maps.rda")
+# rm(list=ls())
+#load("./quick_load_sp_maps.rda")
+```
+
+```{r fig.height=8, fig.width=4,}
+
+#png(file = "example_maps.png", bg = "transparent")
+par(mfrow=c(6,3), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
+for(i in 1:length(p)){
+  plot(plate, col = "light grey",legend=FALSE);plot(p[[i]], col = "gold", legend=FALSE, add = T); gc()}
+
+```
+
+## make a reflife map to highlight the mountaine aspect
+```{r}
+# use NOAA website to get bathy map
+# land <- getNOAA.bathy(lon1 = -33, lon2 = 67,
+#                          lat1 = 30, lat2 = 82, resolution = 10
+# land <- as.raster(land)
+# land <- projectRaster(land, plate)
+# land <- calc(land, fun=function(x){ x[x <= 0] <- NA; return(x)} )
+# land <- mask(land, plate)
+# saveRDS(land, "relifemap.rds")
+land <- readRDS("relifemap.rds")
+```
+
+## species for dicussion
+```{r}
+# high temp high range filling 
+# Silene_mollissima <- raster("occ_rasters/occSilene_mollissima.tif") ## 
+# Silene_sieberi <- raster("occ_rasters/occSilene_sieberi.tif") ## 
+# Papaver_purpureomarginatum <- raster("occ_rasters/occPapaver_purpureomarginatum.tif") ## 
+# 
+# ## high variabilty low occupied area and range size
+# Schivereckia_podolica <- raster("occ_rasters/occSchivereckia_podolica.tif") ## 
+# Dianthus_pseudoversicolor <- raster("occ_rasters/occDianthus_pseudoversicolor.tif") ## 
+# Potentilla_arctica <- raster("occ_rasters/occPotentilla_arctica.tif")
+
+plot(land, legend=FALSE)
+plot(Schivereckia_podolica, add = T, col = "black")
+plot(Dianthus_pseudoversicolor, add = T, col = "black")
+plot(Potentilla_arctica, add = T, col = "black")
+```
+
+
 
 
 ```{r, fig.height=4, fig.width=4, eval=FALSE, include=FALSE}
@@ -325,11 +385,6 @@ plot(plate, col = "light grey", ext = extent(e), legend=FALSE)
 ```
 
 
-```{r}
-# save(list=ls(all=T), file = "./quick_load_sp_maps.rda")
-# rm(list=ls())
-```
-
 ```{r fig.height=7, fig.width=4,}
 par(mfrow=c(6,3), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
 p <- c(l_occ_area, m_occ_area,  h_occ_area, l_range, m_range, h_range,  l_shape, 
@@ -338,8 +393,6 @@ for(i in p){
   plot(plate, col = "light grey", ext = extent(e),legend=FALSE);plot(i, col = "gold", legend=FALSE, add = T); gc()}
 
 ```
-
-
 
 ## range of temperature variability in europe vs tropics
 ```{r}
