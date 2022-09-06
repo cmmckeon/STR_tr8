@@ -84,6 +84,9 @@ gm_mean = function(x, na.rm=TRUE, zero.propagate = FALSE){
   }
 }
 
+
+## after Kevin Healy and Ruth Kelly's BES Macroecology SIG Bayesian modelling workshop
+
 bay_phylo_dia <- function(mod_list){ 
   
   ## How do the trace plots look?

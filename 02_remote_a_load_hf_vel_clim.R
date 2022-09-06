@@ -92,6 +92,14 @@ vel <- readRDS("Data_1km_EU_vel.rds")
 hf <- readRDS("Data_1km_EU_hf.rds")
 #clim_map <- readRDS("Data_1km_EU_clim.rds")
 
+# get these values once
+# all <- brick(hf, vel, clim_map)
+# gc()
+# val <- as.data.frame(all, xy = T)
+# names(val) <- c("x", "y", "hf", "Velocity", "map", "mat","map_var","mat_var")
+# val <- drop_na(val)
+# saveRDS(val, "Data_hf_vel_clim_map_values.rds")
+
 ## create empty template raster
 temp <- calc(hf, fun=function(x){ x[x >= 0] <- 0; return(x)} )
 
@@ -118,6 +126,16 @@ gc()
 
 ## read in AFE grid
 grid <- shapefile("AFEcells/cgrs_grid.shp")
+
+
+## make template dataframe 
+# rat <- as.data.frame(t(1:13))
+# names(rat) <- c("species", "hf_mean", "vel_mean", "mat_mean", "mat_var_mean", 
+#               "map_mean", "map_var_mean", "hf_range", "vel_range", "mat_range", 
+#               "mat_var_range", "map_range", "map_var_range")
+# rat <- rat[0,]
+
+## OR 
 
 ## read in existing dataframe
 rat <- readRDS("Data_ratios_dataframe.rds")

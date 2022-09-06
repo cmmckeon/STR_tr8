@@ -5,7 +5,7 @@ date: "03/17/2020"
 output: word_document
 ---
 
-This markdown is for the extraction, wrangling and analysis of data relating to species spatial pattern (range metrics) and climate and humanfootprint.
+This markdown is for the extraction, wrangling and analysis of data relating to species spatial pattern (range metrics) and climate and human footprint.
 
 # Set up
 ```{r setup, include=FALSE}
@@ -72,8 +72,8 @@ for (i in names(Filter(is.numeric, metrics))) {
        xlab = paste(i))
 }
 ```
+
 ## get phylogeny
-Set up phylogeny
 ```{r}
 if(!exists("clean_tree")) {
   try(clean_tree <- read.tree("Data_sp_clean_tree.tre"))
@@ -85,7 +85,12 @@ if(!exists("clean_tree")) {
 
 ## get current climate, humanfootprint and climate change velocity means across all species total areas
 ```{r}
+## once you have run through script 02_remote_a once interactively, you can run all of these scripts in the terminal 
+
+# setwd("/Users/macbookpro/Library/CloudStorage/OneDrive-Personal/PhD/spatialpattern_climate_humanfootprint")
+
 ## load base rasters and occurrence data
+#this script will need to be interactive the first time you run it to create all the objects that can be easily sourced later
 #source("02_remote_a_load_hf_vel_clim.R")
 
 ## for all species make 1km2 resolution occurrence rasters based on the AFE irregular grids cells 
@@ -108,38 +113,18 @@ for(i in names(Filter(is.numeric, rat))) {
        main = paste(i),
        xlab = paste(i))
 }
-## is these look different from previous histograms that is fine. I have check the values against the rasters and i trust that the 1km2 naming is correct.
-
-```
-
-run analyses
-```{r}
-#source("03_sp_mean_analysis.R")
-#source("03_sp_range_analysis.R")
 ```
 
 
-```{r}
-# current vs historic calc.
-mat_var <- raster("wc2/wc2.1_30s_bio_4.tif") ## mean annual temp SD*100
-current_historic <- brick(vel,mat_var)
-#current_historic <- drop_na(data.frame(raster::extract(current_historic,sp_co)))
-current_historic <- drop_na(data.frame(current_historic))
-cor(scale(current_historic$Velocity), scale(current_historic$wc2.1_30s_bio_4)) ## correlation = 0.382153
-plot(scale(current_historic$wc2.1_30s_bio_4), scale(current_historic$Velocity))
+## these scripts is also interactive, so work your way through them  
 
-x <- lm(scale(log(current_historic$Velocity)) ~ scale(log(current_historic$wc2.1_30s_bio_4)))
-summary(x)
+#run analyses
+# 03_sp_analysis.R
 
-par(mfrow = c(1,2))
-hist(log(current_historic$Velocity))
-hist(log(current_historic$wc2.1_30s_bio_4))
+#plot results
+# 04_sp_results.Rmd
+# 05_maps.Rmd
 
-
-grid <- shapefile("AFEcells/cgrs_grid.shp")
-
-
-```
 
 
 

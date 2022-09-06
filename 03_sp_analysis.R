@@ -71,7 +71,7 @@ comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
 
 source("03a_sourceable_clim_analysis.R")
 source("03b_sourceable_hf_analysis.R")
-source("03c_sourceable_hf_clim_analysis.R")
+source("03c_sourceable_vel_hf_clim_analysis.R")
 
 m_metric_null <- readRDS("m_metric_null.rds")
 m_metric_hf <- readRDS("m_metric_hf.rds")

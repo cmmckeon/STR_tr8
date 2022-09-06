@@ -2,14 +2,6 @@
 
 # source("02_remote_d_get_ratios.R")
 
-# get these values once
-# all <- brick(hf, vel, clim_map)
-# gc()
-# val <- as.data.frame(all, xy = T)
-# names(val) <- c("x", "y", "hf", "Velocity", "map", "mat","map_var","mat_var")
-# val <- drop_na(val)
-# saveRDS(val, "Data_hf_vel_clim_map_values.rds")
-
 vals <- readRDS("Data_hf_vel_clim_map_values.rds")
 
 land_co <- vals[,1:2]

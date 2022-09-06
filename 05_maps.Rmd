@@ -199,7 +199,9 @@ win <- extent(irl_h)*1.05
 plot(win, col=NA)
 plot(irl_s, col = "gold", legend=FALSE, add =T)
 gc()
-plot.new()
+#plot.new()
+plot(win, col=NA)
+plot(irl_s, col = "gold", legend=FALSE, add =T)
 
 plot(vm,#col = pal(50), 
      legend=FALSE)
@@ -251,9 +253,53 @@ abline(v = metrics$hf_mean[metrics$species == "Pinus_nigra"], col = "red", lwd =
 abline(v = metrics$hf_mean[metrics$species == "Atriplex_calotheca"], col = "red", lwd = 2)
 ```
 
-## example species
-```{r}
+## plot ranges of example species
 
+## make a reflife map to highlight the mountaine aspect
+```{r}
+# use NOAA website to get bathy map
+# land <- getNOAA.bathy(lon1 = -33, lon2 = 67,
+#                          lat1 = 30, lat2 = 82, resolution = 10
+# land <- as.raster(land)
+# land <- projectRaster(land, plate)
+# land <- calc(land, fun=function(x){ x[x <= 0] <- NA; return(x)} )
+# land <- mask(land, plate)
+# saveRDS(land, "relifemap.rds")
+land <- readRDS("relifemap.rds")
+```
+
+## species for dicussion
+```{r}
+## high temp high range filling 
+Silene_mollissima <- raster("occ_rasters/occSilene_mollissima.tif") ##
+Silene_sieberi <- raster("occ_rasters/occSilene_sieberi.tif") ##
+Papaver_purpureomarginatum <- raster("occ_rasters/occPapaver_purpureomarginatum.tif") ##
+
+## high variabilty low occupied area and range size
+Schivereckia_podolica <- raster("occ_rasters/occSchivereckia_podolica.tif") ##
+Dianthus_pseudoversicolor <- raster("occ_rasters/occDianthus_pseudoversicolor.tif") ##
+Potentilla_arctica <- raster("occ_rasters/occPotentilla_arctica.tif")
+
+grey.col <- colorRampPalette(c("white", "black"))
+```
+
+```{r}
+par(mfrow = c(1,2), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
+plot(land, legend=FALSE, col = grey.col(50))
+plot(Schivereckia_podolica, add = T, col = "red", legend=FALSE)
+plot(Dianthus_pseudoversicolor, add = T, col = "pink", legend=FALSE)
+plot(Potentilla_arctica, add = T, col = "orange", legend=FALSE)
+
+plot(land, legend = F, col = grey.col(50))
+plot(Silene_mollissima, add = T, col = "red", legend=FALSE)
+plot(Silene_sieberi, add = T, col = "pink", legend=FALSE)
+plot(Papaver_purpureomarginatum, add = T, col = "orange", legend=FALSE)
+```
+
+## make the maps for illustrating the different range metrics
+
+## example species
+```{r eval=FALSE, include=FALSE}
 #e2 <- crop(e, extent(-33,67,30, 82))
 
 h_occ_area <- raster("occ_rasters/occTrollius_europaeus.tif") ## high occupied area
@@ -282,9 +328,8 @@ l_frac <- raster("occ_rasters/occAconitum_napellus.tif") ## low frac
 
 ```
 
-
-
-```{r}
+heavy lifting thought don't run every time
+```{r eval=FALSE, include=FALSE}
 p <- list(l_occ_area, m_occ_area,  h_occ_area, l_range, m_range, h_range,  l_shape, 
   m_shape, h_shape,  l_fill, m_fill,h_fill,l_comp,  m_comp, h_comp, l_frac,m_frac,h_frac)
 for(i in 1:length(p)){
@@ -299,7 +344,8 @@ plate <- projectRaster(plate, p[[i]])
 #load("./quick_load_sp_maps.rda")
 ```
 
-```{r fig.height=8, fig.width=4,}
+## plots the heavy maps
+```{r eval=FALSE, fig.height=8, fig.width=4, include=FALSE}
 
 #png(file = "example_maps.png", bg = "transparent")
 par(mfrow=c(6,3), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
@@ -307,39 +353,6 @@ for(i in 1:length(p)){
   plot(plate, col = "light grey",legend=FALSE);plot(p[[i]], col = "gold", legend=FALSE, add = T); gc()}
 
 ```
-
-## make a reflife map to highlight the mountaine aspect
-```{r}
-# use NOAA website to get bathy map
-# land <- getNOAA.bathy(lon1 = -33, lon2 = 67,
-#                          lat1 = 30, lat2 = 82, resolution = 10
-# land <- as.raster(land)
-# land <- projectRaster(land, plate)
-# land <- calc(land, fun=function(x){ x[x <= 0] <- NA; return(x)} )
-# land <- mask(land, plate)
-# saveRDS(land, "relifemap.rds")
-land <- readRDS("relifemap.rds")
-```
-
-## species for dicussion
-```{r}
-# high temp high range filling 
-# Silene_mollissima <- raster("occ_rasters/occSilene_mollissima.tif") ## 
-# Silene_sieberi <- raster("occ_rasters/occSilene_sieberi.tif") ## 
-# Papaver_purpureomarginatum <- raster("occ_rasters/occPapaver_purpureomarginatum.tif") ## 
-# 
-# ## high variabilty low occupied area and range size
-# Schivereckia_podolica <- raster("occ_rasters/occSchivereckia_podolica.tif") ## 
-# Dianthus_pseudoversicolor <- raster("occ_rasters/occDianthus_pseudoversicolor.tif") ## 
-# Potentilla_arctica <- raster("occ_rasters/occPotentilla_arctica.tif")
-
-plot(land, legend=FALSE)
-plot(Schivereckia_podolica, add = T, col = "black")
-plot(Dianthus_pseudoversicolor, add = T, col = "black")
-plot(Potentilla_arctica, add = T, col = "black")
-```
-
-
 
 
 ```{r, fig.height=4, fig.width=4, eval=FALSE, include=FALSE}
@@ -384,8 +397,7 @@ plot(plate, col = "light grey", ext = extent(e), legend=FALSE)
 
 ```
 
-
-```{r fig.height=7, fig.width=4,}
+```{r eval=FALSE, fig.height=7, fig.width=4, include=FALSE}
 par(mfrow=c(6,3), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
 p <- c(l_occ_area, m_occ_area,  h_occ_area, l_range, m_range, h_range,  l_shape, 
   m_shape, h_shape,  l_fill, m_fill,h_fill,l_comp,  m_comp, h_comp, l_frac,m_frac,h_frac)
@@ -395,7 +407,7 @@ for(i in p){
 ```
 
 ## range of temperature variability in europe vs tropics
-```{r}
+```{r eval=FALSE, include=FALSE}
 mat_var <- raster("wc2/wc2.1_30s_bio_4.tif") ## mean annual temp SD*100
 gc()
 
@@ -414,15 +426,26 @@ print("tropics")
 mean(mv_t_v$wc2.1_30s_bio_4, na.rm = T)
 range(mv_t_v$wc2.1_30s_bio_4, na.rm = T)
 sd(mv_t_v$wc2.1_30s_bio_4, na.rm = T)
+
+
+# [1] "europe"
+# [1] 922.4605
+# [1]    0.000 1547.464
+# [1] 247.554
+# [1] "tropics"
+# [1] 326.0772
+# [1]   0.0000 962.6841
+# [1] 242.0177
 ```
 
 
+## figure 1 if I have time
 ```{r}
-temp <- read.csv("osman_lgm_temp.csv")
-
-t <- as.data.frame(cbind(as.numeric(as.character(temp$X[-1])), c(125:1)))
-
-plot(t$V1 ~ t$V2)
+# temp <- read.csv("osman_lgm_temp.csv")
+# 
+# t <- as.data.frame(cbind(as.numeric(as.character(temp$X[-1])), c(125:1)))
+# 
+# plot(t$V1 ~ t$V2)
 ```
 
 
@@ -447,8 +470,6 @@ plot(t$V1 ~ t$V2)
  #  geom_point(data=j[j$layer == 3,], aes(x=x, y=y), size=0.1, colour="yellow")
 
 ```
-
-
 
 ```{r}
 # test_spdf <- as(hf, "SpatialPixelsDataFrame")
