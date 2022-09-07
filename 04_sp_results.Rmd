@@ -403,6 +403,59 @@ p[[6]] <- p[[6]] + theme(axis.text.x = element_blank(), axis.title.x = element_b
 (p[[1]] + p[[2]] +  p[[3]] + p[[4]] + p[[5]] + guide_area() + plot_layout(nrow = 3, guides = 'collect'))
 ```
 
+## do we really want full full models?
+```{r}
+sum <- list()
+for(i in r) {
+sum[[i]] <- as.data.frame(summary(m_metric_clim_hf_vel[[i]][["hf"]][[1]])$solutions);
+sum[[i]] <- setDT(sum[[i]], keep.rownames = TRUE)[]
+#sum[[i]] <- sum[[i]][c(2:22),]
+sum[[i]]$main <- sum[[i]]$rn
+sum[[i]]$main <-  gsub("_mean", "", sum[[i]]$main, ignore.case = TRUE)
+sum[[i]]$rn <-  gsub("_mean", "", sum[[i]]$rn, ignore.case = TRUE)
+# sum[[i]]$rn <- factor(sum[[i]]$rn,
+#                        levels = c("vel", "map", "mat", "map_var", "mat_var", "hf", 
+#                                    "hf:map","hf:mat","hf:map_var","hf:mat_var", "vel:hf",
+#                                   "vel:map","vel:mat","vel:map_var", "vel:mat_var",
+#                                   "map:mat", "map:map_var", "map:mat_var",
+#                                   "mat:map_var", "mat:mat_var", "map_var:mat_var"))
+}
+```
+
+
+## tabulate model outputs
+```{r}
+tab <- function(sum.df, caption = "Table C.1.1. Model outputs for communities at the level of haul") { 
+  sum.df <- as_tibble(sum.df[, c("rn", "post.mean", "l-95% CI", "u-95% CI", "eff.samp", "pMCMC")]) 
+sum.df %>% 
+  kable(booktabs = T, caption = caption) %>%
+  kable_styling(bootstrap_options = "striped", full_width = T) %>%
+    row_spec(which(sum.df$pMCMC < 0.05 & sum.df$post.mean < 0), color = "red", background = "white") %>%
+  row_spec(which(sum.df$pMCMC < 0.05 & sum.df$post.mean > 0), color = "blue", background = "white") %>% 
+  kable_styling(font_size = 11) }
+```
+
+## summaries of PC1 models all resolutions
+```{r}
+
+sum.df <- sum[["total.area"]]
+tab(sum.df, caption = "Table B.1.1. Occupied area maximal model outputs")
+
+sum.df <- sum[["range.size"]]
+tab(sum.df, caption = "Table B.1.2. Geographic range size maximal model outputs")
+
+sum.df <- sum[["effective.mesh.size"]]
+tab(sum.df, caption = "Table B.1.3. Patch size distribution maximal model outputs")
+
+sum.df <- sum[["prop.landscape"]]
+tab(sum.df, caption = "Table B.1.4. Geographic range filling maximal model outputs")
+
+sum.df <- sum[["mean.shape.index"]]
+tab(sum.df, caption = "Table B.1.5. Patch shape complexity maximal model outputs")
+
+
+```
+
 ## pairs plots for collinearity
 ```{r fig.height=10, fig.width=10}
 colfunc <- colorRampPalette(c("#A715AD","white", "#FFB000"))
