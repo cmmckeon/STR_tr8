@@ -82,6 +82,49 @@ if(!exists("clean_tree")) {
 ## 653 species with metrics and phylogeny April 2022
 ```
 
+## 
+```{r}
+## load environmental data ----------------
+# mat <- raster("wc2/wc2.1_30s_bio_1.tif") ## mean annual temperature (C*10)
+# map <- raster("wc2/wc2.1_30s_bio_12.tif") ## mean annual precipatation (mm)
+# map_var <- raster("wc2/wc2.1_30s_bio_15.tif")  ## mean annual precip coeff variation
+# mat_var <- raster("wc2/wc2.1_30s_bio_4.tif") ## mean annual temp SD*100
+# 
+# ## make climate variables into one object (raster brick)
+# clim_map <- brick(map, mat, map_var, mat_var) 
+
+## get occurrence data
+# endem <- read.delim2("AFE_endemics.txt")
+# endem <- endem[, which(names(endem) %in% c("afe", "lon", "lat"))]
+# endem$lon <- as.numeric(as.character(endem$lon))
+# endem$lat <- as.numeric(as.character(endem$lat))
+# endem$afe <- gsub(" ssp.*", "", endem$afe)
+# endem$afe <- gsub(" ssp.*", "", endem$afe)
+# endem$afe <- gsub(" s.lat.", "", endem$afe)
+# endem$afe <- gsub(" s.str.", "", endem$afe)
+# endem$afe <- gsub("coll.", "coll", endem$afe)
+# endem$afe[endem$afe == "Saxifraga osloënsis"] <- "Saxifraga osloensis"
+# endem$afe <- as.character(endem$afe)
+# endem$afe[endem$afe == "Arabis collna"] <- "Arabis collina"
+# endem$afe[endem$afe == "Dianthus collnus"] <- "Dianthus collinus"
+# names(endem) <- c("species", "y", "x") 
+# sp <- endem
+# 
+# sp <- sp[, c("species", "x", "y")] ## 735 unique species
+# 
+# ## make dataframe with just the lat and long co-ordinates of data that is relevant to my analysis
+# sp_co <- sp %>% .[, which(names(.) %in% c("x", "y"))]
+# 
+# ## #extract climate values for coordinates in (full) dataset
+# full_clim <- data.frame(raster::extract(clim_map,sp_co)) 
+# ## create dataset with both climate values and co-ordinates of the values
+# full_clim <- cbind(full_clim,sp)
+# env <- unique(full_clim)
+# names(env) <- c("map", "mat", "map_var", "mat_var", "species", "Longitude", "Latitude") 
+# env <- drop_na(env)
+#saveRDS(env, "Data_occurences_climate_values.rds")
+```
+
 
 ## get current climate, humanfootprint and climate change velocity means across all species total areas
 ```{r}
