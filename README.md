@@ -6,7 +6,7 @@ Data needed to run associated code available on request, and will be released wh
 
 Data needed for this project (see thesis for citations in full):
 
-# species range metrics from Csergo et al., (2020)
+## species range metrics from Csergo et al., (2020)
 - GRSmetrics_AFE_pol_50km_pol_line_mcp.csv
 
 ## phylogeny from Smith et al., (2018)
