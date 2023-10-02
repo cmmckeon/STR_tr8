@@ -57,10 +57,10 @@ prep for exploring model results
 #                     "hf_mean", "vel_mean", "mat_mean", "mat_var_mean", "map_mean", "map_var_mean")
 # 
 
-mcmc_data <- metrics
-mcmc_data$animal <- mcmc_data$species
-## create comparative dataset
-comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
+# mcmc_data <- metrics
+# mcmc_data$animal <- mcmc_data$species
+# ## create comparative dataset
+# comp_data <- clean.data(mcmc_data, clean_tree, data.col = "animal")
 
 f <- list()
 f[["total.area"]]  <- total.area ~ hf_mean*map_mean*mat_mean*map_var_mean*mat_var_mean
@@ -235,8 +235,8 @@ sum[[i]]$main <- sum[[i]]$rn
 sum[[i]]$main <-  gsub("_mean", "", sum[[i]]$main, ignore.case = TRUE)
 sum[[i]]$rn <-  gsub("_mean", "", sum[[i]]$rn, ignore.case = TRUE)
 sum[[i]]$rn <- factor(sum[[i]]$rn,
-                       levels = c("vel", "map", "mat", "map_var", "mat_var", "hf", 
-                                   "hf:map","hf:mat","hf:map_var","hf:mat_var", "vel:hf",
+                       levels = c("hf", "hf:map","hf:mat","hf:map_var","hf:mat_var", "vel:hf",
+                                  "vel", "map", "mat", "map_var", "mat_var", 
                                   "vel:map","vel:mat","vel:map_var", "vel:mat_var",
                                   "map:mat", "map:map_var", "map:mat_var",
                                   "mat:map_var", "mat:mat_var", "map_var:mat_var"))
@@ -270,7 +270,7 @@ p[[i]] <-  ggplot(sum[[i]],  aes(rn, post.mean, colour = main)) +
   geom_line() +
   geom_pointrange(data = sum[[i]],shape = 1,
                     aes(rn, post.mean, colour = main1, ymin= `l-95% CI`, ymax= `u-95% CI`), 
-                    position = position_dodge(0.5), size = 1.5) +
+                    position = position_dodge(0.5), linewidth = 1.5) +
     geom_point(data = sum[[i]], 
                     aes(rn, post.mean, colour = main2),
                     position = position_dodge(0.5), size = 6) +        
@@ -295,23 +295,27 @@ for(i in r){
   p[[i]] <- p[[i]] 
 }
 
-p[[1]] <- p[[1]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank()) 
-p[[2]] <- p[[2]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank()) 
-p[[3]] <- p[[3]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank()) 
+p[[1]] <- p[[1]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank(), legend.position="none")
+p[[2]] <- p[[2]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank(), legend.position="none")
+p[[3]] <- p[[3]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank(), legend.position="none")
 p[[4]] <- p[[4]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank())
 
-p[[5]] <- p[[5]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank())  
+p[[5]] <- p[[5]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank(), legend.position="none")
 p[[6]] <- p[[6]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank())  
 
-# resp <-ggarrange(p[[1]],p[[2]],p[[3]],p[[4]],p[[5]],#p[[6]], 
-#                  labels = c("A", "B", "C", "D", "E"), 
-#                  nrow = 3, ncol = 2, common.legend = TRUE, legend = "bottom")
-# annotate_figure(resp, left = text_grob("patch irregularity                         range division                                range size",  face = "bold", size = 25, rot = 90))
+```
+```{r fig.width=14, fig.height=18}
+resp <-ggarrange(p[[4]],p[[4]],p[[1]],p[[2]],p[[3]],p[[4]],
+                 labels = c("x", "x", "A", "B", "C", "D"),
+                 nrow = 3, ncol = 2, common.legend = TRUE, legend = "bottom")
+resp
 ```
 
 
-```{r fig.width=14, fig.height=18}
-p[[1]] + p[[2]] +  p[[3]] + p[[4]] + p[[5]] + guide_area() + plot_layout(nrow = 3, guides = 'collect')
+```{r fig.width=14, fig.height=12}
+p[[1]] + p[[2]] +  p[[3]] + p[[4]] + #p[[5]] +
+  #guide_area() + 
+  plot_layout(nrow = 2, ncol = 2, guides = 'keep')
 ```
 
 ## supplimentals (full colour)
@@ -327,8 +331,9 @@ sum[[i]]$main <- sum[[i]]$rn
 sum[[i]]$main <-  gsub("_mean", "", sum[[i]]$main, ignore.case = TRUE)
 sum[[i]]$rn <-  gsub("_mean", "", sum[[i]]$rn, ignore.case = TRUE)
 sum[[i]]$rn <- factor(sum[[i]]$rn,
-                       levels = c("vel", "map", "mat", "map_var", "mat_var", "hf", 
+                       levels = c( "hf", 
                                    "hf:map","hf:mat","hf:map_var","hf:mat_var", "vel:hf",
+                                   "vel", "map", "mat", "map_var", "mat_var",
                                   "vel:map","vel:mat","vel:map_var", "vel:mat_var",
                                   "map:mat", "map:map_var", "map:mat_var",
                                   "mat:map_var", "mat:mat_var", "map_var:mat_var"))
@@ -346,7 +351,7 @@ sum[[i]]$cat <- as.numeric(sum[[i]]$rn)
 ```
 
 
-```{r fig.width=14, fig.height=18}
+```{r fig.width=14, fig.height=12}
 par(mfrow = c(6,1), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
 
 p <- list()
@@ -395,12 +400,13 @@ p[[4]] <- p[[4]] + theme(axis.text.x = element_blank(), axis.title.x = element_b
 p[[5]] <- p[[5]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank())  
 p[[6]] <- p[[6]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank())  
 
-# resp <-ggarrange(p[[1]],p[[2]],p[[3]],p[[4]],p[[5]],#p[[6]], 
-#                  labels = c("A", "B", "C", "D", "E"), 
-#                  nrow = 3, ncol = 2, common.legend = TRUE, legend = "bottom")
+resp <-ggarrange(p[[1]],p[[2]],p[[3]],p[[4]],
+                 labels = c("A", "B", "C", "D"),
+                 nrow = 2, ncol = 2, common.legend = TRUE, legend = "bottom")
 # annotate_figure(resp, left = text_grob("patch irregularity                         range division                                range size",  face = "bold", size = 25, rot = 90))
 
-(p[[1]] + p[[2]] +  p[[3]] + p[[4]] + p[[5]] + guide_area() + plot_layout(nrow = 3, guides = 'collect'))
+#(p[[1]] + p[[2]] +  p[[3]] + p[[4]] + p[[5]] + guide_area() + plot_layout(nrow = 3, guides = 'collect'))
+resp
 ```
 
 ## do we really want full full models?
@@ -424,8 +430,8 @@ sum[[i]]$rn <-  gsub("_mean", "", sum[[i]]$rn, ignore.case = TRUE)
 
 
 ## tabulate model outputs
-```{r}
-tab <- function(sum.df, caption = "Table C.1.1. Model outputs for communities at the level of haul") { 
+```{r eval=FALSE, include=FALSE}
+tab <- function(sum.df, caption = "Table ") { 
   sum.df <- as_tibble(sum.df[, c("rn", "post.mean", "l-95% CI", "u-95% CI", "eff.samp", "pMCMC")]) 
 sum.df %>% 
   kable(booktabs = T, caption = caption) %>%
@@ -436,7 +442,7 @@ sum.df %>%
 ```
 
 ## summaries of PC1 models all resolutions
-```{r}
+```{r eval=FALSE, include=FALSE}
 
 sum.df <- sum[["total.area"]]
 tab(sum.df, caption = "Table B.1.1. Occupied area maximal model outputs")
@@ -505,7 +511,7 @@ m <- metrics[which(names(metrics) %nin% "Geographic range fractality")]
 # pairs(m[, which(names(m) %in% c("Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling", "Patch shape complexity", "Geographic range fractality"),)],
 #       lower.panel = NULL, upper.panel = upper.panel)
 
-pairs(m[, which(names(m) %in% c("Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling", "Patch shape complexity"),)],
+pairs(m[, which(names(m) %in% c("Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling"),)],
       lower.panel = NULL, upper.panel = upper.panel)
 
 pairs(m[, which(names(m) %in% c("hf_mean", "vel_mean", "mat_mean", "mat_var_mean", 
@@ -562,9 +568,9 @@ names(r2) <- c("r_old", "r", "mean_r2_mar", "mode_r2_mar", "lower_r2_mar", "uppe
               "mean_r2_cond", "mode_r2_cond", "lower_r2_cond", "upper_r2_cond", "model")
 r2$model <- factor(r2$model, levels = c("null","hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim"))
 
-r2 <- r2[r2$r !=  "Geographic range fractality",]
+r2 <- r2[r2$r %nin% c("Geographic range fractality","Patch shape complexity"),]
 
-r2$r <- factor(r2$r, levels = c("Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling", "Patch shape complexity"))
+r2$r <- factor(r2$r, levels = c("Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling"))
 g <-  ggplot(r2,  aes(r, mode_r2_mar, colour = model)) + 
   geom_pointrange(data = r2,
                     aes(r, mean_r2_mar, colour = model, ymin= `lower_r2_mar`, ymax= `upper_r2_mar`),
@@ -585,7 +591,7 @@ g <-  ggplot(r2,  aes(r, mode_r2_mar, colour = model)) +
     ylim(-0.01, 0.75) 
  
 
- annotate_figure(g, bottom = text_grob("          range size                                   range division                     patch irregularity"     ,  face = "bold", size = 25))
+ # annotate_figure(g, bottom = text_grob("          range size                                   range division                     patch irregularity"     ,  face = "bold", size = 25))
 ```
 
 ## r2 table 
