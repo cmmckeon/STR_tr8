@@ -616,7 +616,7 @@ rt <- rt[order(rt$Metrics),]
 ```
 
 
-```{r eval=FALSE, include=FALSE}
+```{r}
 r2_table <- as_tibble(rt)
 r2_table  %>%
   knitr::kable(booktabs = T, col.names = c("Metrics","type", "null", "hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim")) %>%

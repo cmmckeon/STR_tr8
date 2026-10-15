@@ -18,6 +18,7 @@ library(raster)
 library(viridis)
 library(fasterize)
 library(marmap)
+library(terra)
 # blank theme
 set_theme(
   base = theme_classic(),
@@ -58,7 +59,7 @@ e <- st_transform(e,"+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +el
 # gc()
 # s <- projectRaster(clim_map, crs = crs(e))
 # s <- mask(s, e)
-# writeRaster(s, "repro_all_clim.tif")
+# writeRaster(s, "repro_all_clim.tif", overwrite = T)
 
 # ## past climate data
 # vel <- readRDS("Data_1km_EU_vel.rds")
@@ -120,7 +121,7 @@ vm <- raster("repro_vel.tif")
 s <- raster("repro_salix.tif")
 pinus <- raster("repro_pinus.tif")
 atriplex <- raster("repro_atriplex.tif") 
-clim <- raster("repro_all_clim.tif")
+clim <- brick("repro_all_clim.tif")
 ```
 
 ```{r}
@@ -254,6 +255,15 @@ plot(irl_h50, col = pal(50), legend=FALSE, add =T)
 ```
 
 
+```{r}
+par(mfrow=c(3,1), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
+plot(irl_v)
+plot(irl_c)
+plot(irl_h, col = pal(50))
+```
+
+
+
 ## histograms of variable range
 ```{r, fig.height= 7, fig.width=6}
 par(mfrow = c(3,1), bty = "n", bg = "transparent")
@@ -326,33 +336,38 @@ l_occ_area <- raster("occ_rasters/occPotentilla_visianii.tif") ## low occupied a
 
 h_range <- raster("occ_rasters/occMinuartia_rubella.tif") ## high range size
 m_range <- raster("occ_rasters/occRanunculus_nodiflorus.tif") ## mid range size
-l_range <- raster("occ_rasters/occArabis_cretica.tif") ## low range size
+#l_range <- raster("occ_rasters/occArabis_cretica.tif") ## low range size
+l_range <- raster("occ_rasters/occCorydalis_uniflora.tif") ## low occupied area
 
 h_shape <- raster("occ_rasters/occSalix_repens.tif") ## high shape dist
 m_shape <- raster("occ_rasters/occCerastium_grandiflorum.tif") ## mid shape dist
 l_shape <- raster("occ_rasters/occSalix_bicolor.tif") ## low shape dist
 
-h_fill <- raster("occ_rasters/occArabis_cretica.tif") ## high filling
+#h_fill <- raster("occ_rasters/occArabis_cretica.tif") ## high filling
+h_fill <- raster("occ_rasters/occCorydalis_uniflora.tif") ## low occupied area
 m_fill <- raster("occ_rasters/occDianthus_glacialis.tif") ## mid filling
 l_fill <- raster("occ_rasters/occCorydalis_solida.tif") ## low filling
 
-h_comp <- raster("occ_rasters/occRosa_pendulina.tif") ## high complexity
-m_comp <- raster("occ_rasters/occAquilegia_pyrenaica.tif") ## mid complexity
-l_comp <- raster("occ_rasters/occErysimum_montosicola.tif") ## low complexity
-
-h_frac <- raster("occ_rasters/occSisymbrium_assoanum.tif") ## high frac
-m_frac <- raster("occ_rasters/occQuercus_mas.tif") ## mid frac
-l_frac <- raster("occ_rasters/occAconitum_napellus.tif") ## low frac
+# h_comp <- raster("occ_rasters/occRosa_pendulina.tif") ## high complexity
+# m_comp <- raster("occ_rasters/occAquilegia_pyrenaica.tif") ## mid complexity
+# l_comp <- raster("occ_rasters/occErysimum_montosicola.tif") ## low complexity
+# 
+# h_frac <- raster("occ_rasters/occSisymbrium_assoanum.tif") ## high frac
+# m_frac <- raster("occ_rasters/occQuercus_mas.tif") ## mid frac
+# l_frac <- raster("occ_rasters/occAconitum_napellus.tif") ## low frac
 
 ```
 
 heavy lifting thought don't run every time
-```{r eval=FALSE, include=FALSE}
+```{r}
 p <- list(l_occ_area, m_occ_area,  h_occ_area, l_range, m_range, h_range,  l_shape, 
-  m_shape, h_shape,  l_fill, m_fill,h_fill,l_comp,  m_comp, h_comp, l_frac,m_frac,h_frac)
+  m_shape, h_shape,  l_fill, m_fill,h_fill)
 for(i in 1:length(p)){
   p[[i]] <- crop(p[[i]], extent(-25, 65, 36, 77)); gc()}
-plate <- projectRaster(plate, p[[i]])
+plate <- rast(plate)
+l <- rast(p[[1]])
+plate <- terra::project(plate, l)
+plate <- raster(plate)
 ```
 
 
@@ -365,16 +380,17 @@ plate <- projectRaster(plate, p[[i]])
 ## plots the heavy maps
 ```{r eval=FALSE, fig.height=8, fig.width=4, include=FALSE}
 
-#png(file = "example_maps.png", bg = "transparent")
-par(mfrow=c(6,3), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
+png(file = "example_maps.png", bg = "transparent")
+par(mfrow=c(4,3), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
 for(i in 1:length(p)){
   plot(plate, col = "light grey",legend=FALSE);plot(p[[i]], col = "gold", legend=FALSE, add = T); gc()}
 
 ```
 
 
-```{r, fig.height=4, fig.width=4, eval=FALSE, include=FALSE}
-par(mfrow=c(6,3), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
+```{r eval=FALSE, fig.height=4, fig.width=4, include=FALSE}
+png(file = "example_maps.png", bg = "transparent")
+par(mfrow=c(4,3), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
 plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
 plot(l_occ_area, col = "gold", legend=FALSE, add = T)
 plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
@@ -399,26 +415,13 @@ plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
 plot(m_fill,col = "gold", legend=FALSE, add = T)
 plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
 plot(h_fill, col = "gold", legend=FALSE, add = T)
-plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
-plot(l_comp,  col = "gold", legend=FALSE, add = T)
-plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
-plot(m_comp, col = "gold", legend=FALSE, add = T)
-plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
-plot(h_comp, col = "gold", legend=FALSE, add = T)
-plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
-plot(l_frac,col = "gold", legend=FALSE, add = T)
-plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
-plot(m_frac,col = "gold", legend=FALSE, add = T)
-plot(plate, col = "light grey", ext = extent(e),legend=FALSE)
-plot(h_frac,col = "gold", legend=FALSE, add = T)
-plot(plate, col = "light grey", ext = extent(e), legend=FALSE)
 
 ```
 
 ```{r eval=FALSE, fig.height=7, fig.width=4, include=FALSE}
-par(mfrow=c(6,3), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
+par(mfrow=c(4,3), bty = "n", yaxt="n", xaxt="n", mar = c(0,0,0,0), bg = "transparent")
 p <- c(l_occ_area, m_occ_area,  h_occ_area, l_range, m_range, h_range,  l_shape, 
-  m_shape, h_shape,  l_fill, m_fill,h_fill,l_comp,  m_comp, h_comp, l_frac,m_frac,h_frac)
+  m_shape, h_shape,  l_fill, m_fill,h_fill)
 for(i in p){
   plot(plate, col = "light grey", ext = extent(e),legend=FALSE);plot(i, col = "gold", legend=FALSE, add = T); gc()}
 
@@ -506,6 +509,27 @@ sd(mv_t_v$wc2.1_30s_bio_4, na.rm = T)
 ```
 
 
+## get maps of Ireland and UK only
+```{r}
+uk <- world[which(world$name == "United Kingdom"),]
+
+uk <- uk$geometry
+uk = st_as_sf(uk)
+uk <- st_transform(uk,"+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs ")
+par(bg = "transparent")
+plot(uk, col = "#00bfa0")
+# ggplot(uk, aes(col = "grey")) +
+#   geom_sf()
+
+ggsave("/Users/macbookpro/Library/CloudStorage/OneDrive-Personal/fellowship/cbb/irish_landuse/proportions/figs/uk_grey.png", plot = e, width = 5, height = 5, device = "png",   bg = "transparent")
+
+isles <- world[which(world$name %in% c("Ireland")),]
+isles <- isles$geometry
+isles = st_as_sf(isles)
+isles <- st_transform(isles,"+proj=laea +lat_0=53 +lon_0=9 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs ")
+par(bg = "transparent")
+plot(isles, col = "#8c510a") #"#00bfa0","#32648EFF")
+```
 
 
 
