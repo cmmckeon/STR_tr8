@@ -1,0 +1,486 @@
+---
+title: "07_sp_additional_results"
+output: word_document
+date: "2025-07-25"
+---
+
+---
+title: "04_sp_mean_results"
+author: "Caroline McKeon"
+date: "5/18/2022"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.height = 10, fig.width = 16)
+source("00_sp_functions.R")
+```
+
+```{r plotting themes}
+library(patchwork)
+# blank theme
+set_theme(
+  base = theme_classic(),
+  axis.title.size = 2,
+  axis.textsize = 1.2,
+  legend.size = 2,
+  legend.title.size = 2,
+  geom.label.size = 3,
+  plot.margin = margin(3, 5, 1, 5, "pt")
+)
+
+## text editing
+get_wraper <- function(width) {
+  function(x) {
+    lapply(strwrap(x, width = width, simplify = FALSE), paste, collapse="\n")}}
+## colour palett
+cb_pal <- c("#01665e", "#5ab4ac","#c7eae5", "#d8b365", 
+            "#8c510a")
+r <- c("total.area", "range.size", "effective.mesh.size", "prop.landscape")
+
+```
+
+## read in data and models
+```{r}
+metrics <- readRDS("Data_metrics_for_hf_analysis.rds")
+clean_tree <- read.tree("Data_sp_clean_tree.tre")
+rat <- readRDS("Data_ratios_dataframe.rds")
+
+metrics <- left_join(metrics, rat[,c("species", "hf_range", "vel_range", "mat_range", 
+                                     "mat_var_range", "map_range", "map_var_range")], by = "species")
+metrics <- metrics[, c("species", "Occupied area", "Geographic range size", "Patch size distribution", 
+                       "Geographic range filling", 
+                       "hf_mean", "vel_mean", "mat_mean", "mat_var_mean", "map_mean", 
+                       "map_var_mean", "hf_range", "vel_range", "mat_range", "mat_var_range", 
+                       "map_range", "map_var_range")]
+
+## log and scale raw data
+l <- c("vel_range", "mat_var_range")
+
+for (i in l) {
+  metrics[, i] <- c(log(metrics[,i]))
+}
+for (i in names(Filter(is.numeric, metrics))) {
+  metrics[, i] <- c(scale(metrics[,i]))
+}
+length(unique(metrics$species)) ## 650 unique species
+
+names(metrics) <- c("species", "total.area", "range.size", "effective.mesh.size", "prop.landscape",
+                    "hf_mean", "vel_mean", "mat_mean", "mat_var_mean", "map_mean", "map_var_mean",
+                    "hf_range", "vel_range", "mat_range", "mat_var_range", "map_range", "map_var_range")
+
+m_metric_null <- readRDS("m_metric_null.rds")
+m_metric_hf <- readRDS("m_metric_hf.rds")
+m_metric_clim <- readRDS("06_m_metric_clim.rds")
+m_metric_clim_hf <- readRDS("06_m_metric_clim_hf.rds")
+m_metric_clim_vel <- readRDS("06_m_metric_vel_clim.rds")
+m_metric_clim_hf_vel <- readRDS("06_m_metric_vel_hf_clim.rds")
+
+r2 <- readRDS("06_r2_additional_models.rds")
+```
+
+prep for exploring model results
+```{r}
+f <- list()
+f[["total.area"]]  <- total.area ~ vel_range*hf_range*map_range*mat_range*map_var_range*mat_var_range
+f[["range.size"]] <- range.size ~ vel_range*hf_range*map_range*mat_range*map_var_range*mat_var_range
+f[["effective.mesh.size"]] <-  effective.mesh.size ~ vel_range*hf_range*map_range*mat_range*map_var_range*mat_var_range
+f[["prop.landscape"]] <- prop.landscape ~ vel_range*hf_range*map_range*mat_range*map_var_range*mat_var_range
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+z <- "total.area"
+# z <- "range.size"
+# z <- 'effective.mesh.size'
+# z <- "mean.shape.index"
+# z <- "prop.landscape"
+# z <- "perimeter.area.frac.dim"
+
+
+m_metric <- m_metric_clim_hf_vel
+mod_mcmc <- m_metric[[z]][["hf"]][[1]]
+mod_mcmc_2 <- m_metric[[z]][["hf"]][[2]]
+
+#bay_phylo_dia(mod_mcmc)
+
+for(i in r){
+        print(summary(m_metric[[i]][["hf"]][[1]]))
+}
+
+```
+
+DIC table
+
+## note that Geographic range fractality has a smaller sample size than the other models, hense the lower DIC
+```{r}
+l <- data.frame(cbind(r, c(1:4), c(1:4), c(1:4), c(1:4)))
+l[,2] <- as.character(l[,2])
+l[,3] <- as.character(l[,3])
+l[,4] <- as.character(l[,4])
+l[,5] <- as.character(l[,5])
+for(i in r){
+  l[,2][l$r == i] <- round(m_metric_clim[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,3][l$r == i] <- round(m_metric_hf[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,4][l$r == i] <- round(m_metric_clim_hf[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,5][l$r == i] <- round(m_metric_null[[i]][["hf"]][[1]][["DIC"]],2)
+}
+names(l) <- c("Metrics", "Climate", "Human_footprint", "Climate*Human_footprint", "null")
+l[,2] <- as.numeric(l[,2])
+l[,3] <- as.numeric(l[,3])
+l[,4] <- as.numeric(l[,4])
+l[,5] <- as.numeric(l[,5])
+```
+
+```{r}
+l <- data.frame(cbind(r, c(1:4), c(1:4), c(1:4), c(1:4), c(1:4), c(1:4)))
+l[,2] <- as.character(l[,2])
+l[,3] <- as.character(l[,3])
+l[,4] <- as.character(l[,4])
+l[,5] <- as.character(l[,5])
+l[,6] <- as.character(l[,6])
+l[,7] <- as.character(l[,7])
+for(i in r){
+  l[,2][l$r == i] <- round(m_metric_clim[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,3][l$r == i] <- round(m_metric_hf[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,4][l$r == i] <- round(m_metric_clim_hf[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,5][l$r == i] <- round(m_metric_clim_vel[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,6][l$r == i] <- round(m_metric_clim_hf_vel[[i]][["hf"]][[1]][["DIC"]],2)
+  l[,7][l$r == i] <- round(m_metric_null[[i]][["hf"]][[1]][["DIC"]],2)
+}
+names(l) <- c("Metrics", "Climate", "Human_footprint", "Climate*Human_footprint", "Climate*Velocity", "Climate*Vel*HF", "null")
+l[,2] <- as.numeric(l[,2])
+l[,3] <- as.numeric(l[,3])
+l[,4] <- as.numeric(l[,4])
+l[,5] <- as.numeric(l[,5])
+l[,6] <- as.numeric(l[,6])
+l[,7] <- as.numeric(l[,7])
+```
+
+
+```{r eval=FALSE, include=FALSE}
+#https://haozhu233.github.io/kableExtra/awesome_table_in_html.html for colour by cell value
+
+dic_table <- l
+
+dic_table$Delta_DIC <- 0
+
+for(i in 1:4){
+  dic_table$Delta_DIC[i] <- dic_table[i,7] - min(dic_table[i,2:6])
+  }
+
+dic_table[1,5] <- paste("**", dic_table[1,5], "**", sep = "")
+dic_table[2,5] <- paste("**", dic_table[2,5], "**", sep = "")
+dic_table[3,4] <- paste("**", dic_table[3,4], "**", sep = "")
+dic_table[4,5] <- paste("**", dic_table[4,5], "**", sep = "")
+
+
+for(i in 1:4){
+dic_table[,i] <- as.character(dic_table[,i])}
+
+dic_table$Metrics <- c("Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling")
+
+dic_table <- as_tibble(dic_table)
+dic_table  %>%
+  knitr::kable(booktabs = T) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F) %>% 
+  pack_rows("range size", 1, 2) %>%
+  pack_rows("range division", 3, 4) 
+
+
+# dic_table 
+```
+
+
+## plot effect sizes
+```{r}
+n <- as.data.frame(cbind(c("Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling"),
+           c("total.area", "range.size", "effective.mesh.size", "prop.landscape")))
+```
+
+```{r}
+## considered plotting the best models, but I think that since we are testing explanitary models rather than predicting,  
+## it is most informative to look at the significance and effect sizes from the maximal models, while reporting through the DIC table w
+## who the best models were
+x <- m_metric_clim_vel
+x[[3]] <- m_metric_clim_hf[[3]]
+```
+
+
+## main text
+```{r}
+## interactions are two coloured
+sum <- list()
+for(i in r) {
+sum[[i]] <- as.data.frame(summary(m_metric_clim_hf_vel[[i]][["hf"]][[1]])$solutions);
+sum[[i]] <- setDT(sum[[i]], keep.rownames = TRUE)[]
+sum[[i]] <- sum[[i]][c(2:22),]
+sum[[i]]$main <- sum[[i]]$rn
+sum[[i]]$main <-  gsub("_range", "", sum[[i]]$main, ignore.case = TRUE)
+sum[[i]]$rn <-  gsub("_range", "", sum[[i]]$rn, ignore.case = TRUE)
+sum[[i]]$rn <- factor(sum[[i]]$rn,
+                       levels = c("hf", "hf:map","hf:mat","hf:map_var","hf:mat_var", "vel:hf",
+                                  "vel", "map", "mat", "map_var", "mat_var", 
+                                  "vel:map","vel:mat","vel:map_var", "vel:mat_var",
+                                  "map:mat", "map:map_var", "map:mat_var",
+                                  "mat:map_var", "mat:mat_var", "map_var:mat_var"))
+## hash out next 3 lines to keep non-significant terms in colour
+sum[[i]]$main <- as.character(sum[[i]]$main)
+sum[[i]]$main[sum[[i]]$pMCMC > 0.05] <- "ns"
+sum[[i]]$main <- factor(sum[[i]]$main)
+sum[[i]]$main1 <-  gsub(":.*", "", sum[[i]]$main, ignore.case = TRUE)
+sum[[i]]$main2 <-  gsub(".*:", "", sum[[i]]$main, ignore.case = TRUE)
+## create column for grey bars
+sum[[i]]$rep <- as.character("white")
+sum[[i]]$rep[grep("hf", sum[[i]]$rn)] <- "grey"
+sum[[i]]$cat <- as.numeric(sum[[i]]$rn)
+}
+```
+
+
+```{r fig.width=14, fig.height=18}
+par(mfrow = c(6,1), mar=c(4.5,4.5,2,2), col="black", col.main = "black", col.lab = "black")
+
+p <- list()
+
+for(i in r){
+  
+p[[i]] <-  ggplot(sum[[i]],  aes(rn, post.mean, colour = main)) + 
+  
+        geom_rect(data = sum[[i]][sum[[i]]$rep != "white",],
+            aes(NULL, NULL, xmin = cat - 0.5, xmax = cat+0.5, ymin = -Inf, ymax = Inf), col = NA, alpha = 0.07) +
+  
+      geom_hline(yintercept= 0, alpha = 0.8) +
+  geom_line() +
+  geom_pointrange(data = sum[[i]],shape = 1,
+                    aes(rn, post.mean, colour = main1, ymin= `l-95% CI`, ymax= `u-95% CI`), 
+                    position = position_dodge(0.5), linewidth = 1.5) +
+    geom_point(data = sum[[i]], 
+                    aes(rn, post.mean, colour = main2),
+                    position = position_dodge(0.5), size = 6) +        
+    scale_color_manual(values = c("map" = "#440154FF",
+                                  "map_var" = "#3B528BFF",
+                                  "mat" = "#21908CFF",
+                                  "mat_var" = "#5DC863FF",
+                                  "vel" =  "orange", 
+                                  "hf" = "#FDE725FF", 
+                                  "ns" = "light grey")) +
+
+    theme(axis.line = element_line(colour = 'black', size = 1.5), 
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)),
+           plot.title = element_text(hjust = 0.5, size = 20)) +
+    
+  scale_x_discrete(labels = get_wraper(10)) +
+  labs(colour = "Model terms", y = paste("Effect Size", n$V1[n$V2 ==i], sep = " ")) +
+    ylim(-0.9, 0.8) }
+
+for(i in r){
+  p[[i]] <- p[[i]] 
+}
+
+p[[1]] <- p[[1]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank(), legend.position="none")
+p[[2]] <- p[[2]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank(), legend.position="none")
+p[[3]] <- p[[3]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank(), legend.position="none")
+p[[4]] <- p[[4]] + theme(axis.text.x = element_blank(), axis.title.x = element_blank())
+
+```
+
+```{r fig.width=14, fig.height=12}
+resp <-ggarrange(p[[1]],p[[2]],p[[3]],p[[4]],
+                 labels = c("A", "B", "C", "D"),
+                 nrow = 2, ncol = 2, common.legend = TRUE, legend = "bottom")
+resp
+```
+
+
+```{r fig.width=14, fig.height=12}
+p[[1]] + p[[2]] +  p[[3]] + p[[4]] 
+  plot_layout(nrow = 2, ncol = 2, guides = 'keep')
+```
+
+
+## tabulate model outputs
+```{r eval=FALSE, include=FALSE}
+tab <- function(sum.df, caption = "Table ") { 
+  sum.df <- as_tibble(sum.df[, c("rn", "post.mean", "l-95% CI", "u-95% CI", "eff.samp", "pMCMC")]) 
+sum.df %>% 
+  kable(booktabs = T, caption = caption) %>%
+  kable_styling(bootstrap_options = "striped", full_width = T) %>%
+    row_spec(which(sum.df$pMCMC < 0.05 & sum.df$post.mean < 0), color = "red", background = "white") %>%
+  row_spec(which(sum.df$pMCMC < 0.05 & sum.df$post.mean > 0), color = "blue", background = "white") %>% 
+  kable_styling(font_size = 11) }
+```
+
+```{r}
+sum <- list()
+for(i in r) {
+sum[[i]] <- as.data.frame(summary(m_metric_clim_hf_vel[[i]][["hf"]][[1]])$solutions);
+sum[[i]] <- setDT(sum[[i]], keep.rownames = TRUE)[]
+#sum[[i]] <- sum[[i]][c(2:22),]
+sum[[i]]$main <- sum[[i]]$rn
+sum[[i]]$main <-  gsub("_mean", "", sum[[i]]$main, ignore.case = TRUE)
+sum[[i]]$rn <-  gsub("_mean", "", sum[[i]]$rn, ignore.case = TRUE)}
+```
+
+## summaries of PC1 models all resolutions
+```{r eval=FALSE, include=FALSE}
+
+sum.df <- sum[["total.area"]]
+tab(sum.df, caption = "Table B.1.1. Occupied area maximal model outputs")
+
+sum.df <- sum[["range.size"]]
+tab(sum.df, caption = "Table B.1.2. Geographic range size maximal model outputs")
+
+sum.df <- sum[["effective.mesh.size"]]
+tab(sum.df, caption = "Table B.1.3. Patch size distribution maximal model outputs")
+
+sum.df <- sum[["prop.landscape"]]
+tab(sum.df, caption = "Table B.1.4. Geographic range filling maximal model outputs")
+
+```
+
+## pairs plots for collinearity
+```{r fig.height=10, fig.width=10}
+colfunc <- colorRampPalette(c("#A715AD","white", "#FFB000"))
+
+upper.panel<-function(x, y){
+        r <- round(cor(x, y), digits=2)
+       # points(x,y, pch=21, col = metrics$mat_var_col, cex = 0.5)
+        points(x,y, pch=21, col=c("grey"), cex = 0.5)
+       # points(x,y, pch=21, col=colfunc(100)[r], cex = 0.5)
+        txt <- paste0("R = ", r)
+       # text(0.8, 0.9, txt, cex = 6* abs(cor(x, y)))
+        usr <- par("usr"); on.exit(par(usr))
+        par(usr = c(0, 1, 0, 1))
+        text(0.6, 0.9, txt, cex =1.8)
+}
+
+pairs(metrics[, which(names(metrics) %in% c("hf_range", "vel_range", "mat_range", "mat_var_range", 
+                                      "map_range", "map_var_range"))],
+      lower.panel = NULL, upper.panel = upper.panel)
+
+                                      
+```
+
+## plot r2s
+```{r}
+ # show_col(viridis_pal(option = "D", direction = 1)(5))
+ # show_col(viridis_pal(option = "D", direction = 1)(10))
+ dput(viridis_pal(option = "D", direction = 1)(5))
+```
+
+```{r}
+full_pal <-c("#FA9E3BFF", "#ED7953FF","#D8576BFF", "#BD3786FF","#7301A8FF",  "#47039FFF")
+```
+
+##plot conditional only
+```{r}
+r2 <- merge(n, r2, by.x = "V2", by.y = "r")
+names(r2) <- c("r_old", "r", "mean_r2_mar", "mode_r2_mar", "lower_r2_mar", "upper_r2_mar", 
+              "mean_r2_cond", "mode_r2_cond", "lower_r2_cond", "upper_r2_cond", "model")
+r2$model <- factor(r2$model, levels = c("null","hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim"))
+r2$r <- factor(r2$r, levels = c("Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling"))
+ ggplot(r2,  aes(r, mode_r2_mar, colour = model)) + 
+     geom_pointrange(data = r2,
+                    aes(r, mean_r2_cond, colour = model, ymin= `lower_r2_cond`, ymax= `upper_r2_cond`),
+                    position = position_dodge(width = 0.5), size = 2, shape = 1) +
+  
+    theme(axis.line = element_line(colour = 'black', size = 1.5), 
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +#, plot.title = element_text(hjust = 0.5, size = 20)) +
+  labs(colour = "Conditional models", y = "R2") +
+  scale_color_manual(values=paste(full_pal)) +
+    ylim(-0.01, 0.8) 
+
+```
+
+#FDBA00 - yellow
+#A302B7 - purple
+#02AFA8 - turquoise
+
+```{r}
+#r2 <- merge(n, r2, by.x = "V2", by.y = "r")
+```
+
+```{r fig.width=17, fig.height=10}
+
+names(r2) <- c("r_old", "r", "mean_r2_mar", "mode_r2_mar", "lower_r2_mar", "upper_r2_mar", 
+              "mean_r2_cond", "mode_r2_cond", "lower_r2_cond", "upper_r2_cond", "model")
+r2$model <- factor(r2$model, levels = c("null","hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim"))
+
+r2 <- r2[r2$r %nin% c("Geographic range fractality","Patch shape complexity"),]
+
+r2$r <- factor(r2$r, levels = c("Occupied area", "Geographic range size", "Patch size distribution", "Geographic range filling"))
+g <-  ggplot(r2,  aes(r, mode_r2_mar, colour = model)) + 
+  geom_pointrange(data = r2,
+                    aes(r, mean_r2_mar, colour = model, ymin= `lower_r2_mar`, ymax= `upper_r2_mar`),
+                    position = position_dodge(width = 0.5), size = 2) +
+     geom_pointrange(data = r2,
+                    aes(r, mean_r2_cond, colour = model, ymin= `lower_r2_cond`, ymax= `upper_r2_cond`),
+                    position = position_dodge(width = 0.5), size = 2, shape = 1) +
+
+   
+    theme(axis.line = element_line(colour = 'black', size = 1.5), 
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0))) +
+  labs(colour = "Marginal models", y = "R2") +
+  scale_color_manual(values=paste(full_pal)) +
+        scale_shape_manual(values = c(1, 24), 
+                         breaks = c("Conditional", "Marginal"),
+                         guide = guide_legend(override.aes = list(shape = c(NA, 1), color = "black"))) +
+    ylim(-0.01, 0.8) 
+ 
+
+ # annotate_figure(g, bottom = text_grob("          range size                                   range division                     patch irregularity"     ,  face = "bold", size = 25))
+```
+
+## r2 table 
+```{r}
+rt <- r2[,c("r", "mean_r2_mar", "mean_r2_cond", "model")]
+rt <- rt[order(rt$r),] 
+
+a <- data.frame(cbind(levels(rt$r), "mar"))
+b <- data.frame(cbind(levels(rt$r), "cond"))
+
+for(i in levels(rt$model)){
+  a <- cbind(a,round(rt$mean_r2_mar[rt$model == i],3))
+  b <- cbind(b,round(rt$mean_r2_cond[rt$model == i],3))}
+
+names(a) <- c("Metrics","type", "null", "hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim")
+names(b) <- c("Metrics","type", "null", "hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim")
+rt <- rbind(a,b)
+
+rt$Metrics <- factor(rt$Metrics, levels = c("Occupied area", "Geographic range size", "Patch size distribution", 
+                          "Geographic range filling", "Patch shape complexity", "Geographic range fractality"))
+rt <- rt[order(rt$Metrics),]
+```
+
+
+```{r}
+r2_table <- as_tibble(rt)
+r2_table  %>%
+  knitr::kable(booktabs = T, col.names = c("Metrics","type", "null", "hf", "clim", "clim_hf", "vel_clim", "vel_hf_clim")) %>%
+  add_header_above(c()) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F) %>% 
+    collapse_rows(columns = 1:2, valign = "top") %>% 
+    pack_rows("range size", 1, 4) %>%
+  pack_rows("range division", 5, 8) 
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
